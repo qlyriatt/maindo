@@ -20,7 +20,7 @@ private:
 public:
 
 	//коэффициент скорости передвижения
-	float speed = 1;
+	float speed = 0.5;
 
 	Actor(Vector2f& size, Vector2f& position, Color& color) {
 		hero.setSize(size);
@@ -70,6 +70,29 @@ public:
 		downPressed = false;
 	}
 
+	// (не уверен, что правильно возвращаю ссылку)
+	//возвращает информацию о направлении движения
+	Vector2f& getDirection() {
+		float x, y;
+		if (leftPressed)
+			x = -1;
+		else if (rightPressed)
+			x = 1;
+		else
+			x = 0;
+
+		if (upPressed)
+			y = -1;
+		else if (downPressed)
+			y = 1;
+		else
+			y = 0;
+		
+		Vector2f direction(x, y);
+
+		return direction;
+	}
+
 	//метод для обновления полей для каждой интерации игрового цикла
 	//с учетом времени
 	void update(float elapsedTime) {
@@ -101,6 +124,10 @@ public:
 		if (downPressed)
 			hero.move(0, speed);
 	}
+
+	void shiftPosition(float x, float y) {
+		hero.move(x, y);
+	}
 };
 
 int main() {
@@ -108,10 +135,19 @@ int main() {
 	RenderWindow window(VideoMode(500, 500), "maindo");
 	//характеристики актора
 	Vector2f heroSize(20, 30);
-	Vector2f heroPosition(10, 20);
+	Vector2f heroPosition(100, 100);
 	Color color(255, 0, 0);
 	//установка характеристик
 	Actor activeActor(heroSize, heroPosition, color);
+
+	RectangleShape mapBounds;
+	mapBounds.setPosition(50, 50);
+	mapBounds.setSize(Vector2f(400, 400));
+	mapBounds.setFillColor(Color(255, 255, 255, 0));
+	mapBounds.setOutlineThickness(4);
+	mapBounds.setOutlineColor(Color(0, 255, 0));
+
+
 	//время для движения
 	Clock clock;
 	//отладочная информация
@@ -127,7 +163,7 @@ int main() {
 			if (event.type == Event::Closed)
 				window.close();
 			//отладочная информация
-			cout << i++ << " " << event.type << " " << activeActor.getHero().getPosition().x << " " << activeActor.getHero().getPosition().y << endl;
+			//cout << i++ << " " << event.type << " " << activeActor.getHero().getPosition().x << " " << activeActor.getHero().getPosition().y << endl;
 
 			if (Keyboard::isKeyPressed(Keyboard::A))
 				activeActor.moveLeft();
@@ -135,7 +171,7 @@ int main() {
 			if (event.type == Event::KeyReleased)
 				if (event.key.code == Keyboard::A)
 					activeActor.stopLeft();
-
+			
 			if (Keyboard::isKeyPressed(Keyboard::D))
 				activeActor.moveRight();
 			
@@ -158,12 +194,38 @@ int main() {
 					activeActor.stopUp();
 		}
 		
+		if (activeActor.getHero().getGlobalBounds().intersects(mapBounds.getGlobalBounds())) {
+			//отладочная информация
+			cout << mapBounds.getGlobalBounds().height << " " << mapBounds.getGlobalBounds().width << endl;
+			//направление, в котором дальнейшее движение запрещено
+			Vector2f forbiddenDirection = activeActor.getDirection();
+			cout << forbiddenDirection.x << " " << forbiddenDirection.y << endl;
+			if (forbiddenDirection.x == 1) {
+				activeActor.shiftPosition(-activeActor.speed, 0);
+				activeActor.stopRight();
+			}
+			else if (forbiddenDirection.x == -1) {
+				activeActor.shiftPosition(activeActor.speed, 0);
+				activeActor.stopLeft();
+			}
+			if (forbiddenDirection.y == 1) {
+				activeActor.shiftPosition(0, -activeActor.speed);
+				activeActor.stopDown();
+			}
+			else if (forbiddenDirection.y == -1) {
+				activeActor.shiftPosition(0, activeActor.speed);
+				activeActor.stopUp();
+			}
+		}
+
 		//обновляем состояние действующего актора
 		activeActor.update();
 		//очищаем предыдущий кадр
 		window.clear();
 		//создаём новое состояние экрана
+		window.draw(mapBounds);
 		window.draw(activeActor.getHero());
+		
 		//отрисовываем новое состояние экрана
 		window.display();
 		//отладочная информация
