@@ -1,5 +1,6 @@
 #include  <SFML/Graphics.hpp>
 #include <iostream>
+#include "windows.h"
 
 using namespace std;
 using namespace sf;
@@ -70,6 +71,23 @@ public:
 	}
 
 	//метод для обновления полей для каждой интерации игрового цикла
+	//с учетом времени
+	void update(float elapsedTime) {
+		if (leftPressed)
+			hero.move(-speed * elapsedTime, 0);
+
+		if (rightPressed)
+			hero.move(speed * elapsedTime, 0);
+
+		if (upPressed)
+			hero.move(0, -speed * elapsedTime);
+
+		if (downPressed)
+			hero.move(0, speed * elapsedTime);
+	}
+
+	//метод для обновления полей для каждой интерации игрового цикла
+	//без учета времени
 	void update() {
 		if (leftPressed)
 			hero.move(-speed, 0);
@@ -82,7 +100,6 @@ public:
 
 		if (downPressed)
 			hero.move(0, speed);
-
 	}
 };
 
