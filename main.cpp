@@ -135,7 +135,7 @@ int main() {
 	RenderWindow window(VideoMode(500, 500), "maindo");
 	//характеристики актора
 	Vector2f heroSize(20, 30);
-	Vector2f heroPosition(100, 100);
+	Vector2f heroPosition(0, 0);
 	Color color(255, 0, 0);
 	//установка характеристик
 	Actor activeActor(heroSize, heroPosition, color);
@@ -194,12 +194,16 @@ int main() {
 					activeActor.stopUp();
 		}
 		
+		//обновляем состояние действующего актора
+		activeActor.update();
+
 		if (activeActor.getHero().getGlobalBounds().intersects(mapBounds.getGlobalBounds())) {
 			//отладочная информация
 			cout << mapBounds.getGlobalBounds().height << " " << mapBounds.getGlobalBounds().width << endl;
 			//направление, в котором дальнейшее движение запрещено
 			Vector2f forbiddenDirection = activeActor.getDirection();
-			cout << forbiddenDirection.x << " " << forbiddenDirection.y << endl;
+
+			//cout << forbiddenDirection.x << " " << forbiddenDirection.y << endl;
 			if (forbiddenDirection.x == 1) {
 				activeActor.shiftPosition(-activeActor.speed, 0);
 				activeActor.stopRight();
@@ -218,8 +222,6 @@ int main() {
 			}
 		}
 
-		//обновляем состояние действующего актора
-		activeActor.update();
 		//очищаем предыдущий кадр
 		window.clear();
 		//создаём новое состояние экрана
