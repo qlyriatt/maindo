@@ -132,13 +132,24 @@ public:
 
 int main() {
 	//игровое окно
-	RenderWindow window(VideoMode(500, 500), "maindo");
+	RenderWindow window(VideoMode(1280, 720), "maindo");
 	//характеристики актора
 	Vector2f heroSize(20, 30);
 	Vector2f heroPosition(0, 0);
 	Color color(255, 0, 0);
 	//установка характеристик
 	Actor activeActor(heroSize, heroPosition, color);
+
+	//вид камеры можно задать как хочется
+	View alternativeView;
+	//утсанавливаем центр камеры
+	alternativeView.setCenter(activeActor.getHero().getPosition());
+	//устанавливаем размер области попадающей в камеру
+	alternativeView.setSize(sf::Vector2f(1280, 720));
+	//зум камеры 
+	//alternativeView.zoom(4.f);
+	//
+	alternativeView.setViewport(sf::FloatRect(0.25f, 0.25, 0.5f, 0.5f));
 
 	RectangleShape mapBounds;
 	mapBounds.setPosition(50, 50);
@@ -222,8 +233,16 @@ int main() {
 			}
 		}
 
+		
+
 		//очищаем предыдущий кадр
 		window.clear();
+
+		
+		alternativeView.setCenter(activeActor.getHero().getPosition());
+		window.setView(alternativeView);
+		
+
 		//создаём новое состояние экрана
 		window.draw(mapBounds);
 		window.draw(activeActor.getHero());
@@ -233,5 +252,8 @@ int main() {
 		//отладочная информация
 		i %= 100000;
 	}
+
+
+
 	return 0;
 }
