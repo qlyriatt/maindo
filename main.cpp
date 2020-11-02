@@ -1,154 +1,35 @@
-#include  <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <iostream>
 #include "windows.h"
+#include "Actor.h"
+#include "Kevin.h"
+#include "NPC.h"
+#include "Robot.h"
+#include "Weapon.h"
 
 using namespace std;
 using namespace sf;
 
-//класс передвигащихся по карте сущностей (в будущем - абстрактный)
-class Actor {
-private:
-	//фигура актора
-	RectangleShape hero;
-
-	//флаги для передвижения
-	bool leftPressed;
-	bool rightPressed;
-	bool upPressed;
-	bool downPressed;
-
-public:
-
-	//коэффициент скорости передвижения
-	float speed = 0.5;
-
-	Actor(Vector2f& size, Vector2f& position, Color& color) {
-		hero.setSize(size);
-		hero.setPosition(position);
-		hero.setFillColor(color);
-		leftPressed = false;
-		rightPressed = false;
-		upPressed = false;
-		downPressed = false;
-	}
-
-	RectangleShape getHero() {
-		return hero;
-	}
-
-	// Для движения 
-	void moveLeft() {
-		leftPressed = true;
-	}
-
-	void moveRight() {
-		rightPressed = true;
-	}
-
-	void moveUp() {
-		upPressed = true;
-	}
-
-	void moveDown() {
-		downPressed = true;
-	}
-
-	// Прекращение движения
-	void stopLeft() {
-		leftPressed = false;
-	}
-
-	void stopRight() {
-		rightPressed = false;
-	}
-
-	void stopUp() {
-		upPressed = false;
-	}
-
-	void stopDown() {
-		downPressed = false;
-	}
-
-	// (не уверен, что правильно возвращаю ссылку)
-	//возвращает информацию о направлении движения
-	Vector2f& getDirection() {
-		float x, y;
-		if (leftPressed)
-			x = -1;
-		else if (rightPressed)
-			x = 1;
-		else
-			x = 0;
-
-		if (upPressed)
-			y = -1;
-		else if (downPressed)
-			y = 1;
-		else
-			y = 0;
-		
-		Vector2f direction(x, y);
-
-		return direction;
-	}
-
-	//метод для обновления полей для каждой интерации игрового цикла
-	//с учетом времени
-	void update(float elapsedTime) {
-		if (leftPressed)
-			hero.move(-speed * elapsedTime, 0);
-
-		if (rightPressed)
-			hero.move(speed * elapsedTime, 0);
-
-		if (upPressed)
-			hero.move(0, -speed * elapsedTime);
-
-		if (downPressed)
-			hero.move(0, speed * elapsedTime);
-	}
-
-	//метод для обновления полей для каждой интерации игрового цикла
-	//без учета времени
-	void update() {
-		if (leftPressed)
-			hero.move(-speed, 0);
-
-		if (rightPressed)
-			hero.move(speed, 0);
-
-		if (upPressed)
-			hero.move(0, -speed);
-
-		if (downPressed)
-			hero.move(0, speed);
-	}
-
-	void shiftPosition(float x, float y) {
-		hero.move(x, y);
-	}
-};
 
 int main() {
 	//игровое окно
-	RenderWindow window(VideoMode(1280, 720), "maindo");
+	RenderWindow window(VideoMode(640, 310), "Maindo");
 	//характеристики актора
 	Vector2f heroSize(20, 30);
 	Vector2f heroPosition(0, 0);
 	Color color(255, 0, 0);
 	//установка характеристик
-	Actor activeActor(heroSize, heroPosition, color);
-
+	Kevin activeActor(heroSize, heroPosition, color);
+	activeActor.speed = 100;
 	//вид камеры можно задать как хочется
 	View alternativeView;
 	//утсанавливаем центр камеры
 	alternativeView.setCenter(activeActor.getHero().getPosition());
 	//устанавливаем размер области попадающей в камеру
-	alternativeView.setSize(sf::Vector2f(1280, 720));
+	//alternativeView.setSize(sf::Vector2f(1280, 720));
 	//зум камеры 
 	//alternativeView.zoom(4.f);
-	//
+	//расположение окна камеры
 	alternativeView.setViewport(sf::FloatRect(0.25f, 0.25, 0.5f, 0.5f));
 
 	RectangleShape mapBounds;
@@ -167,7 +48,9 @@ int main() {
 	while (window.isOpen()) {
 		Event event;
 		//время для движения
-		float delta = clock.restart().asSeconds();
+		float time = clock.getElapsedTime().asSeconds();
+		clock.restart();
+
 		
 		//обработчик событий и нажатий клавиш
 		while (window.pollEvent(event)) {
@@ -206,41 +89,18 @@ int main() {
 		}
 		
 		//обновляем состояние действующего актора
-		activeActor.update();
+		activeActor.update(time);
 
-		if (activeActor.getHero().getGlobalBounds().intersects(mapBounds.getGlobalBounds())) {
-			//отладочная информация
-			cout << mapBounds.getGlobalBounds().height << " " << mapBounds.getGlobalBounds().width << endl;
-			//направление, в котором дальнейшее движение запрещено
-			Vector2f forbiddenDirection = activeActor.getDirection();
-
-			//cout << forbiddenDirection.x << " " << forbiddenDirection.y << endl;
-			if (forbiddenDirection.x == 1) {
-				activeActor.shiftPosition(-activeActor.speed, 0);
-				activeActor.stopRight();
-			}
-			else if (forbiddenDirection.x == -1) {
-				activeActor.shiftPosition(activeActor.speed, 0);
-				activeActor.stopLeft();
-			}
-			if (forbiddenDirection.y == 1) {
-				activeActor.shiftPosition(0, -activeActor.speed);
-				activeActor.stopDown();
-			}
-			else if (forbiddenDirection.y == -1) {
-				activeActor.shiftPosition(0, activeActor.speed);
-				activeActor.stopUp();
-			}
-		}
-
-		
+		//проверяем коллизии
+		activeActor.collisionCheck(&mapBounds, &time);
 
 		//очищаем предыдущий кадр
 		window.clear();
 
-		
+		//ставим центр камеры так, чтобы камера следила иза игроком
 		alternativeView.setCenter(activeActor.getHero().getPosition());
-		window.setView(alternativeView);
+		//обязаельное действие: установка вида как текущее
+		//window.setView(alternativeView);
 		
 
 		//создаём новое состояние экрана
@@ -252,8 +112,6 @@ int main() {
 		//отладочная информация
 		i %= 100000;
 	}
-
-
 
 	return 0;
 }
