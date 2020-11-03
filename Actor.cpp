@@ -5,7 +5,6 @@
 #include "gameObject.h"
 
 
-
 using namespace std;
 using namespace sf;
 
