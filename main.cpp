@@ -11,6 +11,7 @@ using namespace std;
 using namespace sf;
 
 
+
 int main() {
 	//игровое окно
 	RenderWindow window(VideoMode(640, 310), "Maindo");
