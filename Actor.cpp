@@ -7,8 +7,6 @@
 using namespace std;
 using namespace sf;
 
-
-
 	Actor::Actor(Vector2f& size, Vector2f& position, Color& color) {
 		hero.setSize(size);
 		hero.setPosition(position);
