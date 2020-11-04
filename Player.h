@@ -1,9 +1,10 @@
 #pragma once
-#include "Actor.h"
+#include "Entity.h"
 #include "Weapon.h"
 #include <iostream>
 
 using namespace std;
+
 
 class Player : public Entity
 {
@@ -12,7 +13,6 @@ public:
 	Player() : Entity() {};
 	Player(float,float,float,float,float);
 	
-	//флаги для передвижения
 	bool upPressed = 0;
 	bool rightPressed = 0;
 	bool downPressed = 0;
@@ -28,6 +28,7 @@ Player::Player(float xsize, float ysize, float xpos, float ypos, float speed) :E
 {
 };
 
+//Update state 
 void Player::update()
 {
 	if (upPressed)
@@ -40,6 +41,7 @@ void Player::update()
 		body.move(-basespeed, 0);
 }
 
+//Update state time-based
 void Player::update(int)
 {
 	if (upPressed)

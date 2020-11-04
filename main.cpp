@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "windows.h"
-#include "Actor.h"
+#include "Entity.h"
 //#include "Kevin.h"
 //#include "NPC.h"
 //#include "Robot.h"
@@ -17,7 +17,7 @@ int main()
 {
 	RenderWindow window(VideoMode(800, 600), "Maindo");
 	
-	Player player(15, 30, 0, 0, 0.05);
+	Player player(15, 30, 0, 0, 0.1);
 
 	//вид камеры можно задать как хочется
 	//View alternativeView;
@@ -38,26 +38,25 @@ int main()
 	mapBounds.setOutlineColor(Color(0, 255, 0));
 
 
-	Clock clock;
-	bool moving = 0;
-	bool timef = 0;
+	//Clock clock;
+	//bool moving = 0;
+	//bool timef = 0;
 
 	while (window.isOpen()) {
 		Event event;
 		
-		if (timef)
-		{
-			clock.restart();
-			timef = 0;
-		}
+		//if (timef)
+		//{
+		//	clock.restart();
+		//	timef = 0;
+		//}
 
-		if ((moving == 1) and (player.speed <= 0.2))
-		{
-			player.speed = player.basespeed + 0.05 * clock.getElapsedTime().asSeconds();
-			if (player.speed > 0.2)
-				player.speed = 0.2;
-			//cout << player.speed << "      " << clock.getElapsedTime().asSeconds() << endl;
-		}
+		//if ((moving == 1) and (player.getspeed() <= 0.2))
+		//{
+		//	player.setspeed(player.getbasespeed() + 0.05 * clock.getElapsedTime().asSeconds());
+		//	if (player.getspeed() > 0.2)
+		//		player.setspeed(0.2);
+		//}
 
 
 
@@ -68,7 +67,7 @@ int main()
 
 			if (event.type == Event::KeyPressed)
 			{
-				moving = 1;
+				//moving = 1;
 				if (event.key.code == Keyboard::W)
 					player.upPressed = 1;
 				else if (event.key.code == Keyboard::D)
@@ -81,9 +80,9 @@ int main()
 
 			if (event.type == Event::KeyReleased)
 			{
-				moving = false;
-				player.speed = player.basespeed;
-				timef = 1;
+				//moving = false;
+				//player.setspeed(player.getbasespeed());
+				//timef = 1;
 
 				if (event.key.code == Keyboard::W)
 					player.upPressed = 0;
@@ -97,7 +96,7 @@ int main()
 		}
 		window.clear();
 
-		player.update(1);
+		player.update();
 
 		//проверяем коллизии
 		//activeActor.collisionCheck(&mapBounds, &time);

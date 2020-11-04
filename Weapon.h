@@ -5,11 +5,12 @@
 using namespace std;
 using namespace sf;
 
+
 enum weaponId {
 	keyboard = 0,
 	mouse,
 	stapler,
-	staple//скоба
+	staple
 };
 
 class Weapon : public gameObject {
