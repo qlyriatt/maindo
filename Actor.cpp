@@ -24,6 +24,7 @@ using namespace sf;
 	}
 
 	// Для движения 
+	// я я я я я я я я 
 	void Actor::moveLeft() {
 		leftPressed = true;
 	}
