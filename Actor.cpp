@@ -9,7 +9,7 @@
 using namespace std;
 using namespace sf;
 
-	Actor::Actor(Vector2f& size, Vector2f& position, Color& color) {
+	Entity::Entity(Vector2f& size, Vector2f& position, Color& color) {
 		hero.setSize(size);
 		hero.setPosition(position);
 		hero.setFillColor(color);
@@ -19,48 +19,47 @@ using namespace sf;
 		downPressed = false;
 	}
 
-	RectangleShape Actor::getHero() {
+	RectangleShape Entity::getHero() {
 		return hero;
 	}
 
 	// Для движения 
-	// я я я я я я я я 
-	void Actor::moveLeft() {
+	void Entity::moveLeft() {
 		leftPressed = true;
 	}
 
-	void Actor::moveRight() {
+	void Entity::moveRight() {
 		rightPressed = true;
 	}
 
-	void Actor::moveUp() {
+	void Entity::moveUp() {
 		upPressed = true;
 	}
 
-	void Actor::moveDown() {
+	void Entity::moveDown() {
 		downPressed = true;
 	}
 
 	// Прекращение движения
-	void Actor::stopLeft() {
+	void Entity::stopLeft() {
 		leftPressed = false;
 	}
 
-	void Actor::stopRight() {
+	void Entity::stopRight() {
 		rightPressed = false;
 	}
 
-	void Actor::stopUp() {
+	void Entity::stopUp() {
 		upPressed = false;
 	}
 
-	void Actor::stopDown() {
+	void Entity::stopDown() {
 		downPressed = false;
 	}
 
 	// (не уверен, что правильно возвращаю ссылку)
 	//возвращает информацию о направлении движения
-	Vector2f& Actor::getDirection() {
+	Vector2f& Entity::getDirection() {
 		float x, y;
 		if (leftPressed)
 			x = -1;
@@ -83,7 +82,7 @@ using namespace sf;
 
 	//метод для обновления полей для каждой интерации игрового цикла
 	//с учетом времени
-	void Actor::update(float elapsedTime) {
+	void Entity::update(float elapsedTime) {
 		if (leftPressed)
 			hero.move(-speed * elapsedTime, 0);
 
@@ -99,7 +98,7 @@ using namespace sf;
 
 	//метод для обновления полей для каждой интерации игрового цикла
 	//без учета времени
-	void Actor::update() {
+	void Entity::update() {
 		if (leftPressed)
 			hero.move(-speed, 0);
 
@@ -113,11 +112,11 @@ using namespace sf;
 			hero.move(0, speed);
 	}
 
-	void Actor::shiftPosition(float x, float y) {
+	void Entity::shiftPosition(float x, float y) {
 		hero.move(x, y);
 	}
 
-	void Actor::collisionCheck(RectangleShape *mapBounds, float *time) {
+	void Entity::collisionCheck(RectangleShape *mapBounds, float *time) {
 		if (this->getHero().getGlobalBounds().intersects(mapBounds->getGlobalBounds())) {
 			//отладочная информация
 			//cout << mapBounds.getGlobalBounds().height << " " << mapBounds.getGlobalBounds().width << endl;

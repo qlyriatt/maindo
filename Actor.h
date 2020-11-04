@@ -1,53 +1,55 @@
 #pragma once
 #include  <SFML/Graphics.hpp>
 #include <iostream>
-#include "windows.h"
-#include "gameObject.h"
-#include "Weapon.h"
+//#include "windows.h"
+//#include "gameObject.h"
+//#include "Weapon.h"
 
 
 using namespace std;
 using namespace sf;
 
 //класс передвигащихся по карте сущностей (в будущем - абстрактный)
-class Actor {
-private:
+class Entity {
+protected:
 	//фигура актора
-	RectangleShape hero;
+	RectangleShape body;
+	
+	//string name;
 
-	string name;
+	//uint8_t healthPoints;
 
-	uint8_t healthPoints;
-
-	Weapon *actorWeapons;
-
-	//флаги для передвижения
-	bool leftPressed;
-	bool rightPressed;
-	bool upPressed;
-	bool downPressed;
+	//Weapon *Weapons;
 
 
 public:
+	
+	Entity()
+	{
+		body.setSize(Vector2f(0, 0));
+		body.setPosition(0, 0);
+		basespeed = 0;
+	};
+	Entity(float, float, float, float, float);
+	//Entity(Vector2f sizevector, float xpos, float ypos);
 
 	//коэффициент скорости передвижения
-	float speed = 0.5;
+	float basespeed;
+	float speed;
+	//Entity(Vector2f& size, Vector2f& position, Color& color);
 
-	Actor(Vector2f& size, Vector2f& position, Color& color);
-
-	RectangleShape getHero();
-
+	RectangleShape getbody();
 	// Для движения 
-	void moveLeft();
-	void moveRight();
-	void moveUp();
-	void moveDown();
+	//void setLeft();
+	//void setRight();
+	//void setUp();
+	//void setDown();
 
 	// Прекращение движения
-	void stopLeft();
-	void stopRight();
-	void stopUp();
-	void stopDown();
+	//void stopLeft();
+	//void stopRight();
+	//void stopUp();
+	//void stopDown();
 
 	// (не уверен, что правильно возвращаю ссылку)
 	//возвращает информацию о направлении движения
@@ -69,3 +71,25 @@ public:
 
 	void collisionCheck(RectangleShape *mapBounds, float *time);
 };
+
+
+Entity::Entity(float width, float height, float xpos, float ypos, float speed)
+{
+	Vector2f size(width, height);
+	body.setSize(size);
+	body.setPosition(xpos, ypos);
+	this->basespeed = speed;
+	this->speed = speed;
+}
+
+//Entity::Entity(Vector2f sizevector, float xpos, float ypos, float speed)
+//{
+//	body.setSize(sizevector);
+//	body.setPosition(xpos, ypos);
+//	this->speed = speed;
+//}
+
+RectangleShape Entity::getbody()
+{
+	return body;
+}
