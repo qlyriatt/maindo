@@ -11,36 +11,43 @@
 using namespace std;
 using namespace sf;
 
+#define WINDOW_SIZE_X 800
+#define WINDOW_SIZE_Y 600
+#define CAMERA_SIZE_X WINDOW_SIZE_X / 2
+#define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
 
 
 int main()
 {
-	RenderWindow window(VideoMode(800, 600), "Maindo");
+	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "Maindo");
 	
-	Player player(15, 30, 0, 0, 0.1);
+	Player player(20, 30, 190, 135, float(0.1));
 
-	//вид камеры можно задать как хочется
-	//View alternativeView;
-	//утсанавливаем центр камеры
-	//alternativeView.setCenter(activeActor.getHero().getPosition());
-	//устанавливаем размер области попадающей в камеру
-	//alternativeView.setSize(sf::Vector2f(1280, 720));
-	//зум камеры 
-	//alternativeView.zoom(4.f);
-	//расположение окна камеры
-	//alternativeView.setViewport(sf::FloatRect(0.25f, 0.25, 0.5f, 0.5f));
+	RectangleShape outerBounds;
+	outerBounds.setSize(Vector2f(800, 600));
+	outerBounds.setOutlineThickness(-4);
+	outerBounds.setOutlineColor(Color(255, 0, 0));
+	outerBounds.setFillColor(Color(255, 255, 255,0));
 
 	RectangleShape mapBounds;
 	mapBounds.setPosition(50, 50);
 	mapBounds.setSize(Vector2f(400, 400));
-	mapBounds.setFillColor(Color(255, 255, 255, 0));
 	mapBounds.setOutlineThickness(4);
-	mapBounds.setOutlineColor(Color(0, 255, 0));
+	mapBounds.setFillColor(Color(255, 255, 255, 0));
+	mapBounds.setOutlineColor(Color(255, 0, 0));
 
-
+	
 	//Clock clock;
 	//bool moving = 0;
 	//bool timef = 0;
+	
+	bool moving = false;
+
+	View camera;
+	FloatRect camerabounds(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y);
+	camera.reset(camerabounds);
+	camera.setViewport(FloatRect(0,0,1,1));
+
 
 	while (window.isOpen()) {
 		Event event;
@@ -67,7 +74,7 @@ int main()
 
 			if (event.type == Event::KeyPressed)
 			{
-				//moving = 1;
+				moving = true;
 				if (event.key.code == Keyboard::W)
 					player.upPressed = 1;
 				else if (event.key.code == Keyboard::D)
@@ -80,7 +87,7 @@ int main()
 
 			if (event.type == Event::KeyReleased)
 			{
-				//moving = false;
+				moving = false;
 				//player.setspeed(player.getbasespeed());
 				//timef = 1;
 
@@ -94,25 +101,83 @@ int main()
 					player.leftPressed = 0;
 			}
 		}
+
 		window.clear();
-
 		player.update();
+		
 
-		//проверяем коллизии
-		//activeActor.collisionCheck(&mapBounds, &time);
 
-		//очищаем предыдущий кадр
+		camera.reset(camerabounds);
+		camera.setViewport(FloatRect(0, 0, 1, 1));
+		camera.setCenter(player.getbody().getPosition() + player.getbody().getSize() / 2.f);
+		outerBounds.setOutlineColor(Color(255, 0, 0));
+		outerBounds.setFillColor(Color(30, 19, 50));
 
-		//ставим центр камеры так, чтобы камера следила за игроком
-		//alternativeView.setCenter(activeActor.getHero().getPosition());
-		//обязаельное действие: установка вида как текущее
-		//window.setView(alternativeView);
 
-		//создаём новое состояние экрана
+		Vector2f topleft = camera.getCenter() - camera.getSize() / 2.f;
+		Vector2f topright = topleft + Vector2f(camera.getSize().x,0);
+		Vector2f bottomleft = topleft + Vector2f(0, camera.getSize().y);
+		Vector2f bottomright = camera.getCenter() + camera.getSize() / 2.f;
+		FloatRect outerbounds(0, 0, 800, 600);
+
+
+		bool TL = outerbounds.contains(topleft);
+		bool TR = outerbounds.contains(topright);
+		bool BL = outerbounds.contains(bottomleft);
+		bool BR = outerbounds.contains(bottomright);
+
+		//rect match
+		if (!(TL and TR and BL and BR))
+		{
+			if (TL)
+			{
+				if (BL)
+					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, player.getcenter().y));
+				else if (TR)
+					camera.setCenter(Vector2f(player.getcenter().x, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
+				else
+					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
+			}
+
+			else if (BR)
+			{
+				if (TR)
+					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, player.getcenter().y));
+				else if (BL)
+					camera.setCenter(Vector2f(player.getcenter().x, CAMERA_SIZE_Y / 2));
+				else
+					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, CAMERA_SIZE_Y / 2));
+			}
+
+			else if (BL)
+				camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, CAMERA_SIZE_Y / 2));
+			else if (TR)
+				camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
+		}
+
+		
+		window.setView(camera);
+		window.draw(outerBounds);
 		window.draw(mapBounds);
 		window.draw(player.getbody());
+
+		camera.reset(FloatRect(0, 0, 800, 600));
+		camera.setViewport(FloatRect(0.03, 0.75, 0.2, 0.2));
+		window.setView(camera);
+		outerBounds.setFillColor(Color(0, 0, 0, 150));
+		outerBounds.setOutlineColor(Color(255, 0, 0, 150));
+		window.draw(outerBounds);
+		window.draw(mapBounds);
+		window.draw(player.getbody());
+
+		//cout << camera.getCenter().x << "    " << camera.getCenter().y << endl;
+
 		
-		//отрисовываем новое состояние экрана
+		//window.setView(window.getDefaultView());
+		//window.draw(mapBounds);
+		//window.draw(player.getbody());
+
+		
 		window.display();
 
 	}
