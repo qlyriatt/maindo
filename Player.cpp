@@ -39,7 +39,3 @@ void Player::update(int)
 		body.move(-speed, 0);
 }
 
-Vector2f Player::getcenter()
-{
-	return Vector2f(body.getPosition() + body.getSize() / 2.f);
-}

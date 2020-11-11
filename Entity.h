@@ -33,13 +33,26 @@ public:
 	float getbasespeed();
 	void setspeed(float);
 
+	Vector2f getcenter();
+	void move(Vector2f);
+
+
+
+	/// <summary>
+	/// Checks collision with outside objects i.e. when an entity tries to go inside an obstacle
+	/// </summary>
+	/// <param name="Obstacle">
+	/// </param>
+	void collision_check(RectangleShape);
+
+	void collision_check_inner(FloatRect);
+
 	//void shiftPosition(float x, float y);
 
 	//void fire();
 
 	//void interactive();
 
-	//void collisionCheck(RectangleShape *mapBounds, float *time);
 };
 
 

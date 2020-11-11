@@ -21,19 +21,25 @@ int main()
 {
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "Maindo");
 	
-	Player player(20, 30, 190, 135, float(0.1));
+	Player player(20, 30, 190, 135, float(0.15));
+
 
 	RectangleShape outerBounds;
-	outerBounds.setSize(Vector2f(800, 600));
-	outerBounds.setOutlineThickness(-4);
+	float outline = 4;
+	outerBounds.setSize(Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
+	outerBounds.setPosition(Vector2f(outline, outline));
+	outerBounds.setOutlineThickness(outline);
 	outerBounds.setOutlineColor(Color(255, 0, 0));
 	outerBounds.setFillColor(Color(255, 255, 255,0));
 
+	FloatRect playerBounds(Vector2f(outline, outline), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
+
+
 	RectangleShape mapBounds;
-	mapBounds.setPosition(50, 50);
-	mapBounds.setSize(Vector2f(400, 400));
+	mapBounds.setPosition(200, 200);
+	mapBounds.setSize(Vector2f(400, 200));
 	mapBounds.setOutlineThickness(4);
-	mapBounds.setFillColor(Color(255, 255, 255, 0));
+	mapBounds.setFillColor(Color(50, 20, 20));
 	mapBounds.setOutlineColor(Color(255, 0, 0));
 
 	
@@ -72,6 +78,9 @@ int main()
 			if (event.type == Event::Closed)
 				window.close();
 
+			if (event.type == Event::LostFocus)
+				player.upPressed = player.rightPressed = player.downPressed = player.leftPressed = false;
+
 			if (event.type == Event::KeyPressed)
 			{
 				moving = true;
@@ -83,6 +92,8 @@ int main()
 					player.downPressed = 1;
 				else if (event.key.code == Keyboard::A)
 					player.leftPressed = 1;
+				else if (event.key.code == Keyboard::LShift)
+					player.setspeed(player.getbasespeed() / 2);
 			}
 
 			if (event.type == Event::KeyReleased)
@@ -99,12 +110,23 @@ int main()
 					player.downPressed = 0;
 				else if (event.key.code == Keyboard::A)
 					player.leftPressed = 0;
+				else if (event.key.code == Keyboard::LShift)
+					player.setspeed(player.getbasespeed());
 			}
 		}
 
 		window.clear();
-		player.update();
-		
+		player.update(1);
+		//if (mapBounds.getGlobalBounds().contains(player.getbody().getPosition() + player.getbody().getPoint(0)))
+		player.collision_check(mapBounds);
+
+		player.collision_check_inner(playerBounds);
+
+
+
+
+
+
 
 
 		camera.reset(camerabounds);
@@ -118,13 +140,11 @@ int main()
 		Vector2f topright = topleft + Vector2f(camera.getSize().x,0);
 		Vector2f bottomleft = topleft + Vector2f(0, camera.getSize().y);
 		Vector2f bottomright = camera.getCenter() + camera.getSize() / 2.f;
-		FloatRect outerbounds(0, 0, 800, 600);
-
-
-		bool TL = outerbounds.contains(topleft);
-		bool TR = outerbounds.contains(topright);
-		bool BL = outerbounds.contains(bottomleft);
-		bool BR = outerbounds.contains(bottomright);
+		
+		bool TL = outerBounds.getGlobalBounds().contains(topleft);
+		bool TR = outerBounds.getGlobalBounds().contains(topright);
+		bool BL = outerBounds.getGlobalBounds().contains(bottomleft);
+		bool BR = outerBounds.getGlobalBounds().contains(bottomright);
 
 		//rect match
 		if (!(TL and TR and BL and BR))
@@ -169,14 +189,6 @@ int main()
 		window.draw(outerBounds);
 		window.draw(mapBounds);
 		window.draw(player.getbody());
-
-		//cout << camera.getCenter().x << "    " << camera.getCenter().y << endl;
-
-		
-		//window.setView(window.getDefaultView());
-		//window.draw(mapBounds);
-		//window.draw(player.getbody());
-
 		
 		window.display();
 
@@ -184,3 +196,5 @@ int main()
 
 	return 0;
 }
+
+

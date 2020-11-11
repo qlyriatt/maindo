@@ -16,7 +16,6 @@ public:
 	
 	void update();
 	void update(int);
-	Vector2f getcenter();
 
 private:
 };
