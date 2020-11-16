@@ -1,9 +1,5 @@
 #include "Entity.h"
-
-//#define RIGHT basespeed
-//#define DOWN basespeed
-//#define LEFT -RIGHT
-//#define UP -DOWN
+#include <iostream>
 
 
 Entity::Entity()
@@ -50,77 +46,84 @@ Vector2f Entity::getcenter()
 	return Vector2f(body.getPosition() + body.getSize() / 2.f);
 }
 
-void Entity::move(Vector2f action)
+void Entity::move(Vector2f direction)
 {
-	body.move(action);
+	body.move(direction);
 }
 
-void Entity::collision_check(RectangleShape obstacle)
+//whoops --N-- hours of life are now gone
+///////////////////////////   FIX THIS
+//
+// Player stops when going to the older object from the newer one while colliding with them both at the same time
+// (EXAMPLE --- when you try to go into UP into 2 walls and LEFT simultaniosly)
+//
+void Entity::collision_check(RectangleShape obstacle, Vector2f direction)
 {
-	bool TL = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(0));
-	bool TR = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(1));
-	bool BR = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(2));
-	bool BL = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(3));
-
-
-	if (TL or TR or BR or BL)
+	if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
 	{
-		if (TL)
+		if (direction == Vector2f(0,-1)) //UP
 		{
-			if (BL)
-				body.move(speed, 0);
-			else if (TR)
-				body.move(0, speed);
-			//if move(speed, 0) i.e. MOVE RIGHT clears collision before checking TL a second time
-			//entity performs a jump equal to speed -----> 
-			//this reflects in it going around the corner which can be undesirable
-			//the effect is present for every type of one point collision
-			//
-			//
-			//      //////			//////
-			//		//////	--->	//////
-			//		//////			//////*\*
-			//			 *\*		
-			//
-			// (or apparently it won't)
+			body.move(0, speed);
+		}
+		else if (direction == Vector2f(1, -1)) //UP RIGHT
+		{
+			body.move(0, speed);
+			if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+				body.move(-speed, -speed);
 			else
 			{
-				body.move(speed, 0);
-				TL = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(0));
-				if (TL)
-					body.move(-speed, speed);
+				body.move(-speed, -speed);
+				if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+					body.move(speed, speed);
 			}
 		}
-
-		else if (BR)
+		else if (direction == Vector2f(1, 0)) //RIGHT
 		{
-			if (BL)
-				body.move(0, -speed);
-			else if (TR)
-				body.move(-speed, 0);
+			body.move(-speed, 0);
+		}
+		else if (direction == Vector2f(1, 1)) //DOWN RIGHT
+		{
+			body.move(0, -speed);
+			if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+				body.move(-speed, speed);
 			else
 			{
-				body.move(-speed, 0);
-				BR = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(2));
-				if (BR)
+				body.move(-speed, speed);
+				if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
 					body.move(speed, -speed);
 			}
 		}
-
-		else if (TR)
+		else if (direction == Vector2f(0, 1)) //DOWN
 		{
-			body.move(-speed, 0);
-			TR = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(1));
-			if (TR)
-				body.move(speed, speed);
+			body.move(0, -speed);
 		}
-
-		else if (BL)
+		else if (direction == Vector2f(-1, 1)) //DOWN LEFT
+		{
+			body.move(0, -speed);
+			if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+				body.move(speed, speed);
+			else
+			{
+				body.move(speed, speed);
+				if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+					body.move(-speed, -speed);
+			}
+		}
+		else if (direction == Vector2f(-1, 0)) //LEFT
 		{
 			body.move(speed, 0);
-			BL = obstacle.getGlobalBounds().contains(body.getPosition() + body.getPoint(3));
-			if (BL)
-				body.move(-speed, -speed);
+		}
+		else if (direction == Vector2f(-1, -1)) //UP LEFT
+		{						
+			body.move(0, speed);
+			if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+				body.move(speed, -speed);
+			else
+			{
+				body.move(speed, -speed);
+				if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
+					body.move(-speed, speed);
+			}			
 		}
 	}
 }
@@ -162,3 +165,4 @@ void Entity::collision_check_inner(FloatRect area)
 
 
 }
+

@@ -1,16 +1,31 @@
 #include "Player.h"
 
 
-
-
 Player::Player() :Entity()
 {
-	upPressed = rightPressed = downPressed = leftPressed = false;
+	upPressed = rightPressed = downPressed = leftPressed = moving = leftShiftPressed = false;
 }
 
 Player::Player(float xsize, float ysize, float xpos, float ypos, float speed) :Entity(xsize, ysize, xpos, ypos, speed)
 {
-	upPressed = rightPressed = downPressed = leftPressed = false;
+	upPressed = rightPressed = downPressed = leftPressed = moving = leftShiftPressed = false;
+}
+
+Vector2f Player::getdirection()
+{
+	float x, y;
+	x = y = 0;
+
+	if (upPressed)
+		y--;
+	if (rightPressed)
+		x++;
+	if (downPressed)
+		y++;
+	if (leftPressed)
+		x--;
+
+	return Vector2f(x, y);
 }
 
 //Update state 
@@ -37,5 +52,41 @@ void Player::update(int)
 		body.move(0, speed);
 	if (leftPressed)
 		body.move(-speed, 0);
+}
+
+void Player::blink()
+{
+	//float blinkconst = 0.0375 / speed;   0.15 SPEED = 0.25 BLINKCONST
+	float blinkconst = 0.25;
+
+	if (upPressed or rightPressed or downPressed or leftPressed)
+	{
+		if (!moving)
+		{
+			moving = true;
+			clock.restart();
+		}
+
+
+		if (leftShiftPressed)
+		{
+			blinkconst = 0.5;
+		}
+
+		int timepassed = int(trunc(clock.getElapsedTime().asSeconds() / blinkconst));
+
+		if (timepassed % 2 == 1)
+		{
+			body.setFillColor(Color(0, 0, 255));
+		}
+		else
+			body.setFillColor(Color(255, 255, 255));
+	}
+
+	else
+	{
+		body.setFillColor(Color(255, 255, 255));
+		moving = false;
+	}
 }
 

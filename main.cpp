@@ -1,12 +1,12 @@
-#include <SFML/Graphics.hpp>
+#pragma once
 #include <iostream>
-#include "windows.h"
-#include "Entity.h"
-//#include "Kevin.h"
-//#include "NPC.h"
-//#include "Robot.h"
-//#include "Weapon.h"
+#include <vector>
+#include <SFML/Graphics.hpp>
+
+#include "Map.h"
 #include "Player.h"
+#include "Entity.h"
+
 
 using namespace std;
 using namespace sf;
@@ -16,63 +16,33 @@ using namespace sf;
 #define CAMERA_SIZE_X WINDOW_SIZE_X / 2
 #define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
 
+#define ESSENTIAL_OBJECTS 2
+
+
 
 int main()
 {
-	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "Maindo");
+	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
+
+	//	ONLY RECTANGLE SHAPES
+	vector<RectangleShape> objects;
 	
-	Player player(20, 30, 190, 135, float(0.15));
+	objects = initialize<RectangleShape>(1);
 
+	RectangleShape outerBounds = objects.at(0);
+	RectangleShape mapBounds = objects.at(1);
 
-	RectangleShape outerBounds;
-	float outline = 4;
-	outerBounds.setSize(Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
-	outerBounds.setPosition(Vector2f(outline, outline));
-	outerBounds.setOutlineThickness(outline);
-	outerBounds.setOutlineColor(Color(255, 0, 0));
-	outerBounds.setFillColor(Color(255, 255, 255,0));
-
-	FloatRect playerBounds(Vector2f(outline, outline), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
-
-
-	RectangleShape mapBounds;
-	mapBounds.setPosition(200, 200);
-	mapBounds.setSize(Vector2f(400, 200));
-	mapBounds.setOutlineThickness(4);
-	mapBounds.setFillColor(Color(50, 20, 20));
-	mapBounds.setOutlineColor(Color(255, 0, 0));
-
+	float outline = outerBounds.getOutlineThickness();
 	
-	//Clock clock;
-	//bool moving = 0;
-	//bool timef = 0;
-	
-	bool moving = false;
+	FloatRect playerBounds(outerBounds.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 
-	View camera;
-	FloatRect camerabounds(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y);
-	camera.reset(camerabounds);
-	camera.setViewport(FloatRect(0,0,1,1));
+	Player player(20, 30, 20, 20, float(0.15));
 
 
-	while (window.isOpen()) {
+	while (window.isOpen())
+	{
 		Event event;
-		
-		//if (timef)
-		//{
-		//	clock.restart();
-		//	timef = 0;
-		//}
-
-		//if ((moving == 1) and (player.getspeed() <= 0.2))
-		//{
-		//	player.setspeed(player.getbasespeed() + 0.05 * clock.getElapsedTime().asSeconds());
-		//	if (player.getspeed() > 0.2)
-		//		player.setspeed(0.2);
-		//}
-
-
-
+			
 		while (window.pollEvent(event)) 
 		{
 			if (event.type == Event::Closed)
@@ -81,9 +51,9 @@ int main()
 			if (event.type == Event::LostFocus)
 				player.upPressed = player.rightPressed = player.downPressed = player.leftPressed = false;
 
+			//pressed keys
 			if (event.type == Event::KeyPressed)
 			{
-				moving = true;
 				if (event.key.code == Keyboard::W)
 					player.upPressed = 1;
 				else if (event.key.code == Keyboard::D)
@@ -93,15 +63,15 @@ int main()
 				else if (event.key.code == Keyboard::A)
 					player.leftPressed = 1;
 				else if (event.key.code == Keyboard::LShift)
+				{
+					player.leftShiftPressed = 1;
 					player.setspeed(player.getbasespeed() / 2);
+				}
 			}
 
+			//released keys
 			if (event.type == Event::KeyReleased)
 			{
-				moving = false;
-				//player.setspeed(player.getbasespeed());
-				//timef = 1;
-
 				if (event.key.code == Keyboard::W)
 					player.upPressed = 0;
 				else if (event.key.code == Keyboard::D)
@@ -111,22 +81,26 @@ int main()
 				else if (event.key.code == Keyboard::A)
 					player.leftPressed = 0;
 				else if (event.key.code == Keyboard::LShift)
+				{
+					player.leftShiftPressed = 0;
 					player.setspeed(player.getbasespeed());
+				}
 			}
 		}
 
+
 		window.clear();
 		player.update(1);
-		//if (mapBounds.getGlobalBounds().contains(player.getbody().getPosition() + player.getbody().getPoint(0)))
-		player.collision_check(mapBounds);
+		player.blink();
 
-		player.collision_check_inner(playerBounds);
+		
 
+		//some camera things
 
-
-
-
-
+		View camera;
+		FloatRect camerabounds(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y);
+		camera.reset(camerabounds);
+		camera.setViewport(FloatRect(0, 0, 1, 1));
 
 
 		camera.reset(camerabounds);
@@ -137,10 +111,10 @@ int main()
 
 
 		Vector2f topleft = camera.getCenter() - camera.getSize() / 2.f;
-		Vector2f topright = topleft + Vector2f(camera.getSize().x,0);
+		Vector2f topright = topleft + Vector2f(camera.getSize().x, 0);
 		Vector2f bottomleft = topleft + Vector2f(0, camera.getSize().y);
 		Vector2f bottomright = camera.getCenter() + camera.getSize() / 2.f;
-		
+
 		bool TL = outerBounds.getGlobalBounds().contains(topleft);
 		bool TR = outerBounds.getGlobalBounds().contains(topright);
 		bool BL = outerBounds.getGlobalBounds().contains(bottomleft);
@@ -175,21 +149,43 @@ int main()
 				camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
 		}
 
-		
+
+
 		window.setView(camera);
+
+		player.collision_check(mapBounds, player.getdirection());
+
+		player.collision_check_inner(playerBounds);
+
+
 		window.draw(outerBounds);
 		window.draw(mapBounds);
+
+		for (short int i = ESSENTIAL_OBJECTS; i < objects.size(); i++)
+		{
+			player.collision_check(objects.at(i), player.getdirection());
+			window.draw(objects.at(i));
+		}
+
 		window.draw(player.getbody());
 
-		camera.reset(FloatRect(0, 0, 800, 600));
+
+
+
+		camera.reset(FloatRect(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y));
 		camera.setViewport(FloatRect(0.03, 0.75, 0.2, 0.2));
 		window.setView(camera);
 		outerBounds.setFillColor(Color(0, 0, 0, 150));
 		outerBounds.setOutlineColor(Color(255, 0, 0, 150));
 		window.draw(outerBounds);
 		window.draw(mapBounds);
+
+		for (short int i = ESSENTIAL_OBJECTS; i < objects.size(); i++)
+		{
+			window.draw(objects.at(i));
+		}
 		window.draw(player.getbody());
-		
+
 		window.display();
 
 	}
