@@ -7,6 +7,7 @@ Entity::Entity()
 	body.setSize(Vector2f(0, 0));
 	body.setPosition(0, 0);
 	speed = basespeed = 0;
+	allowCollision = false;
 }
 
 Entity::Entity(float width, float height, float xpos, float ypos, float speed)
@@ -15,27 +16,24 @@ Entity::Entity(float width, float height, float xpos, float ypos, float speed)
 	body.setSize(size);
 	body.setPosition(xpos, ypos);
 	this->speed = basespeed = speed;
+	allowCollision = false;
 }
 
-//Get entity shape object
 RectangleShape Entity::getbody()
 {
 	return body;
 }
 
-//Get entity speed
 float Entity::getspeed()
 {
 	return speed;
 }
 
-//Get base entity speed
 float Entity::getbasespeed()
 {
 	return basespeed;
 }
 
-//Set entity speed
 void Entity::setspeed(float speed)
 {
 	this->speed = speed;
@@ -57,7 +55,7 @@ void Entity::move(Vector2f direction)
 // Player stops when going to the older object from the newer one while colliding with them both at the same time
 // (EXAMPLE --- when you try to go into UP into 2 walls and LEFT simultaniosly)
 //
-void Entity::collision_check(RectangleShape obstacle, Vector2f direction)
+bool Entity::collision_check(RectangleShape obstacle, Vector2f direction)
 {
 	if (obstacle.getGlobalBounds().intersects(body.getGlobalBounds()))
 	{
@@ -125,7 +123,9 @@ void Entity::collision_check(RectangleShape obstacle, Vector2f direction)
 					body.move(-speed, speed);
 			}			
 		}
+		return true;
 	}
+	return false;
 }
 
 void Entity::collision_check_inner(FloatRect area)

@@ -19,14 +19,12 @@ public:
 
 	bool moving;
 
-	virtual Vector2f getdirection();
+	Vector2f getdirection();
 	void update();
 	void update(int);
 
 	void blink();
 
-
-private:
 };
 
 

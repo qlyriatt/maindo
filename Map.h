@@ -9,22 +9,47 @@ const int WINDOW_SIZE_Y = 600;
 template<class T>
 vector<T> initialize(int map_type)
 {
+
 	switch (map_type)
 	{
-		case 1:
-		{
-
-		vector<T> objects1;
+	case 0:
+	{
+		vector<T> objects0;
 
 		RectangleShape outerBounds;
 		float outline = 4;
-
-		//overall map bounds
 		outerBounds.setSize(Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 		outerBounds.setPosition(Vector2f(outline, outline));
 		outerBounds.setOutlineThickness(outline);
 		outerBounds.setOutlineColor(Color(Color::Red));
 		outerBounds.setFillColor(Color(Color::White));
+
+		RectangleShape exit;
+		exit.setSize(Vector2f(25, 25));
+		exit.setFillColor(Color(Color::Blue));
+		exit.setPosition(50, 50);
+
+		objects0.push_back(outerBounds);
+		objects0.push_back(exit);
+		return objects0;
+	}
+	case 1:
+	{
+		vector<T> objects1;
+
+		//overall map shape
+		RectangleShape outerBounds;
+		float outline = 4;
+		outerBounds.setSize(Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
+		outerBounds.setPosition(Vector2f(outline, outline));
+		outerBounds.setOutlineThickness(outline);
+		outerBounds.setOutlineColor(Color(Color::Red));
+		outerBounds.setFillColor(Color(Color::White));
+
+		RectangleShape exit;
+		exit.setSize(Vector2f(25, 25));
+		exit.setFillColor(Color(Color::Blue));
+		exit.setPosition(100, 100);
 
 		//obstacle 1
 		RectangleShape mapBounds;
@@ -35,6 +60,7 @@ vector<T> initialize(int map_type)
 		mapBounds.setOutlineColor(Color(255, 0, 0));
 
 		objects1.push_back(outerBounds);
+		objects1.push_back(exit);
 		objects1.push_back(mapBounds);
 
 		//s
@@ -57,7 +83,7 @@ vector<T> initialize(int map_type)
 			obj.setFillColor(Color(Color::Black));
 			obj.setOutlineColor(Color(Color::Green));
 			obj.setOutlineThickness(4);
-
+			
 			obj.setPosition(Vector2f(30, 200 + i * 30));
 			objects1.push_back(obj);
 		}
@@ -76,9 +102,15 @@ vector<T> initialize(int map_type)
 
 
 		return objects1;
+
 	}
-		default:
-			break;
+	
+	default:
+	{
+		vector<T> objects_empty;
+		return objects_empty;
+	}
+
 	}
 
 };
