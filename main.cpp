@@ -7,7 +7,6 @@
 #include "Player.h"
 #include "Entity.h"
 
-
 using namespace std;
 using namespace sf;
 
@@ -15,17 +14,18 @@ using namespace sf;
 #define WINDOW_SIZE_Y 600
 #define CAMERA_SIZE_X WINDOW_SIZE_X / 2
 #define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
-
 #define ESSENTIAL_OBJECTS 1
 
 short int currentLvl = 0;
 short int switchLvl = 1;
 
+
+
 int main()
 {
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
 
-	//	ONLY RECTANGLE SHAPES
+	//ONLY RECTANGLE SHAPES
 	vector<RectangleShape> objects;
 	
 	objects = initialize<RectangleShape>(1);
@@ -33,9 +33,14 @@ int main()
 	RectangleShape outerBounds = objects.at(0);
 	float outline = outerBounds.getOutlineThickness();
 	FloatRect playerBounds(outerBounds.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
-	Player player(20, 30, 20, 20, float(0.2));
-
 	
+	Texture texture;
+	/////////////////////////////// SPECIFY TEXTURE LOCATION 
+	//if (!texture.loadFromFile("D:/All mine/Game/Maindo/player.png"));
+	//	return -1;
+	Player player(0.2f, Vector2f(20, 20), texture);
+	player.sprite.setTexture(texture);
+
 	//some camera things
 	View camera;
 	camera.reset(FloatRect(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y));
@@ -50,6 +55,7 @@ int main()
 
 	while (window.isOpen())
 	{
+		bool interaction_flag = false;
 		if (currentLvl != switchLvl)
 		{
 			Clock clock;
@@ -66,7 +72,7 @@ int main()
 			FloatRect playerBounds(outerBounds.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 			currentLvl = switchLvl;
 
-			for (; floor(clock.getElapsedTime().asSeconds()) < 1;); //wait
+			for (; floor(clock.getElapsedTime().asSeconds() * 2) < 1;); //wait
 			window.clear();
 		}
 		
@@ -109,7 +115,7 @@ int main()
 						window.draw(button);
 					}
 					window.display();
-					
+
 					while (window.pollEvent(event) or pause)
 					{
 						if (event.type == Event::KeyPressed)
@@ -152,6 +158,8 @@ int main()
 					player.leftShiftPressed = 1;
 					player.setspeed(player.getbasespeed() / 2);
 				}
+				else if (event.key.code == Keyboard::E)
+					interaction_flag = true;
 			}
 
 			if (event.type == Event::KeyReleased)
@@ -180,7 +188,7 @@ int main()
 		outerBounds.setOutlineColor(Color(255, 0, 0));
 		outerBounds.setFillColor(Color(30, 19, 50));
 
-		camera.setCenter(player.getbody().getPosition() + player.getbody().getSize() / 2.f);
+		camera.setCenter(player.getcenter(1));
 		
 		Vector2f topleft = camera.getCenter() - camera.getSize() / 2.f;
 		Vector2f topright = topleft + Vector2f(camera.getSize().x, 0);
@@ -197,9 +205,9 @@ int main()
 			if (TL)
 			{
 				if (BL)
-					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, player.getcenter().y));
+					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, player.getcenter(1).y));
 				else if (TR)
-					camera.setCenter(Vector2f(player.getcenter().x, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
+					camera.setCenter(Vector2f(player.getcenter(1).x, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
 				else
 					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
 			}
@@ -207,9 +215,9 @@ int main()
 			else if (BR)
 			{
 				if (TR)
-					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, player.getcenter().y));
+					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, player.getcenter(1).y));
 				else if (BL)
-					camera.setCenter(Vector2f(player.getcenter().x, CAMERA_SIZE_Y / 2));
+					camera.setCenter(Vector2f(player.getcenter(1).x, CAMERA_SIZE_Y / 2));
 				else
 					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, CAMERA_SIZE_Y / 2));
 			}
@@ -225,6 +233,7 @@ int main()
 		player.collision_check_inner(playerBounds);
 		window.draw(outerBounds);
 
+		bool msg_displayed = false;
 		for (short unsigned int i = ESSENTIAL_OBJECTS; i < objects.size(); i++)
 		{
 			bool coll = player.collision_check(objects.at(i), player.getdirection());
@@ -235,20 +244,47 @@ int main()
 				else if (currentLvl == 1)
 					switchLvl = 0;
 			}
+			gameObject interactionZone;
+			interactionZone.allowCollision = true;
+			interactionZone.body.setSize(objects.at(i).getSize() + Vector2f(20, 20));
+			interactionZone.body.setPosition(objects.at(i).getPosition() + Vector2f(-10, -10));
+			coll = player.collision_check(interactionZone, player.getdirection());
+
+			if (coll and !msg_displayed)
+			{
+				if (interaction_flag)
+				{
+					if (objects.at(i).getFillColor() == Color::Green)
+						objects.at(i).setFillColor(Color(Color::Black));
+					else
+						objects.at(i).setFillColor(Color(Color::Green));
+					interaction_flag = false;
+				}
+				else
+				{
+					RectangleShape msg;
+					msg.setSize(Vector2f(30, 5));
+					msg.setPosition(Vector2f(objects.at(i).getPosition() + Vector2f(-5, 30)));
+					msg.setFillColor(Color(Color::White));
+					window.draw(msg);
+					msg_displayed = true;
+				}
+			}
+
 			window.draw(objects.at(i));
 		}
 
-		window.draw(player.getbody());
+		window.draw(player.sprite);
 
 		window.setView(minimap);
-		outerBounds.setFillColor(Color(0, 0, 0, 150));
+		outerBounds.setFillColor(Color(30, 19, 50, 150));
 		outerBounds.setOutlineColor(Color(255, 0, 0, 150));
 		window.draw(outerBounds);
 		for (short unsigned int i = ESSENTIAL_OBJECTS; i < objects.size(); i++)
 		{
 			window.draw(objects.at(i));
 		}
-		window.draw(player.getbody());
+		window.draw(player.sprite);
 
 		
 		

@@ -2,13 +2,13 @@
 #include "Entity.h"
 
 
-class Player : public Entity
+class Player : public gameObject
 {
 public:
 
 	Player();
-	Player(float,float,float,float,float);
-	
+	Player(float, bool, short int, Vector2f, Vector2f, Color, float);
+	Player(float, Vector2f, Texture);
 	Clock clock;
 
 	bool upPressed;

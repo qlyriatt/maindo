@@ -1,14 +1,20 @@
 #include "Player.h"
 
 
-Player::Player() :Entity()
+Player::Player() :gameObject()
 {
 	upPressed = rightPressed = downPressed = leftPressed = moving = leftShiftPressed = false;
 }
 
-Player::Player(float xsize, float ysize, float xpos, float ypos, float speed) :Entity(xsize, ysize, xpos, ypos, speed)
+Player::Player(float speed, bool allowCollision, short int interactionType, Vector2f position, Vector2f size, Color color, float outline) :gameObject(speed, allowCollision, interactionType, position, size, color, outline)
 {
 	upPressed = rightPressed = downPressed = leftPressed = moving = leftShiftPressed = false;
+}
+
+Player::Player(float speed, Vector2f position, Texture texture) : gameObject(speed, position, texture)
+{
+	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = moving = false;
+	sprite.setTexture(texture);
 }
 
 Vector2f Player::getdirection()
@@ -45,13 +51,25 @@ void Player::update()
 void Player::update(int)
 {
 	if (upPressed)
+	{
 		body.move(0, -speed);
+		sprite.move(0, -speed);
+	}
 	if (rightPressed)
+	{
 		body.move(speed, 0);
+		sprite.move(speed, 0);
+	}
 	if (downPressed)
+	{
 		body.move(0, speed);
+		sprite.move(0, speed);
+	}
 	if (leftPressed)
+	{
 		body.move(-speed, 0);
+		sprite.move(-speed, 0);
+	}
 }
 
 void Player::blink()
