@@ -3,9 +3,9 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 
+#include "Misc.h"
 #include "Map.h"
 #include "Player.h"
-#include "Entity.h"
 
 using namespace std;
 using namespace sf;
@@ -16,28 +16,30 @@ using namespace sf;
 #define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
 #define ESSENTIAL_OBJECTS 1
 
-short int currentLvl = 0;
-short int switchLvl = 1;
-
+int currentLvl = 0;
+int switchLvl = 1;
 
 
 int main()
 {
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
 	//ONLY RECTANGLE SHAPES
-	vector<RectangleShape> objects;
+	//vector<RectangleShape> objects;
+	vector<gameObject> objects;
 	
-	objects = initialize<RectangleShape>(1);
+	objects = initialize<gameObject>(1);
 
-	RectangleShape outerBounds = objects.at(0);
-	float outline = outerBounds.getOutlineThickness();
-	FloatRect playerBounds(outerBounds.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
+	gameObject outerBounds = objects.at(0);
+	float outline = outerBounds.body.getOutlineThickness();
+	FloatRect playerBounds(outerBounds.body.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 	
 	Texture *texture = new Texture;
 	/////////////////////////////// SPECIFY TEXTURE LOCATION 
 	if (!((*texture).loadFromFile("D:/All mine/Game/player.png")))
 		return -1;
 	Player player(0.2, Vector2f(20, 20), texture);
+	player.weapon.range = 200;
+	player.weapon.projectileSpeed = 0.5;
 	//player.sprite.setTexture(texture);
 	
 
@@ -56,25 +58,7 @@ int main()
 	while (window.isOpen())
 	{
 		bool interaction_flag = false;
-		if (currentLvl != switchLvl)
-		{
-			Clock clock;
-			RectangleShape loadScreen;
-			loadScreen.setSize(Vector2f(WINDOW_SIZE_X, WINDOW_SIZE_Y));
-			loadScreen.setFillColor(Color(Color::Black));
-			window.draw(loadScreen);
-			window.display();
-
-			objects.erase(objects.begin(), objects.end());
-			objects = initialize<RectangleShape>(switchLvl);
-			RectangleShape outerBounds = objects.at(0);
-			float outline = outerBounds.getOutlineThickness();
-			FloatRect playerBounds(outerBounds.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
-			currentLvl = switchLvl;
-
-			for (; floor(clock.getElapsedTime().asSeconds() * 2) < 1;); //wait
-			window.clear();
-		}
+		level_load(&window, &objects, &currentLvl, &switchLvl);
 		
 		Event event;
 			
@@ -98,85 +82,23 @@ int main()
 			{
 				if (event.key.code == Keyboard::Escape)
 				{
-					bool pause = true;
-					RectangleShape pauseScreen;
-					pauseScreen.setSize(Vector2f(WINDOW_SIZE_X, WINDOW_SIZE_Y));
-					pauseScreen.setFillColor(Color(0, 0, 0, 150));
-					window.draw(pauseScreen);
-
-					vector<RectangleShape> pauseButtons;
-					for (short int i = 0; i < 3; i++)
-					{
-						RectangleShape button;
-						button.setSize(Vector2f(80, 10));
-						button.setFillColor(Color(Color::White));
-						button.setPosition(Vector2f(camera.getCenter().x - 40, camera.getCenter().y - 35 + 30 * i));
-						pauseButtons.push_back(button);
-						window.draw(button);
-					}
-					window.display();
-
-					while (window.pollEvent(event) or pause)
-					{
-						if (event.type == Event::KeyPressed)
-						{
-							if (event.key.code == Keyboard::Escape)
-								pause = false;
-							else if (event.key.code == Keyboard::W)
-								player.upPressed = 1;
-							else if (event.key.code == Keyboard::D)
-								player.rightPressed = 1;
-							else if (event.key.code == Keyboard::S)
-								player.downPressed = 1;
-							else if (event.key.code == Keyboard::A)
-								player.leftPressed = 1;
-						}
-
-						if (event.type == Event::KeyReleased)
-						{
-							if (event.key.code == Keyboard::W)
-								player.upPressed = 0;
-							else if (event.key.code == Keyboard::D)
-								player.rightPressed = 0;
-							else if (event.key.code == Keyboard::S)
-								player.downPressed = 0;
-							else if (event.key.code == Keyboard::A)
-								player.leftPressed = 0;
-						}
-					}
-				}
-				else if (event.key.code == Keyboard::W)
-					player.upPressed = 1;
-				else if (event.key.code == Keyboard::D)
-					player.rightPressed = 1;
-				else if (event.key.code == Keyboard::S)
-					player.downPressed = 1;
-				else if (event.key.code == Keyboard::A)
-					player.leftPressed = 1;
-				else if (event.key.code == Keyboard::LShift)
-				{
-					player.leftShiftPressed = 1;
-					player.setspeed(player.getbasespeed() / 2);
+					pause(&window, &player, &camera);
 				}
 				else if (event.key.code == Keyboard::E)
 					interaction_flag = true;
+				else if (event.key.code == Keyboard::Space)
+				{
+					player.weapon.action(player.getSight(), &window, player.sprite.getPosition());
+				}
+				else
+				{
+					movement_handler(&event, &player, 1);
+				}
 			}
 
 			if (event.type == Event::KeyReleased)
 			{
-				if (event.key.code == Keyboard::W)
-					player.upPressed = 0;
-				else if (event.key.code == Keyboard::D)
-					player.rightPressed = 0;
-				else if (event.key.code == Keyboard::S)
-					player.downPressed = 0;
-				else if (event.key.code == Keyboard::A)
-					player.leftPressed = 0;
-				else if (event.key.code == Keyboard::LShift)
-				{
-					player.leftShiftPressed = 0;
-					player.setspeed(player.getbasespeed());
-				}
+				movement_handler(&event, &player, 0);
 			}
 		}
 		window.clear();
@@ -185,8 +107,8 @@ int main()
 
 		
 
-		outerBounds.setOutlineColor(Color(255, 0, 0));
-		outerBounds.setFillColor(Color(30, 19, 50));
+		outerBounds.body.setOutlineColor(Color(255, 0, 0));
+		outerBounds.body.setFillColor(Color(30, 19, 50));
 
 		camera.setCenter(player.getcenter(1));
 		
@@ -194,10 +116,10 @@ int main()
 		Vector2f topright = topleft + Vector2f(camera.getSize().x, 0);
 		Vector2f bottomleft = topleft + Vector2f(0, camera.getSize().y);
 		Vector2f bottomright = camera.getCenter() + camera.getSize() / 2.f;
-		bool TL = outerBounds.getGlobalBounds().contains(topleft);
-		bool TR = outerBounds.getGlobalBounds().contains(topright);
-		bool BL = outerBounds.getGlobalBounds().contains(bottomleft);
-		bool BR = outerBounds.getGlobalBounds().contains(bottomright);
+		bool TL = outerBounds.body.getGlobalBounds().contains(topleft);
+		bool TR = outerBounds.body.getGlobalBounds().contains(topright);
+		bool BL = outerBounds.body.getGlobalBounds().contains(bottomleft);
+		bool BR = outerBounds.body.getGlobalBounds().contains(bottomright);
 
 		//rect match (aka inner collision)
 		if (!(TL and TR and BL and BR))
@@ -231,7 +153,7 @@ int main()
 		window.setView(camera);
 
 		player.collision_check_inner(playerBounds);
-		window.draw(outerBounds);
+		window.draw(outerBounds.body);
 
 		bool msg_displayed = false;
 		for (short unsigned int i = ESSENTIAL_OBJECTS; i < objects.size(); i++)
@@ -246,43 +168,43 @@ int main()
 			}
 			gameObject interactionZone;
 			interactionZone.allowCollision = true;
-			interactionZone.body.setSize(objects.at(i).getSize() + Vector2f(20, 20));
-			interactionZone.body.setPosition(objects.at(i).getPosition() + Vector2f(-10, -10));
+			interactionZone.body.setSize(objects.at(i).body.getSize() + Vector2f(20, 20));
+			interactionZone.body.setPosition(objects.at(i).body.getPosition() + Vector2f(-10, -10));
 			coll = player.collision_check(interactionZone, player.getdirection());
 
 			if (coll and !msg_displayed)
 			{
 				if (interaction_flag)
 				{
-					if (objects.at(i).getFillColor() == Color::Green)
-						objects.at(i).setFillColor(Color(Color::Black));
+					if (objects.at(i).body.getFillColor() == Color::Green)
+						objects.at(i).body.setFillColor(Color(Color::Black));
 					else
-						objects.at(i).setFillColor(Color(Color::Green));
+						objects.at(i).body.setFillColor(Color(Color::Green));
 					interaction_flag = false;
 				}
 				else
 				{
 					RectangleShape msg;
 					msg.setSize(Vector2f(30, 5));
-					msg.setPosition(Vector2f(objects.at(i).getPosition() + Vector2f(-5, 30)));
+					msg.setPosition(Vector2f(objects.at(i).body.getPosition() + Vector2f(-5, 30)));
 					msg.setFillColor(Color(Color::White));
 					window.draw(msg);
 					msg_displayed = true;
 				}
 			}
 
-			window.draw(objects.at(i));
+			window.draw(objects.at(i).body);
 		}
 
 		window.draw(player.sprite);
 
 		window.setView(minimap);
-		outerBounds.setFillColor(Color(30, 19, 50, 150));
-		outerBounds.setOutlineColor(Color(255, 0, 0, 150));
-		window.draw(outerBounds);
+		outerBounds.body.setFillColor(Color(30, 19, 50, 150));
+		outerBounds.body.setOutlineColor(Color(255, 0, 0, 150));
+		window.draw(outerBounds.body);
 		for (short unsigned int i = ESSENTIAL_OBJECTS; i < objects.size(); i++)
 		{
-			window.draw(objects.at(i));
+			window.draw(objects.at(i).body);
 		}
 		window.draw(player.sprite);
 

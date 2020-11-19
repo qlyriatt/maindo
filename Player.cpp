@@ -11,6 +11,18 @@ Player::Player(float speed, Vector2f position, Texture* texture) : gameObject(sp
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = moving = false;
 }
 
+Vector2f Player::getSight()
+{
+	Vector2f sight_t = getdirection();
+	if (sight_t == Vector2f(0, 0))
+		return sight;
+	else
+	{
+		sight = sight_t;
+		return sight_t;
+	}
+}
+
 Vector2f Player::getdirection()
 {
 	float x, y;

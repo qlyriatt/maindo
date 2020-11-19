@@ -1,16 +1,18 @@
 #pragma once
-#include "Entity.h"
-
+#include "gameObject.h"
+#include "Weapon.h"
 
 class Player : public gameObject
 {
 public:
 
 	Player();
-	Player(float, bool, short int, Vector2f, Vector2f, Color, float);
 
 	Player(float speed, Vector2f position, Texture* texture);
 	Clock clock;
+
+	Weapon weapon;
+	Vector2f sight;
 
 	bool upPressed;
 	bool rightPressed;
@@ -20,6 +22,7 @@ public:
 
 	bool moving;
 
+	Vector2f getSight();
 	Vector2f getdirection();
 	void update();
 	void update(int);
