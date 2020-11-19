@@ -24,7 +24,6 @@ short int switchLvl = 1;
 int main()
 {
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
-
 	//ONLY RECTANGLE SHAPES
 	vector<RectangleShape> objects;
 	
@@ -34,12 +33,13 @@ int main()
 	float outline = outerBounds.getOutlineThickness();
 	FloatRect playerBounds(outerBounds.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 	
-	Texture texture;
+	Texture *texture = new Texture;
 	/////////////////////////////// SPECIFY TEXTURE LOCATION 
-	//if (!texture.loadFromFile("D:/All mine/Game/Maindo/player.png"));
-	//	return -1;
-	Player player(0.2f, Vector2f(20, 20), texture);
-	player.sprite.setTexture(texture);
+	if (!((*texture).loadFromFile("D:/All mine/Game/player.png")))
+		return -1;
+	Player player(0.2, Vector2f(20, 20), texture);
+	//player.sprite.setTexture(texture);
+	
 
 	//some camera things
 	View camera;

@@ -5,33 +5,30 @@ gameObject::gameObject()
 	allowCollision = interactionType = basespeed = speed = 0;
 }
 
-gameObject::gameObject(float speed, bool allowCollision, short int interactionType, Vector2f position, Vector2f size, Color color, float outline) 
+gameObject::gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bool allowCollision, Color outlineColor,
+	float outlineThickness, short int interactionType)
 {
-	body.setPosition(position);
-	body.setSize(size);
-	body.setFillColor(color);
-	body.setOutlineThickness(outline);
-	
-	this->basespeed = this->speed = speed;
-	this->interactionType = interactionType;
+	this->speed = speed;
+	body.setPosition(bodyPosition);
+	body.setSize(bodySize);
 	this->allowCollision = allowCollision;
+	body.setOutlineColor(outlineColor);
+	body.setOutlineThickness(outlineThickness);
+	this->interactionType = interactionType;
 } //should be removed later
 
-gameObject::gameObject(float speed, bool allowCollision, short int interactionType, Vector2f position, Texture texture)
+gameObject::gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision, short int interactionType,
+	Vector2f bodyPosition, Color outlineColor, float bodyOutlineThickness)
 {
 	this->basespeed = this->speed = speed;
-	this->interactionType = interactionType;
+	sprite.setPosition(spritePosition);
+	sprite.setTexture(*texture);
 	this->allowCollision = allowCollision;
-	sprite.setTexture(texture);
-}
+	this->interactionType = interactionType;
 
-gameObject::gameObject(float speed, Vector2f position, Texture texture)
-{
-	this->basespeed = this->speed = speed;
-	this->interactionType = 0;
-	this->allowCollision = 0;
-	sprite.setTexture(texture);
-	sprite.setPosition(position);
+	body.setPosition(bodyPosition);
+	body.setOutlineColor(outlineColor);
+	body.setOutlineThickness(bodyOutlineThickness);
 }
 
 RectangleShape gameObject::getbody()

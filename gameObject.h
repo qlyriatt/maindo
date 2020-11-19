@@ -12,13 +12,13 @@ public:
 	
 	gameObject();
 	
-	gameObject(float, bool, short int, Vector2f, Vector2f, Color, float); //should be removed later
+	gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bool allowCollision = 0, Color outlineColor = Color::Red, float outlineThickness = 4,
+		 short int interactionType = 0); //should be removed later
 	
-	gameObject(float, bool, short int, Vector2f, Texture);
+	gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision = 0, short int interactionType = 0,
+		Vector2f bodyPosition = Vector2f(0, 0), Color bodyColor = Color::White, float bodyOutlineThickness = 0);
 
-	gameObject(float, Vector2f, Texture);
-
-	bool collision_check(RectangleShape, Vector2f);
+	bool collision_check(RectangleShape, Vector2f); //should be removed
 
 	bool collision_check(FloatRect, Vector2f);
 
@@ -39,9 +39,9 @@ public:
 	Vector2f getcenter(int);	//
 
 	void move(Vector2f);
+
 	//be careful
 	virtual Vector2f getdirection();
-
 
 	RectangleShape body; //remove
 	

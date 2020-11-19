@@ -8,7 +8,8 @@ public:
 
 	Player();
 	Player(float, bool, short int, Vector2f, Vector2f, Color, float);
-	Player(float, Vector2f, Texture);
+
+	Player(float speed, Vector2f position, Texture* texture);
 	Clock clock;
 
 	bool upPressed;
