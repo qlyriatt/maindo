@@ -9,6 +9,9 @@ public:
 	Player();
 
 	Player(float speed, Vector2f position, Texture* texture);
+
+	// a lot of stuff should be transfered to gameobject instead
+
 	Clock clock;
 
 	Weapon weapon;
@@ -23,12 +26,12 @@ public:
 	bool moving;
 
 	Vector2f getSight();
-	Vector2f getdirection();
+
+	Vector2f getDirection();
+
 	void update();
-	void update(int);
 
 	void blink();
-
 };
 
 

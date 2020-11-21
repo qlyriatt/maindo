@@ -1,7 +1,6 @@
-#pragma once
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 
-using namespace std;
 using namespace sf;
 
 //CLASS DEFINING EVERYTHING YOU CAN SEE ON SCREEN
@@ -12,11 +11,12 @@ public:
 	
 	gameObject();
 	
-	gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bool allowCollision = 0, Color outlineColor = Color::Red, float outlineThickness = 4,
-		 short int interactionType = 0); //should be removed later
+	virtual ~gameObject();
+
+	gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bool allowCollision = 0, Color bodyColor = Color::Black, Color outlineColor = Color::Red, float outlineThickness = 4,
+		 short int interactionType = 0, short int interactionRadius = 5); //easier, without a sprite //should be removed later
 	
-	gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision = 0, short int interactionType = 0,
-		Vector2f bodyPosition = Vector2f(0, 0), Color bodyColor = Color::White, float bodyOutlineThickness = 0);
+	gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision = 0, int interactionType = 0, int interactionRadius = 0);
 
 	bool collision_check(RectangleShape, Vector2f); //should be removed
 
@@ -24,32 +24,33 @@ public:
 
 	bool collision_check(gameObject, Vector2f);
 
-	void collision_check_inner(FloatRect);
+	void collision_check_inner(FloatRect); //somewhat excessive (though probably not...)
 
-	RectangleShape getbody();
-
-	float getspeed();
-
-	float getbasespeed();
-
-	void setspeed(float);
-
-	Vector2f getcenter();		//
+	////////////////////////////// INT FUNCTIONS WORK WITH SPRITES
+	Vector2f getCenter();		//
 								//needs merging
-	Vector2f getcenter(int);	//
+	Vector2f getCenter(int);	//
 
-	void move(Vector2f);
+	void move(Vector2f);		//
+								//needs merging
+	void move(Vector2f, int);	//
 
 	//be careful
-	virtual Vector2f getdirection();
+	virtual Vector2f getDirection(); //redefines in player class
 
-	RectangleShape body; //remove
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	RectangleShape body; //should be removed                //...or maybe not
 	
-	
-	float basespeed, speed;
+	float baseSpeed; //useful for something 
+
+	float speed; //speed is key
+
 	bool allowCollision;
-	short int interactionType;
+
+	int interactionType;
 	
-	float interactionRadius = 5;
+	float interactionRadius;
+	
 	Sprite sprite;
 };

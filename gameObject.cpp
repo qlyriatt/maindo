@@ -2,61 +2,47 @@
 
 gameObject::gameObject()
 {
-	allowCollision = interactionType = basespeed = speed = 0;
+	allowCollision = interactionRadius = interactionType = speed = baseSpeed = 0;
 }
 
-gameObject::gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bool allowCollision, Color outlineColor,
-	float outlineThickness, short int interactionType)
+gameObject::~gameObject()
 {
-	this->speed = speed;
+
+}
+
+gameObject::gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bool allowCollision, Color bodyColor, Color outlineColor,
+	float outlineThickness, short int interactionType, short int interactionRadius)
+{
+	this->speed = this->baseSpeed = speed;
 	body.setPosition(bodyPosition);
 	body.setSize(bodySize);
 	this->allowCollision = allowCollision;
+	body.setFillColor(bodyColor);
 	body.setOutlineColor(outlineColor);
 	body.setOutlineThickness(outlineThickness);
 	this->interactionType = interactionType;
+	this->interactionRadius = interactionRadius;
 } //should be removed later
 
-gameObject::gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision, short int interactionType,
-	Vector2f bodyPosition, Color outlineColor, float bodyOutlineThickness)
+gameObject::gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision, int interactionType, int interactionRadius)
 {
-	this->basespeed = this->speed = speed;
+	this->speed = this->baseSpeed = speed;
 	sprite.setPosition(spritePosition);
 	sprite.setTexture(*texture);
 	this->allowCollision = allowCollision;
 	this->interactionType = interactionType;
+	this->interactionRadius = interactionRadius;
 
-	body.setPosition(bodyPosition);
-	body.setOutlineColor(outlineColor);
-	body.setOutlineThickness(bodyOutlineThickness);
+	body.setPosition(spritePosition);
+	body.setSize(Vector2f(sprite.getGlobalBounds().width,sprite.getGlobalBounds().height));
 }
 
-RectangleShape gameObject::getbody()
-{
-	return body;
-}
-
-float gameObject::getspeed()
-{
-	return speed;
-}
-
-float gameObject::getbasespeed()
-{
-	return basespeed;
-}
-
-void gameObject::setspeed(float speed)
-{
-	this->speed = speed;
-}
-
-Vector2f gameObject::getcenter()
+Vector2f gameObject::getCenter()
 {
 	return Vector2f(body.getPosition() + body.getSize() / 2.f);
 }
 
-Vector2f gameObject::getcenter(int)
+Vector2f gameObject::getCenter(int)
 {
 	return Vector2f(sprite.getPosition() + Vector2f(sprite.getGlobalBounds().width / 2, sprite.getGlobalBounds().height / 2));
 }
@@ -66,7 +52,12 @@ void gameObject::move(Vector2f direction)
 	body.move(direction);
 }
 
-Vector2f gameObject::getdirection()
+void gameObject::move(Vector2f direction, int)
+{
+	sprite.move(direction);
+}
+
+Vector2f gameObject::getDirection()
 {
 	return Vector2f(0, 0);
 }

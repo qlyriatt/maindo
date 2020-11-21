@@ -9,23 +9,27 @@ Weapon::Weapon()
 }
 
 
-void Weapon::action(Vector2f sightDirection, RenderWindow* window, Vector2f shotPosition)
+Projectile Weapon::action(Vector2f sightDirection, Vector2f shotPosition)
 {
-	RectangleShape projectile;
-	projectile.setSize(Vector2f(10, 10));
-	projectile.setFillColor(Color(Color::Red));
-	this->shotPosition = shotPosition;
-	projectilePosition = Vector2f(0, 0);
+	Projectile projectile;
 
-	//sqrt((projectilePosition.x - this->shotPosition.x) * (projectilePosition.x - this->shotPosition.x) + (projectilePosition.y - this->shotPosition.y) * (projectilePosition.y - this->shotPosition.y)) < range
-	for (; sqrt(projectilePosition.x*projectilePosition.x + projectilePosition.y * projectilePosition.y) < range;)
-	{
-		projectilePosition += sightDirection * projectileSpeed;
-		projectile.setPosition(shotPosition + projectilePosition);
-		window->draw(projectile);
-		window->display();
-	}
+	projectile.projectile.body.setSize(Vector2f(10, 3));
+	projectile.projectile.body.setFillColor(Color(Color::Red));
+	projectile.projectile.speed = this->projectileSpeed;
+	projectile.range = this->range;
+	projectile.shotDirection = sightDirection;
+	projectile.projectile.body.setPosition(shotPosition);
+	projectile.currentPosition = Vector2f(0, 0);
 
+	//for (; sqrt(projectilePosition.x*projectilePosition.x + projectilePosition.y * projectilePosition.y) < range;)
+	//{
+	//	projectilePosition += sightDirection * projectileSpeed;
+	//	projectile.setPosition(shotPosition + projectilePosition);
+	//	window->draw(projectile);
+	//	window->display();
+	//}
+
+	return projectile;
 	//if (!has_fired)
 	//{
 	//	projectilePosition = shotPosition;

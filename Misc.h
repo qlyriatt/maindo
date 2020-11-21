@@ -2,7 +2,7 @@
 #include "Player.h"
 #include "Map.h"
 
-
+//clever but not clever enough
 void movement_handler(Event* event, Player* player, int state)
 {
 	if (event->key.code == Keyboard::W)
@@ -16,7 +16,7 @@ void movement_handler(Event* event, Player* player, int state)
 	else if (event->key.code == Keyboard::LShift)
 	{
 		player->leftShiftPressed = state;
-		player->setspeed((player->getbasespeed()) * (1 - 0.5 * state));
+		player->speed = player->baseSpeed * (1 - 0.5 * state);
 	}
 } //let it beeeeeeeeeeeeeeee
 
@@ -38,7 +38,7 @@ void level_load(RenderWindow* window, vector<gameObject>* objects, int* currentL
 		FloatRect playerBounds(outerBounds.getPosition(), Vector2f(window->getSize().x - 2 * outline, window->getSize().y - 2 * outline));
 		*currentLvl = *switchLvl;
 
-		for (; floor(clock.getElapsedTime().asSeconds() * 2) < 1;); //wait
+		for (; floor(clock.getElapsedTime().asSeconds() * 2) < 2;); //wait
 		window->clear();
 	}
 }

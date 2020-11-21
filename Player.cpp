@@ -13,7 +13,7 @@ Player::Player(float speed, Vector2f position, Texture* texture) : gameObject(sp
 
 Vector2f Player::getSight()
 {
-	Vector2f sight_t = getdirection();
+	Vector2f sight_t = getDirection();
 	if (sight_t == Vector2f(0, 0))
 		return sight;
 	else
@@ -23,7 +23,7 @@ Vector2f Player::getSight()
 	}
 }
 
-Vector2f Player::getdirection()
+Vector2f Player::getDirection()
 {
 	float x, y;
 	x = y = 0;
@@ -40,21 +40,8 @@ Vector2f Player::getdirection()
 	return Vector2f(x, y);
 }
 
-//Update state 
-void Player::update()
-{
-	if (upPressed)
-		body.move(0, -basespeed);
-	if (rightPressed)
-		body.move(basespeed, 0);
-	if (downPressed)
-		body.move(0, basespeed);
-	if (leftPressed)
-		body.move(-basespeed, 0);
-}
-
 //Update state time-based
-void Player::update(int)
+void Player::update()
 {
 	if (upPressed)
 	{
@@ -78,6 +65,7 @@ void Player::update(int)
 	}
 }
 
+//excessive but may be useful 
 void Player::blink()
 {
 	//float blinkconst = 0.0375 / speed;   0.15 SPEED = 0.25 BLINKCONST
