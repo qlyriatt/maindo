@@ -12,35 +12,34 @@
 using namespace std;
 using namespace sf;
 
-
 #define WINDOW_SIZE_X 800
 #define WINDOW_SIZE_Y 600
 #define CAMERA_SIZE_X WINDOW_SIZE_X / 2
 #define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
 #define ESSENTIAL_OBJECTS 1
 
-int currentLvl = 0;
-int switchLvl = 1;
-
 int main()
 {
+	int currentLvl = 0;
+	int switchLvl = 1;
+
+	Clock uni_clock;
+	uni_clock.restart();
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
 	
 	//thats lvl pretty much
 	vector<gameObject> objects;
 	objects = initialize<gameObject>(1);
 
-	
+
 	Texture *texture = new Texture;
-	//////////SPECIFY TEXTURE LOCATION 
-	//if (!((*texture).loadFromFile(               )))
-		//return -1;
+	if (!((*texture).loadFromFile("D:/All mine/Game/player.png")))
+		return -1;
 
-	Player player(0.2, Vector2f(20, 20), texture);
-	player.weapon.range = 200;
-	player.weapon.projectileSpeed = 0.5;
+	Player player(200, Vector2f(20, 20), texture); //speed is pixels per second
+	Weapon rifle(400, 600, Color::Green);
+	player.weapon = rifle;
 	
-
 	//some camera things
 	View camera;
 	camera.reset(FloatRect(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y));
@@ -49,6 +48,7 @@ int main()
 	View minimap;
 	minimap.reset(FloatRect(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y));
 	minimap.setViewport(FloatRect(0.03, 0.75, 0.2, 0.2));
+	
 
 	vector<Projectile> projectiles;
 
@@ -63,6 +63,8 @@ int main()
 			
 		while (window.pollEvent(event)) 
 		{
+			cout << bool(event.type == Event::KeyPressed);
+
 			if (event.type == Event::Closed)
 				window.close();
 
@@ -83,14 +85,26 @@ int main()
 				{
 					pause(&window, &player, &camera);
 				}
-				else if (event.key.code == Keyboard::E)
+				if (event.key.code == Keyboard::E)
 				{
 					interaction_flag = true;
 				}
-				else if (event.key.code == Keyboard::Space)
+				if (event.key.code == Keyboard::Space)
 				{
-					projectiles.push_back(player.weapon.action(player.getSight(),player.sprite.getPosition()));
+					projectiles.push_back(player.weapon.action(player.currentSight,player.sprite.getPosition()));
 				}
+				//else if (event.key.code == Keyboard::R)
+				//{
+				//	if (weapontype == 1)
+				//	{
+				//		weapontype = 2;
+				//	}
+				//	else
+				//	{
+				//		weapontype = 1;
+				//	}
+				//	player.weapon = Weapon(weapontype);
+				//}
 				else
 				{
 					movement_handler(&event, &player, 1);
@@ -102,14 +116,15 @@ int main()
 				movement_handler(&event, &player, 0);
 			}
 		}
-
 		//constructing playground
 		float outline = objects.at(0).body.getOutlineThickness();
 		FloatRect playerBounds(objects.at(0).body.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 
 		window.clear();
-		player.update();
 
+		player.moving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
+		
+		player.updatePosition(uni_clock.getElapsedTime().asSeconds());
 
 		FloatRect outerBounds = objects.at(0).body.getGlobalBounds();
 		camera.setCenter(player.getCenter(1));
@@ -151,14 +166,14 @@ int main()
 			else if (TR)
 				camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
 		}
-		player.collision_check_inner(playerBounds);
+		player.collisionCheckInner(playerBounds);
 
 		
 		window.draw(objects.at(0).body);
 		bool msg_displayed = false;
 		for (int i = 1; i < objects.size(); i++)
 		{
-			bool coll = player.collision_check(objects.at(i), player.getDirection());
+			bool coll = player.collisionCheck(objects.at(i), 1);
 			if (i == 1 and coll == true)
 			{
 				if (currentLvl == 0)
@@ -170,7 +185,7 @@ int main()
 			interactionZone.allowCollision = true;
 			interactionZone.body.setSize(objects.at(i).body.getSize() + Vector2f(20, 20));
 			interactionZone.body.setPosition(objects.at(i).body.getPosition() + Vector2f(-10, -10));
-			coll = player.collision_check(interactionZone, player.getDirection());
+			coll = player.collisionCheck(interactionZone, 1);
 
 			if (coll and !msg_displayed)
 			{
@@ -198,37 +213,48 @@ int main()
 
 		window.draw(player.sprite);
 
-		for (int i = 0, erased = 0; i < projectiles.size(); i++)
+		for (int i = 0; i < projectiles.size(); i++)
 		{
-			if (sqrt(projectiles.at(i - erased).currentPosition.x * projectiles.at(i - erased).currentPosition.x + projectiles.at(i - erased).currentPosition.y * projectiles.at(i - erased).currentPosition.y) < projectiles.at(i - erased).range)
+			bool was_erased = false;
+			if (sqrt(projectiles.at(i).currentPosition.x * projectiles.at(i).currentPosition.x + projectiles.at(i).currentPosition.y * projectiles.at(i).currentPosition.y) < projectiles.at(i).range)
 			{
-				projectiles.at(i - erased).projectile.body.move(projectiles.at(i - erased).shotDirection * projectiles.at(i - erased).projectile.speed);
-				projectiles.at(i - erased).currentPosition += projectiles.at(i - erased).shotDirection * projectiles.at(i - erased).projectile.speed;
-				window.draw(projectiles.at(i - erased).projectile.body);
+				projectiles.at(i).updatePosition(uni_clock.getElapsedTime().asSeconds());
+				for (int j = 1; j < objects.size(); j++)
+				{
+					if (projectiles.at(i).collisionCheck(objects.at(j), 1))
+					{
+						projectiles.erase(projectiles.begin() + i);
+						i--;
+						was_erased = true;
+						break;
+					}
+				}
+				if (was_erased)
+				{
+					continue;
+				}
+				projectiles.at(i).currentPosition += projectiles.at(i).currentDirection * projectiles.at(i).latestDistanceCovered;
+				window.draw(projectiles.at(i).body);
 			}
 			else
 			{
-				projectiles.erase(projectiles.begin() + i - erased);
-				cout << projectiles.size() << endl; 
+				projectiles.erase(projectiles.begin() + i);
 				i--;
 			}
-		}
 
+
+		}
 		window.setView(minimap);
 
-		//outerBounds.body.setFillColor(Color(30, 19, 50, 150));
-		//outerBounds.body.setOutlineColor(Color(255, 0, 0, 150));
-		//window.draw(outerBounds.body);
-
+		
 		for (int i = 0; i < objects.size(); i++)
 		{
 			window.draw(objects.at(i).body);
 		}
 		window.draw(player.sprite);
-
 		for (int i = 0; i < projectiles.size(); i++)
 		{
-			window.draw(projectiles.at(i).projectile.body);
+			window.draw(projectiles.at(i).body);
 		}
 		
 		window.display();

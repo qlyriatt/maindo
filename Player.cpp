@@ -1,104 +1,36 @@
 #include "Player.h"
 
 
-Player::Player() :gameObject()
+Player::Player() : gameObject()
 {
-	upPressed = rightPressed = downPressed = leftPressed = moving = leftShiftPressed = false;
+	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
 }
 
 Player::Player(float speed, Vector2f position, Texture* texture) : gameObject(speed, position, texture)
 {
-	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = moving = false;
+	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
 }
 
-Vector2f Player::getSight()
+void Player::updatePosition(float elapsedTime)
 {
-	Vector2f sight_t = getDirection();
-	if (sight_t == Vector2f(0, 0))
-		return sight;
-	else
-	{
-		sight = sight_t;
-		return sight_t;
-	}
-}
-
-Vector2f Player::getDirection()
-{
-	float x, y;
-	x = y = 0;
-
+	float x = 0, y = 0;
 	if (upPressed)
 		y--;
-	if (rightPressed)
-		x++;
 	if (downPressed)
 		y++;
+	if (rightPressed)
+		x++;
 	if (leftPressed)
 		x--;
 
-	return Vector2f(x, y);
+	currentDirection = Vector2f(x, y);
+	if (currentDirection != Vector2f(0, 0))
+	{
+		currentSight = currentDirection;
+	}
+
+
+	gameObject::updatePosition(elapsedTime);
 }
 
-//Update state time-based
-void Player::update()
-{
-	if (upPressed)
-	{
-		body.move(0, -speed);
-		sprite.move(0, -speed);
-	}
-	if (rightPressed)
-	{
-		body.move(speed, 0);
-		sprite.move(speed, 0);
-	}
-	if (downPressed)
-	{
-		body.move(0, speed);
-		sprite.move(0, speed);
-	}
-	if (leftPressed)
-	{
-		body.move(-speed, 0);
-		sprite.move(-speed, 0);
-	}
-}
-
-//excessive but may be useful 
-void Player::blink()
-{
-	//float blinkconst = 0.0375 / speed;   0.15 SPEED = 0.25 BLINKCONST
-	float blinkconst = 0.25;
-
-	if (upPressed or rightPressed or downPressed or leftPressed)
-	{
-		if (!moving)
-		{
-			moving = true;
-			clock.restart();
-		}
-
-
-		if (leftShiftPressed)
-		{
-			blinkconst = 0.5;
-		}
-
-		int timepassed = int(trunc(clock.getElapsedTime().asSeconds() / blinkconst));
-
-		if (timepassed % 2 == 1)
-		{
-			body.setFillColor(Color(0, 0, 255));
-		}
-		else
-			body.setFillColor(Color(255, 255, 255));
-	}
-
-	else
-	{
-		body.setFillColor(Color(255, 255, 255));
-		moving = false;
-	}
-}
 

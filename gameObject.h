@@ -1,11 +1,8 @@
 ﻿#pragma once
-#include <SFML/Graphics.hpp>
+#include "gameObjectStationary.h"
 
-using namespace sf;
 
-//CLASS DEFINING EVERYTHING YOU CAN SEE ON SCREEN
-
-class gameObject 
+class gameObject : public gameObjectStationary
 {
 public:
 	
@@ -18,39 +15,21 @@ public:
 	
 	gameObject(float speed, Vector2f spritePosition, Texture* texture, bool allowCollision = 0, int interactionType = 0, int interactionRadius = 0);
 
-	bool collision_check(RectangleShape, Vector2f); //should be removed
+	bool collisionCheck(gameObject); //works with sprites
 
-	bool collision_check(FloatRect, Vector2f);
+	bool collisionCheck(gameObject, int); 
 
-	bool collision_check(gameObject, Vector2f);
+	void collisionCheckInner(FloatRect); //somewhat excessive (though probably not...)
 
-	void collision_check_inner(FloatRect); //somewhat excessive (though probably not...)
-
-	////////////////////////////// INT FUNCTIONS WORK WITH SPRITES
-	Vector2f getCenter();		//
-								//needs merging
-	Vector2f getCenter(int);	//
-
-	void move(Vector2f);		//
-								//needs merging
-	void move(Vector2f, int);	//
-
-	//be careful
-	virtual Vector2f getDirection(); //redefines in player class
-
-	//////////////////////////////////////////////////////////////////////////////////////////
-
-	RectangleShape body; //should be removed                //...or maybe not
+	virtual void updatePosition(float elapsedTime);
 	
-	float baseSpeed; //useful for something 
-
-	float speed; //speed is key
-
-	bool allowCollision;
-
-	int interactionType;
+	bool moving;
+	float baseSpeed;  
+	float speed; 
 	
-	float interactionRadius;
-	
-	Sprite sprite;
+	Vector2f currentSight;
+	Vector2f currentDirection;
+	//Clock objectClock;
+	float latestUpdate;
+	float latestDistanceCovered;
 };

@@ -1,53 +1,39 @@
 #include "Weapon.h"
-#include "Player.h"
 
 
 Weapon::Weapon()
 {
-	range = damage = type = fireRate = projectileSpeed = has_fired = 0;
-	projectilePosition = shotPosition = Vector2f(0, 0);
+	range = damage = type = fireRate = projectileSpeed = 0;
+	projectileColor = Color::White;
 }
 
+Weapon::Weapon(float range, float projectileSpeed, Color projectileColor, float fireRate, float damage, int weaponType, Texture* weaponTexture, Texture* projectileTexture)
+{
+	this->type = weaponType;
+	this->range = range;
+	this->projectileSpeed = projectileSpeed;
+	this->fireRate = fireRate;
+	this->damage = damage;
+	this->projectileColor = projectileColor;
 
-Projectile Weapon::action(Vector2f sightDirection, Vector2f shotPosition)
+	//this->sprite.setTexture(*weaponTexture);
+	//this->projectileTexture = projectileTexture;
+}
+
+Projectile Weapon::action(Vector2f shotDirection, Vector2f shotPosition)
 {
 	Projectile projectile;
 
-	projectile.projectile.body.setSize(Vector2f(10, 3));
-	projectile.projectile.body.setFillColor(Color(Color::Red));
-	projectile.projectile.speed = this->projectileSpeed;
+	//projectile.body.setTexture(projectileTexture);
+	projectile.body.setSize(Vector2f(10, 3));
+	projectile.body.setFillColor(projectileColor);
+	projectile.speed = this->projectileSpeed;
 	projectile.range = this->range;
-	projectile.shotDirection = sightDirection;
-	projectile.projectile.body.setPosition(shotPosition);
+	projectile.currentDirection = shotDirection;
 	projectile.currentPosition = Vector2f(0, 0);
-
-	//for (; sqrt(projectilePosition.x*projectilePosition.x + projectilePosition.y * projectilePosition.y) < range;)
-	//{
-	//	projectilePosition += sightDirection * projectileSpeed;
-	//	projectile.setPosition(shotPosition + projectilePosition);
-	//	window->draw(projectile);
-	//	window->display();
-	//}
+	projectile.body.setPosition(shotPosition);
+	projectile.sprite.setPosition(shotPosition);
+	projectile.moving = true;
 
 	return projectile;
-	//if (!has_fired)
-	//{
-	//	projectilePosition = shotPosition;
-	//	this->shotPosition = shotPosition;
-	//	has_fired = 1;
-	//}
-
-	//if (sqrt((projectilePosition.x - shotPosition.x) * (projectilePosition.x - shotPosition.x) + (projectilePosition.y - shotPosition.y)*(projectilePosition.y - shotPosition.y)) < range)
-	//{
-	//	projectilePosition += sightDirection * projectileSpeed;
-	//	projectile.setPosition(projectilePosition);
-
-	//	window->draw(projectile);
-	//}
-	//else
-	//{
-	//	has_fired = 0;
-	//	projectilePosition = Vector2f(0, 0);
-	//}
-	
 }

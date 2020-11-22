@@ -4,23 +4,32 @@
 
 using namespace sf;
 
-struct Projectile
+struct Projectile : public gameObject
 {
-	gameObject projectile;
 	float range;
-	Vector2f shotPosition, shotDirection, currentPosition;
+	Vector2f currentPosition;
 };
 
 class Weapon
 {
 public:
+
 	Weapon();
 
-	Projectile action(Vector2f sightDirection, Vector2f shotPosition);
-	float range, damage, type, fireRate, projectileSpeed;
-	Vector2f projectilePosition, shotPosition;
-	bool has_fired;
+	Weapon(float range, float projectileSpeed, Color projectileColor = Color::White, float fireRate = 0, float damage = 0, int weaponType = 0,
+		Texture* weaponTexture = NULL, Texture* projectileTexture = NULL);
 
-private:
+	Projectile action(Vector2f shotDirection, Vector2f shotPosition);
+
+	
+	Sprite sprite;
+
+	//Texture* projectileTexture = NULL;
+
+	float range, damage, fireRate, projectileSpeed, type;
+
+	//compatibility
+	RectangleShape body;
+	Color projectileColor;
 };
 
