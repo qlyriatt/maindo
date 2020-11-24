@@ -24,7 +24,7 @@ public:
 	
 	Sprite sprite;
 
-	//Texture* projectileTexture = NULL;
+	Texture* projectileTexture;
 
 	float range, damage, fireRate, projectileSpeed, type;
 

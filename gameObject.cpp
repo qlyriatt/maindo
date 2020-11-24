@@ -5,7 +5,6 @@ gameObject::gameObject()
 {
 	moving = false;
 	baseSpeed = speed = 0;
-	currentDirection = Vector2f(0, 0);
 	latestUpdate = 0;
 	latestDistanceCovered = 0;
 }
@@ -32,7 +31,7 @@ gameObject::gameObject(float speed, Vector2f bodyPosition, Vector2f bodySize, bo
 	this->interactionRadius = interactionRadius;
 
 	// movement
-
+	currentSight = Vector2f(1, 0);
 	moving = false;
 	latestUpdate = 0;
 	latestDistanceCovered = 0;
@@ -56,6 +55,7 @@ gameObject::gameObject(float speed, Vector2f spritePosition, Texture* texture, b
 	body.setFillColor(Color::Transparent);
 
 	// movement
+	currentSight = Vector2f(1, 0);
 	moving = false;
 	latestUpdate = 0;
 	latestDistanceCovered = 0;
@@ -169,3 +169,74 @@ void gameObject::updatePosition(float elapsedTime)
 	body.move(distance);
 	sprite.move(distance);
 }
+
+void gameObject::script(int type, Vector2f node, Vector2f playerPosition, float elapsedTime)
+{
+	srand(elapsedTime);
+	Vector2f offset = node - body.getPosition();
+	Vector2f offsetPlayer = playerPosition - body.getPosition();
+	if (abs(offset.x) > 150 or abs(offset.y) > 150 or (movedToNode and movedToNode < 30))
+	{
+		moving = true;
+		movingSwitch = 0;
+		body.setFillColor(Color(20, 20, 200));
+		if (offset.y == 0)
+			offset.y = 5;
+		if (offset.x == 0)
+			offset.x = 5;
+		float angle = atan2(offset.y, offset.x); //x*x + tan(angle) * tan(angle) * x * x = 2	x = sqrt(2/(1 + tan(angle) * tan(angle)))
+		bool positive = false;
+		if (angle > 0)
+			positive = true;
+		angle -= 3.14 / 2;
+		if (positive)
+			currentDirection.x = sqrt(2 / (1 + tan(angle) * tan(angle)));
+		else
+			currentDirection.x = -sqrt(2 / (1 + tan(angle) * tan(angle)));
+
+		currentDirection.y = currentDirection.x * tan(angle);
+		movedToNode++;
+	}
+	else if (abs(offsetPlayer.x) < 60 or abs(offsetPlayer.y) < 60)
+	{
+		movedToNode = 0;
+		moving = true;
+		movingSwitch = 0;
+		body.setFillColor(Color(150, 20, 20));
+		if (offsetPlayer.y == 0)
+			offsetPlayer.y = 5;
+		if (offsetPlayer.x == 0)
+			offsetPlayer.x = 5;
+		float angle = atan2(offsetPlayer.y, offsetPlayer.x);
+		currentDirection.x = 1 / (1 + tan(angle));
+		currentDirection.y = currentDirection.x * tan(angle);
+	}
+	else
+	{
+		movedToNode = 0;
+		body.setFillColor(Color(150, 150, 150));
+		currentDirection.x = rand() % 2;
+		currentDirection.y = rand() % 2;
+		movingSwitch = 1;
+	}
+
+	if (movingSwitch)
+	{
+		latestmove += elapsedTime;
+		if (int(floor(latestmove)) % 2)
+		{
+			moving = false;
+		}
+		else
+		{
+			moving = true;
+		}
+	}
+	else
+	{
+		latestmove = 0;
+	}
+
+	updatePosition(elapsedTime);
+}
+

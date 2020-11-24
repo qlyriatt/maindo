@@ -23,7 +23,15 @@ public:
 
 	virtual void updatePosition(float elapsedTime);
 	
+	void script(int type, Vector2f node, Vector2f playerPosition, float elapsedTime);
+
 	bool moving;
+
+	int movingSwitch = 0;
+	float movingSwitchTime = 0;
+	float latestmove = 0;
+	int movedToNode = 0;
+	
 	float baseSpeed;  
 	float speed; 
 	

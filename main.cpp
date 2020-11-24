@@ -16,29 +16,41 @@ using namespace sf;
 #define WINDOW_SIZE_Y 600
 #define CAMERA_SIZE_X WINDOW_SIZE_X / 2
 #define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
-#define ESSENTIAL_OBJECTS 1
+#define ESSENTIAL_OBJECTS 2
 
 int main()
 {
+	cout << tan(-3.14 / 4) << " " << atan(1) << " " << atan(-1);
 	int currentLvl = 0;
 	int switchLvl = 1;
 
 	Clock uni_clock;
 	uni_clock.restart();
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
-	
+	srand(uni_clock.getElapsedTime().asSeconds());	//tmp
+
 	//thats lvl pretty much
 	vector<gameObject> objects;
 	objects = initialize<gameObject>(1);
 
+	// SPECIFY TEXTURE LOCATION
+	Texture* playerTexture = new Texture;
+	playerTexture->loadFromFile("D:/All mine/Game/player.png");
+	Texture* bulletRifleTexture = new Texture;
+	bulletRifleTexture->loadFromFile("D:/All mine/Game/bulletRifle.png");
+	Texture* bulletPistolTexture = new Texture;
+	bulletPistolTexture->loadFromFile("D:/All mine/Game/bulletPistol.png");
 
-	Texture *texture = new Texture;
-	if (!((*texture).loadFromFile("D:/All mine/Game/player.png")))
-		return -1;
+	// range, speed
+	Weapon rifle(600, 400);
+	rifle.projectileTexture = bulletRifleTexture;
+	Weapon pistol(200, 200);
+	pistol.projectileTexture = bulletPistolTexture;
 
-	Player player(200, Vector2f(20, 20), texture); //speed is pixels per second
-	Weapon rifle(400, 600, Color::Green);
-	player.weapon = rifle;
+	Player player(100, Vector2f(20, 20), playerTexture); //speed is pixels per second
+	player.weapon = pistol;
+	bool switchedWeapon = false;
+	
 	
 	//some camera things
 	View camera;
@@ -63,7 +75,6 @@ int main()
 			
 		while (window.pollEvent(event)) 
 		{
-			cout << bool(event.type == Event::KeyPressed);
 
 			if (event.type == Event::Closed)
 				window.close();
@@ -91,20 +102,21 @@ int main()
 				}
 				if (event.key.code == Keyboard::Space)
 				{
-					projectiles.push_back(player.weapon.action(player.currentSight,player.sprite.getPosition()));
+					projectiles.push_back(player.weapon.action(player.currentSight,player.getCenter(true) - Vector2f(0,5)));	//tmp
 				}
-				//else if (event.key.code == Keyboard::R)
-				//{
-				//	if (weapontype == 1)
-				//	{
-				//		weapontype = 2;
-				//	}
-				//	else
-				//	{
-				//		weapontype = 1;
-				//	}
-				//	player.weapon = Weapon(weapontype);
-				//}
+				if (event.key.code == Keyboard::R)
+				{
+					if (switchedWeapon)
+					{
+						player.weapon = pistol;
+						switchedWeapon = false;
+					}
+					else
+					{
+						player.weapon = rifle;
+						switchedWeapon = true;
+					}
+				}
 				else
 				{
 					movement_handler(&event, &player, 1);
@@ -200,14 +212,17 @@ int main()
 				else
 				{
 					RectangleShape msg;
-					msg.setSize(Vector2f(30, 5));
-					msg.setPosition(Vector2f(objects.at(i).body.getPosition() + Vector2f(-5, 30)));
+					msg.setSize(Vector2f(20, 5));
+					msg.setPosition(Vector2f(player.sprite.getPosition() + Vector2f(0, -10)));
 					msg.setFillColor(Color(Color::White));
 					window.draw(msg);
 					msg_displayed = true;
 				}
 			}
-
+			if (i == 2 and currentLvl == 0)
+			{
+				objects.at(i).script(0, Vector2f(400, 300), player.getCenter(), uni_clock.getElapsedTime().asSeconds());
+			}
 			window.draw(objects.at(i).body);
 		}
 
@@ -225,6 +240,10 @@ int main()
 					{
 						projectiles.erase(projectiles.begin() + i);
 						i--;
+						if (j > ESSENTIAL_OBJECTS)
+						{
+							objects.erase(objects.begin() + j);
+						}
 						was_erased = true;
 						break;
 					}
@@ -234,7 +253,7 @@ int main()
 					continue;
 				}
 				projectiles.at(i).currentPosition += projectiles.at(i).currentDirection * projectiles.at(i).latestDistanceCovered;
-				window.draw(projectiles.at(i).body);
+				window.draw(projectiles.at(i).sprite);
 			}
 			else
 			{
@@ -254,7 +273,7 @@ int main()
 		window.draw(player.sprite);
 		for (int i = 0; i < projectiles.size(); i++)
 		{
-			window.draw(projectiles.at(i).body);
+			window.draw(projectiles.at(i).sprite);
 		}
 		
 		window.display();

@@ -28,8 +28,19 @@ vector<T> initialize(int map_type)
 		gameObject exit(0, Vector2f(20, 50), Vector2f(25, 25));
 		exit.body.setFillColor(Color(Color::Blue));
 
+		gameObject att(50, Vector2f(350, 250), Vector2f(20, 20));
+		att.body.setOutlineThickness(0);
 		objects0.push_back(outerBounds);
 		objects0.push_back(exit);
+		objects0.push_back(att);
+
+		for (int i = 0; i < 3; i++)
+		{
+			gameObject obj(0, Vector2f(300 + rand() % 300, 300 + rand() % 300), Vector2f(rand() % 20, rand() % 20));
+			obj.body.setFillColor(Color(20 * i, 30 * i, 50 * i));
+			objects0.push_back(obj);
+		}
+
 		return objects0;
 	}
 	case 1:

@@ -80,3 +80,4 @@ void pause(RenderWindow* window, Player* player, View* camera)
 	}
 
 }
+
