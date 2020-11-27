@@ -40,7 +40,9 @@ vector<T> initialize(int map_type)
 			obj.body.setFillColor(Color(20 * i, 30 * i, 50 * i));
 			objects0.push_back(obj);
 		}
-
+		
+		gameObject node1(0, Vector2f(393, 293), Vector2f(10, 10), 1);
+		objects0.push_back(node1);
 		return objects0;
 	}
 	case 1:

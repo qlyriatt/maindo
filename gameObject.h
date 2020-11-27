@@ -30,7 +30,7 @@ public:
 	int movingSwitch = 0;
 	float movingSwitchTime = 0;
 	float latestmove = 0;
-	int movedToNode = 0;
+	float movedToNode = 0;
 	
 	float baseSpeed;  
 	float speed; 

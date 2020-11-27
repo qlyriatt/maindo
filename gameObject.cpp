@@ -175,8 +175,11 @@ void gameObject::script(int type, Vector2f node, Vector2f playerPosition, float 
 	srand(elapsedTime);
 	Vector2f offset = node - body.getPosition();
 	Vector2f offsetPlayer = playerPosition - body.getPosition();
-	if (abs(offset.x) > 150 or abs(offset.y) > 150 or (movedToNode and movedToNode < 30))
+	
+	bool movenode = false;
+	if (sqrt(offset.x * offset.x + offset.y * offset.y) > 250 or (movedToNode > 0 and movedToNode < 2))
 	{
+		movenode = true;
 		moving = true;
 		movingSwitch = 0;
 		body.setFillColor(Color(20, 20, 200));
@@ -184,21 +187,23 @@ void gameObject::script(int type, Vector2f node, Vector2f playerPosition, float 
 			offset.y = 5;
 		if (offset.x == 0)
 			offset.x = 5;
-		float angle = atan2(offset.y, offset.x); //x*x + tan(angle) * tan(angle) * x * x = 2	x = sqrt(2/(1 + tan(angle) * tan(angle)))
-		bool positive = false;
-		if (angle > 0)
-			positive = true;
-		angle -= 3.14 / 2;
-		if (positive)
-			currentDirection.x = sqrt(2 / (1 + tan(angle) * tan(angle)));
+		float tan = offset.y / offset.x;
+		// x*x + y*y = 1
+		if ((offset.x > 0 and offset.y > 0) or (offset.x > 0 and offset.y < 0))
+		{
+			currentDirection.x = sqrt(1 / (1 + tan * tan));
+		}
 		else
-			currentDirection.x = -sqrt(2 / (1 + tan(angle) * tan(angle)));
-
-		currentDirection.y = currentDirection.x * tan(angle);
-		movedToNode++;
+		{
+			currentDirection.x = -sqrt(1 / (1 + tan * tan));
+		}
+		currentDirection.y = tan * currentDirection.x;
+		movedToNode += elapsedTime - latestUpdate;
 	}
-	else if (abs(offsetPlayer.x) < 60 or abs(offsetPlayer.y) < 60)
+	bool moveplayer = false;
+	if (sqrt(offsetPlayer.x * offsetPlayer.x + offsetPlayer.y * offsetPlayer.y) < 100 and !movenode)
 	{
+		moveplayer = true;
 		movedToNode = 0;
 		moving = true;
 		movingSwitch = 0;
@@ -207,11 +212,20 @@ void gameObject::script(int type, Vector2f node, Vector2f playerPosition, float 
 			offsetPlayer.y = 5;
 		if (offsetPlayer.x == 0)
 			offsetPlayer.x = 5;
-		float angle = atan2(offsetPlayer.y, offsetPlayer.x);
-		currentDirection.x = 1 / (1 + tan(angle));
-		currentDirection.y = currentDirection.x * tan(angle);
+		float tan = offsetPlayer.y / offsetPlayer.x;
+		// x*x + y*y = 1
+		if ((offsetPlayer.x > 0 and offsetPlayer.y > 0) or (offsetPlayer.x > 0 and offsetPlayer.y < 0))
+		{
+			currentDirection.x = sqrt(1 / (1 + tan * tan));
+		}
+		else
+		{
+			currentDirection.x = -sqrt(1 / (1 + tan * tan));
+		}
+		currentDirection.y = tan * currentDirection.x;
 	}
-	else
+
+	if (!movenode and !moveplayer)
 	{
 		movedToNode = 0;
 		body.setFillColor(Color(150, 150, 150));
