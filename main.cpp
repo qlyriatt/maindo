@@ -20,20 +20,11 @@ using namespace sf;
 
 int main()
 {
-	cout << tan(-3.14 / 4) << " " << atan(1) << " " << atan(-1);
 	int currentLvl = 0;
 	int switchLvl = 1;
 
-	Clock uni_clock;
-	uni_clock.restart();
 	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
-	srand(uni_clock.getElapsedTime().asSeconds());	//tmp
 
-	//thats lvl pretty much
-	vector<gameObject> objects;
-	objects = initialize<gameObject>(1);
-
-	// SPECIFY TEXTURE LOCATION
 	Texture* playerTexture = new Texture;
 	playerTexture->loadFromFile("D:/All mine/Game/player.png");
 	Texture* bulletRifleTexture = new Texture;
@@ -41,18 +32,14 @@ int main()
 	Texture* bulletPistolTexture = new Texture;
 	bulletPistolTexture->loadFromFile("D:/All mine/Game/bulletPistol.png");
 
-	// range, speed
-	Weapon rifle(600, 400);
-	rifle.projectileTexture = bulletRifleTexture;
-	Weapon pistol(200, 200);
-	pistol.projectileTexture = bulletPistolTexture;
-
-	Player player(100, Vector2f(20, 20), playerTexture); //speed is pixels per second
+	Weapon rifle(600, 400, NULL, bulletRifleTexture);
+	Weapon pistol(200, 200, NULL, bulletPistolTexture);
+	
+	Player player(Vector2f(20, 20), Vector2f(20, 30), playerTexture, 100); //speed is pixels per second
 	player.weapon = pistol;
 	bool switchedWeapon = false;
-	
-	
-	//some camera things
+
+
 	View camera;
 	camera.reset(FloatRect(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
@@ -61,10 +48,13 @@ int main()
 	minimap.reset(FloatRect(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y));
 	minimap.setViewport(FloatRect(0.03, 0.75, 0.2, 0.2));
 	
-
+	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 
 	level_load(&window, &objects, &currentLvl, &switchLvl);
+
+	Clock uni_clock;
+	uni_clock.restart();
 
 	while (window.isOpen())
 	{
@@ -76,6 +66,8 @@ int main()
 		while (window.pollEvent(event)) 
 		{
 
+			cout << bool(event.type == Event::KeyPressed);
+			
 			if (event.type == Event::Closed)
 				window.close();
 
@@ -102,7 +94,7 @@ int main()
 				}
 				if (event.key.code == Keyboard::Space)
 				{
-					projectiles.push_back(player.weapon.action(player.currentSight,player.getCenter(true) - Vector2f(0,5)));	//tmp
+					projectiles.push_back(player.weapon.action(player.currentSight, player.getCenter() - Vector2f(0,5)));	//tmp
 				}
 				if (event.key.code == Keyboard::R)
 				{
@@ -134,12 +126,12 @@ int main()
 
 		window.clear();
 
-		player.moving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
+		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
 		
 		player.updatePosition(uni_clock.getElapsedTime().asSeconds());
 
 		FloatRect outerBounds = objects.at(0).body.getGlobalBounds();
-		camera.setCenter(player.getCenter(1));
+		camera.setCenter(player.getCenter());
 		Vector2f topleft = camera.getCenter() - camera.getSize() / 2.f;
 		Vector2f topright = topleft + Vector2f(camera.getSize().x, 0);
 		Vector2f bottomleft = topleft + Vector2f(0, camera.getSize().y);
@@ -156,9 +148,9 @@ int main()
 			if (TL)
 			{
 				if (BL)
-					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, player.getCenter(1).y));
+					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, player.getCenter().y));
 				else if (TR)
-					camera.setCenter(Vector2f(player.getCenter(1).x, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
+					camera.setCenter(Vector2f(player.getCenter().x, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
 				else
 					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
 			}
@@ -166,9 +158,9 @@ int main()
 			else if (BR)
 			{
 				if (TR)
-					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, player.getCenter(1).y));
+					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, player.getCenter().y));
 				else if (BL)
-					camera.setCenter(Vector2f(player.getCenter(1).x, CAMERA_SIZE_Y / 2));
+					camera.setCenter(Vector2f(player.getCenter().x, CAMERA_SIZE_Y / 2));
 				else
 					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, CAMERA_SIZE_Y / 2));
 			}
@@ -185,7 +177,7 @@ int main()
 		bool msg_displayed = false;
 		for (int i = 1; i < objects.size(); i++)
 		{
-			bool coll = player.collisionCheck(objects.at(i), 1);
+			bool coll = player.collisionCheck(objects.at(i));
 			if (i == 1 and coll == true)
 			{
 				if (currentLvl == 0)
@@ -193,11 +185,12 @@ int main()
 				else if (currentLvl == 1)
 					switchLvl = 0;
 			}
+
 			gameObject interactionZone;
 			interactionZone.allowCollision = true;
 			interactionZone.body.setSize(objects.at(i).body.getSize() + Vector2f(20, 20));
 			interactionZone.body.setPosition(objects.at(i).body.getPosition() + Vector2f(-10, -10));
-			coll = player.collisionCheck(interactionZone, 1);
+			coll = player.collisionCheck(interactionZone);
 
 			if (coll and !msg_displayed)
 			{
@@ -213,7 +206,7 @@ int main()
 				{
 					RectangleShape msg;
 					msg.setSize(Vector2f(20, 5));
-					msg.setPosition(Vector2f(player.sprite.getPosition() + Vector2f(0, -10)));
+					msg.setPosition(Vector2f(player.body.getPosition() + Vector2f(0, -10)));
 					msg.setFillColor(Color(Color::White));
 					window.draw(msg);
 					msg_displayed = true;
@@ -221,12 +214,12 @@ int main()
 			}
 			if (i == 2 and currentLvl == 0)
 			{
-				objects.at(i).script(0, Vector2f(400, 300), player.getCenter(), uni_clock.getElapsedTime().asSeconds());
+				objects.at(i).script(Vector2f(400, 300), player.getCenter(), uni_clock.getElapsedTime().asSeconds());
 			}
 			window.draw(objects.at(i).body);
 		}
 
-		window.draw(player.sprite);
+		window.draw(player.body);
 
 		for (int i = 0; i < projectiles.size(); i++)
 		{
@@ -236,7 +229,7 @@ int main()
 				projectiles.at(i).updatePosition(uni_clock.getElapsedTime().asSeconds());
 				for (int j = 1; j < objects.size(); j++)
 				{
-					if (projectiles.at(i).collisionCheck(objects.at(j), 1))
+					if (projectiles.at(i).collisionCheck(objects.at(j)))
 					{
 						projectiles.erase(projectiles.begin() + i);
 						i--;
@@ -253,7 +246,7 @@ int main()
 					continue;
 				}
 				projectiles.at(i).currentPosition += projectiles.at(i).currentDirection * projectiles.at(i).latestDistanceCovered;
-				window.draw(projectiles.at(i).sprite);
+				window.draw(projectiles.at(i).body);
 			}
 			else
 			{
@@ -270,10 +263,10 @@ int main()
 		{
 			window.draw(objects.at(i).body);
 		}
-		window.draw(player.sprite);
+		window.draw(player.body);
 		for (int i = 0; i < projectiles.size(); i++)
 		{
-			window.draw(projectiles.at(i).sprite);
+			window.draw(projectiles.at(i).body);
 		}
 		
 		window.display();

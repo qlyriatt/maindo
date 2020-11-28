@@ -1,6 +1,7 @@
 #pragma once
 #include "gameObject.h"
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
@@ -22,69 +23,86 @@ vector<T> initialize(int map_type)
 
 		float outline = 4;
 
-		gameObject outerBounds(0, Vector2f(outline, outline), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
+		gameObject outerBounds(Vector2f(outline, outline), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
 		outerBounds.body.setFillColor(Color(20,20,50));
 
-		gameObject exit(0, Vector2f(20, 50), Vector2f(25, 25));
+		gameObject exit(Vector2f(20, 50), Vector2f(25, 25));
 		exit.body.setFillColor(Color(Color::Blue));
 
-		gameObject att(50, Vector2f(350, 250), Vector2f(20, 20));
-		att.body.setOutlineThickness(0);
+		gameObject att(Vector2f(350, 250), Vector2f(20, 20), NULL, 50);
+
 		objects0.push_back(outerBounds);
 		objects0.push_back(exit);
 		objects0.push_back(att);
 
 		for (int i = 0; i < 3; i++)
 		{
-			gameObject obj(0, Vector2f(300 + rand() % 300, 300 + rand() % 300), Vector2f(rand() % 20, rand() % 20));
+			gameObject obj(Vector2f(300 + rand() % 300, 300 + rand() % 300), Vector2f(rand() % 20, rand() % 20));
 			obj.body.setFillColor(Color(20 * i, 30 * i, 50 * i));
 			objects0.push_back(obj);
 		}
 		
-		gameObject node1(0, Vector2f(393, 293), Vector2f(10, 10), 1);
-		objects0.push_back(node1);
 		return objects0;
 	}
 	case 1:
 	{
-		vector<T> objects1;
+		ifstream input("D:/All mine/Game/Maindo/map1.txt");
+		if (!input.is_open())
+			cout << "VERY BAD";
+		
+		vector<gameObject> objects1;
 
-		//overall map shape
-		float outline = 4;
+		for (int i = 0; i < 3; i++)
+		{
+			if (char(input.peek()) == '#')
+			{
+				input.ignore(250, '\n');
+				continue;
+			}
+			char* buf = new char[10];
+			Vector2f position;
+			input.getline(buf, 4, ',');
+			position.x = atoi(buf);
+			input.getline(buf, 4, ',');
+			position.y = atoi(buf);
 
-		gameObject outerBounds(0, Vector2f(outline, outline), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
-		outerBounds.body.setFillColor(Color(20, 20, 50));
+			Vector2f size;
+			input.getline(buf, 4, ',');
+			size.x = atoi(buf);
+			input.getline(buf, 4, ';');
+			size.y = atoi(buf);
 
-		gameObject exit(0, Vector2f(100, 100), Vector2f(25, 25));
-		exit.body.setFillColor(Color(Color::Blue));
+			input.getline(buf, 1);
 
-		gameObject mapBounds(0, Vector2f(WINDOW_SIZE_X / 4, WINDOW_SIZE_Y / 4), Vector2f(WINDOW_SIZE_X / 2, WINDOW_SIZE_Y / 2));
-		mapBounds.body.setFillColor(Color(50, 20, 20));
+			gameObject obj(position, size);
+			objects1.push_back(obj);
+		}
 
-		objects1.push_back(outerBounds);
-		objects1.push_back(exit);
-		objects1.push_back(mapBounds);
+		objects1.at(0).body.setFillColor(Color(20, 20, 50));
 
+		objects1.at(1).body.setFillColor(Color::Blue);
+
+		objects1.at(2).body.setFillColor(Color(50, 20, 20));
 
 		for (short int i = 0; i < 10; i++)
 		{
-			gameObject obj(0, Vector2f(100 + 60 * i, 50), Vector2f(20, 20));
+			gameObject obj(Vector2f(100 + 60 * i, 50), Vector2f(20, 20));
 			objects1.push_back(obj);
 		}
 
 		for (short int i = 0; i < 10; i++)
 		{
-			gameObject obj(0, Vector2f(30, 200 + i * 30), Vector2f(5, 5),false,Color::Black,Color::Green);
+			gameObject obj(Vector2f(30, 200 + i * 30), Vector2f(5, 5), NULL, 0, 0, Color::Black,Color::Green);
 			objects1.push_back(obj);
 		}
 
 		for (short int i = 0; i < 5; i++)
 		{
-			gameObject obj(0, Vector2f(30 + i * 20, 200), Vector2f(5, 5), false, Color::Black, Color::Green);
+			gameObject obj(Vector2f(30 + i * 20, 200), Vector2f(5, 5), NULL, 0, 0, Color::Black, Color::Green);
 			objects1.push_back(obj);
 		}
+		input.close();
 		return objects1;
-
 	}
 		default:
 	{

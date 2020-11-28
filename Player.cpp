@@ -6,9 +6,11 @@ Player::Player() : gameObject()
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
 }
 
-Player::Player(float speed, Vector2f position, Texture* texture) : gameObject(speed, position, texture)
+Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) : gameObject(position, size, texture, speed)
 {
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
+	body.setOutlineThickness(0);
+	body.setFillColor(Color::White);
 }
 
 void Player::updatePosition(float elapsedTime)
@@ -24,11 +26,11 @@ void Player::updatePosition(float elapsedTime)
 		x--;
 
 	currentDirection = Vector2f(x, y);
+
 	if (currentDirection != Vector2f(0, 0))
 	{
 		currentSight = currentDirection;
 	}
-
 
 	gameObject::updatePosition(elapsedTime);
 }

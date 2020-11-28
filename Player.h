@@ -8,14 +8,12 @@ public:
 
 	Player();
 
-	Player(float speed, Vector2f position, Texture* texture);
-
-	// a lot of stuff ---WAS--- transfered to gameobject instead
+	Player(Vector2f position, Vector2f size, Texture* texture, float speed);
 
 	void updatePosition(float elapsedTime);
 
+	
 	Weapon weapon;
-
 	bool upPressed;
 	bool rightPressed;
 	bool downPressed;
