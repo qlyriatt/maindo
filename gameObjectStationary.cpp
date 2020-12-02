@@ -27,7 +27,7 @@ gameObjectStationary::gameObjectStationary(Vector2f position, Vector2f size, Tex
 
 	// later 
 	this->interactionType = 0;
-	this->interactionRadius = 5;
+	this->interactionRadius = 10;
 }
 
 Vector2f gameObjectStationary::getCenter()

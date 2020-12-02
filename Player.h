@@ -12,7 +12,16 @@ public:
 
 	void updatePosition(float elapsedTime);
 
-	
+	bool checkPending(gameObject obstacle);
+
+	bool collisionCheck(gameObject obstacle, bool* needOverride);
+
+	bool interactionCheck(gameObject object);
+
+	void collisionCheckInner(FloatRect area);
+
+	Vector2f pendingDirection;
+	Vector2f overrideVector;
 	Weapon weapon;
 	bool upPressed;
 	bool rightPressed;

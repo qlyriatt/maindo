@@ -8,79 +8,67 @@
 #include "Map.h"
 #include "Player.h"
 #include "Weapon.h"
+#include "Entity.h"
 
 using namespace std;
 using namespace sf;
 
-#define WINDOW_SIZE_X 800
-#define WINDOW_SIZE_Y 600
-#define CAMERA_SIZE_X WINDOW_SIZE_X / 2
-#define CAMERA_SIZE_Y WINDOW_SIZE_Y / 2
-#define ESSENTIAL_OBJECTS 2
+const Vector2f WINDOW_SIZE = Vector2f(800, 600);
+const Vector2f CAMERA_SIZE = Vector2f(400, 300);
+#define ESSENTIALS 2
+
+// INPUT --> PROJECTILE --> POSITION --> COLLISION CHECK --> CAMERA --> DRAW
+//	 ^													|
+//   |------------------INPUT OVERRIDE-------------------
+
 
 int main()
 {
-	int currentLvl = 0;
-	int switchLvl = 1;
+	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName());
+	
+	View camera;
+	camera.reset(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
+	camera.setViewport(FloatRect(0, 0, 1, 1));
+	View minimap;
+	minimap.reset(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
+	minimap.setViewport(FloatRect(0.35, 0.7, 0.3, 0.3)); //0.03, 0.75, 0.2, 0.2
 
-	RenderWindow window(VideoMode(WINDOW_SIZE_X, WINDOW_SIZE_Y), "VeryGoodGame");
+	vector<Texture*> textures;
 
 	Texture* playerTexture = new Texture;
 	playerTexture->loadFromFile("D:/All mine/Game/player.png");
 	Texture* bulletRifleTexture = new Texture;
 	bulletRifleTexture->loadFromFile("D:/All mine/Game/bulletRifle.png");
+	textures.push_back(bulletRifleTexture);
 	Texture* bulletPistolTexture = new Texture;
 	bulletPistolTexture->loadFromFile("D:/All mine/Game/bulletPistol.png");
+	textures.push_back(bulletPistolTexture);
 
-	Weapon rifle(600, 400, NULL, bulletRifleTexture);
-	Weapon pistol(200, 200, NULL, bulletPistolTexture);
-	
-	Player player(Vector2f(20, 20), Vector2f(20, 30), playerTexture, 100); //speed is pixels per second
+	Weapon rifle(600, 400, NULL, bulletRifleTexture, 5);
+	Weapon pistol(200, 200, NULL, bulletPistolTexture, 3);
+
+	Player player(Vector2f(20, 20), Vector2f(20, 30), playerTexture, 200); //speed is pixels per second
 	player.weapon = pistol;
 	bool switchedWeapon = false;
-
-
-	View camera;
-	camera.reset(FloatRect(0, 0, CAMERA_SIZE_X, CAMERA_SIZE_Y));
-	camera.setViewport(FloatRect(0, 0, 1, 1));
-
-	View minimap;
-	minimap.reset(FloatRect(0, 0, WINDOW_SIZE_X, WINDOW_SIZE_Y));
-	minimap.setViewport(FloatRect(0.03, 0.75, 0.2, 0.2));
 	
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
+	vector<Entity> entities;
 
-	level_load(&window, &objects, &currentLvl, &switchLvl);
 
+	int currentLevel = 1;
+	levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
 	Clock uni_clock;
-	uni_clock.restart();
 
 	while (window.isOpen())
 	{
-		bool interaction_flag = false;
-		level_load(&window, &objects, &currentLvl, &switchLvl);
-		
+		bool interactionFlag = false;
 		Event event;
-			
+		//---INPUT PHASE
 		while (window.pollEvent(event)) 
 		{
-
-			cout << bool(event.type == Event::KeyPressed);
-			
 			if (event.type == Event::Closed)
 				window.close();
-
-			//FIX
-			if (event.type == Event::LostFocus)
-			{
-				bool lostFocus = true;
-				while (window.pollEvent(event) or lostFocus)
-				{
-					if (event.type == Event::GainedFocus)
-						lostFocus = false;
-				}
-			}
 
 			if (event.type == Event::KeyPressed)
 			{
@@ -90,11 +78,7 @@ int main()
 				}
 				if (event.key.code == Keyboard::E)
 				{
-					interaction_flag = true;
-				}
-				if (event.key.code == Keyboard::Space)
-				{
-					projectiles.push_back(player.weapon.action(player.currentSight, player.getCenter() - Vector2f(0,5)));	//tmp
+					interactionFlag = true;
 				}
 				if (event.key.code == Keyboard::R)
 				{
@@ -109,98 +93,126 @@ int main()
 						switchedWeapon = true;
 					}
 				}
-				else
-				{
-					movement_handler(&event, &player, 1);
-				}
-			}
-
-			if (event.type == Event::KeyReleased)
-			{
-				movement_handler(&event, &player, 0);
 			}
 		}
-		//constructing playground
-		float outline = objects.at(0).body.getOutlineThickness();
-		FloatRect playerBounds(objects.at(0).body.getPosition(), Vector2f(WINDOW_SIZE_X - 2 * outline, WINDOW_SIZE_Y - 2 * outline));
-
 		window.clear();
 
-		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
-		
-		player.updatePosition(uni_clock.getElapsedTime().asSeconds());
+		if (Keyboard::isKeyPressed(Keyboard::W))
+			player.upPressed = true;
+		else
+			player.upPressed = false;
+		if (Keyboard::isKeyPressed(Keyboard::D))
+			player.rightPressed = true;
+		else
+			player.rightPressed = false;
+		if (Keyboard::isKeyPressed(Keyboard::S))
+			player.downPressed = true;
+		else
+			player.downPressed = false;
+		if (Keyboard::isKeyPressed(Keyboard::A))
+			player.leftPressed = true;
+		else
+			player.leftPressed = false;
+		if (Keyboard::isKeyPressed(Keyboard::LShift))
+			player.leftShiftPressed = true;
+		else
+			player.leftShiftPressed = false;
+		if (Keyboard::isKeyPressed(Keyboard::Space))
+			player.weapon.action(player.currentSight, player.getCenter() - Vector2f(0, 5), uni_clock.getElapsedTime().asSeconds(), &projectiles);
+		//---INPUT PHASE END
 
-		FloatRect outerBounds = objects.at(0).body.getGlobalBounds();
-		camera.setCenter(player.getCenter());
-		Vector2f topleft = camera.getCenter() - camera.getSize() / 2.f;
-		Vector2f topright = topleft + Vector2f(camera.getSize().x, 0);
-		Vector2f bottomleft = topleft + Vector2f(0, camera.getSize().y);
-		Vector2f bottomright = camera.getCenter() + camera.getSize() / 2.f;
-
-		bool TL = outerBounds.contains(topleft);
-		bool TR = outerBounds.contains(topright);
-		bool BL = outerBounds.contains(bottomleft);
-		bool BR = outerBounds.contains(bottomright);
-
-		//rect match (aka inner collision)
-		if (!(TL and TR and BL and BR))
+		//---PROJECTILE PHASE
+		for (size_t i = 0; i < projectiles.size(); i++)
 		{
-			if (TL)
-			{
-				if (BL)
-					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, player.getCenter().y));
-				else if (TR)
-					camera.setCenter(Vector2f(player.getCenter().x, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
-				else
-					camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
-			}
+			bool projectileErased = false;
+			float traveledDistance = sqrt(pow(projectiles.at(i).currentPosition.x, 2) + pow(projectiles.at(i).currentPosition.y, 2)); //x^2 + y^2
 
-			else if (BR)
+			if (traveledDistance < projectiles.at(i).range)
 			{
-				if (TR)
-					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, player.getCenter().y));
-				else if (BL)
-					camera.setCenter(Vector2f(player.getCenter().x, CAMERA_SIZE_Y / 2));
-				else
-					camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, CAMERA_SIZE_Y / 2));
-			}
+				projectiles.at(i).updatePosition(uni_clock.getElapsedTime().asSeconds());
 
-			else if (BL)
-				camera.setCenter(Vector2f(WINDOW_SIZE_X - CAMERA_SIZE_X / 2, CAMERA_SIZE_Y / 2));
-			else if (TR)
-				camera.setCenter(Vector2f(CAMERA_SIZE_X / 2, WINDOW_SIZE_Y - CAMERA_SIZE_Y / 2));
+				for (size_t j = 1; j < objects.size(); j++)
+				{
+					if (projectiles.at(i).collisionCheck(objects.at(j)))
+					{
+						if (objects.at(j).destroyable)
+						{
+							objects.erase(objects.begin() + j);
+							j--;
+							if (projectiles.at(i).penetration)
+							{
+								projectiles.at(i).penetration--;
+								continue;
+							}
+						}
+
+						projectiles.erase(projectiles.begin() + i);
+						i--;
+						projectileErased = true;
+						break;
+					}
+				}
+				
+				if(!projectileErased)
+					projectiles.at(i).currentPosition += projectiles.at(i).currentDirection * projectiles.at(i).latestDistanceCovered;
+			}
+			else
+			{
+				projectiles.erase(projectiles.begin() + i);
+				i--;
+			}
 		}
+		//---PROJECTILE PHASE END
+
+		//---POSITION PHASE
+		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
+		player.updatePosition(uni_clock.getElapsedTime().asSeconds());
+		//---POSITION PHASE END
+
+		//---COLLISION PHASE
+		if (player.collisionCheck(objects.at(1), NULL))
+		{
+			if (currentLevel == 1)
+			{
+				levelLoad(&window, &objects, &entities, &currentLevel, 0, &textures);
+				currentLevel = 0;
+			}
+			else
+			{
+				levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
+				currentLevel = 1;
+			}
+			continue;
+		}
+
+		float outline = objects.at(0).body.getOutlineThickness();
+		FloatRect playerBounds(objects.at(0).body.getPosition(), WINDOW_SIZE - 2.f * Vector2f(outline, outline));
 		player.collisionCheckInner(playerBounds);
 
-		
-		window.draw(objects.at(0).body);
-		bool msg_displayed = false;
-		for (int i = 1; i < objects.size(); i++)
-		{
-			bool coll = player.collisionCheck(objects.at(i));
-			if (i == 1 and coll == true)
-			{
-				if (currentLvl == 0)
-					switchLvl = 1;
-				else if (currentLvl == 1)
-					switchLvl = 0;
-			}
+		FloatRect cameraBounds(camera.getCenter() - camera.getSize() / 2.f, camera.getSize());
 
-			gameObject interactionZone;
-			interactionZone.allowCollision = true;
-			interactionZone.body.setSize(objects.at(i).body.getSize() + Vector2f(20, 20));
-			interactionZone.body.setPosition(objects.at(i).body.getPosition() + Vector2f(-10, -10));
-			coll = player.collisionCheck(interactionZone);
+		// Interactions and Collisions
+		bool interactionMessageDisplayed = false;
+		bool needOverride = false;
+		bool needOverride_t = false;
+		for (size_t i = 1; i < objects.size(); i++)
+		{			
+			if (!objects.at(i).collisionCheck(cameraBounds))	//questionable
+				continue;
 
-			if (coll and !msg_displayed)
+			player.collisionCheck(objects.at(i), &needOverride_t);
+			if (needOverride_t)
+				needOverride = true;
+
+			if (!interactionMessageDisplayed and player.interactionCheck(objects.at(i)))
 			{
-				if (interaction_flag)
+				if (interactionFlag)
 				{
 					if (objects.at(i).body.getFillColor() == Color::Green)
 						objects.at(i).body.setFillColor(Color(Color::Black));
 					else
 						objects.at(i).body.setFillColor(Color(Color::Green));
-					interaction_flag = false;
+					interactionFlag = false;
 				}
 				else
 				{
@@ -209,68 +221,81 @@ int main()
 					msg.setPosition(Vector2f(player.body.getPosition() + Vector2f(0, -10)));
 					msg.setFillColor(Color(Color::White));
 					window.draw(msg);
-					msg_displayed = true;
+					interactionMessageDisplayed = true;
 				}
 			}
-			if (i == 2 and currentLvl == 0)
-			{
-				objects.at(i).script(Vector2f(400, 300), player.getCenter(), uni_clock.getElapsedTime().asSeconds());
-			}
-			window.draw(objects.at(i).body);
 		}
+		if (!needOverride)
+			player.overrideVector = Vector2f(0, 0);
 
-		window.draw(player.body);
-
-		for (int i = 0; i < projectiles.size(); i++)
+		for (size_t i = 0; i < entities.size(); i++)
 		{
-			bool was_erased = false;
-			if (sqrt(projectiles.at(i).currentPosition.x * projectiles.at(i).currentPosition.x + projectiles.at(i).currentPosition.y * projectiles.at(i).currentPosition.y) < projectiles.at(i).range)
+			entities.at(i).script(Vector2f(400 + 100 * i, 300 + 100 * i), player.getCenter(), uni_clock.getElapsedTime().asSeconds(), &projectiles);
+			for (size_t j = 1; j < objects.size(); j++)
 			{
-				projectiles.at(i).updatePosition(uni_clock.getElapsedTime().asSeconds());
-				for (int j = 1; j < objects.size(); j++)
-				{
-					if (projectiles.at(i).collisionCheck(objects.at(j)))
-					{
-						projectiles.erase(projectiles.begin() + i);
-						i--;
-						if (j > ESSENTIAL_OBJECTS)
-						{
-							objects.erase(objects.begin() + j);
-						}
-						was_erased = true;
-						break;
-					}
-				}
-				if (was_erased)
-				{
-					continue;
-				}
-				projectiles.at(i).currentPosition += projectiles.at(i).currentDirection * projectiles.at(i).latestDistanceCovered;
+				entities.at(i).collisionCheck(objects.at(j));
+			}
+		}
+		//---COLLISION PHASE END
+
+		//---DRAW PHASE
+		cameraCollision(&objects.at(0), &camera, &player, WINDOW_SIZE);
+		window.setView(camera);
+
+		int draws = 0;
+		for (size_t i = 0; i < objects.size(); i++)
+		{
+			if (objects.at(i).collisionCheck(cameraBounds))
+			{
+				window.draw(objects.at(i).body);
+				draws++;
+			}
+		}
+		for (size_t i = 0; i < entities.size(); i++)
+		{
+			if (entities.at(i).collisionCheck(cameraBounds))
+			{
+				window.draw(entities.at(i).body);
+				draws++;
+			}
+		}
+		window.draw(player.body);
+		for (size_t i = 0; i < projectiles.size(); i++)
+		{
+			if (projectiles.at(i).collisionCheck(cameraBounds))
+			{
 				window.draw(projectiles.at(i).body);
+				draws++;
 			}
-			else
-			{
-				projectiles.erase(projectiles.begin() + i);
-				i--;
-			}
-
-
 		}
-		window.setView(minimap);
 
-		
-		for (int i = 0; i < objects.size(); i++)
+		cout << objects.size() + projectiles.size() + entities.size() << "  " << draws << endl;
+
+		window.setView(minimap);
+		for (size_t i = 0; i < objects.size(); i++)
 		{
-			window.draw(objects.at(i).body);
+			if (objects.at(i).collisionCheck(cameraBounds))
+			{
+				Color color = objects.at(i).body.getFillColor();
+				objects.at(i).body.setFillColor(Color(color.r, color.g, color.b, 150));
+				window.draw(objects.at(i).body);
+				objects.at(i).body.setFillColor(color);
+			}
+		}
+		for (size_t i = 0; i < entities.size(); i++)
+		{
+			if (entities.at(i).collisionCheck(cameraBounds))
+				window.draw(entities.at(i).body);
 		}
 		window.draw(player.body);
-		for (int i = 0; i < projectiles.size(); i++)
+		for (size_t i = 0; i < projectiles.size(); i++)
 		{
-			window.draw(projectiles.at(i).body);
+			if(projectiles.at(i).collisionCheck(cameraBounds))
+				window.draw(projectiles.at(i).body);
 		}
 		
 		window.display();
-		window.setView(camera);
+		//---DRAW PHASE END
 	}
 
 	return 0;

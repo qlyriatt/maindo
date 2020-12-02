@@ -13,19 +13,17 @@ public:
 	gameObject(Vector2f position, Vector2f size, Texture* texture = NULL, float speed = 0, bool allowCollision = 0, 
 		Color bodyColor = Color::Black, Color outlineColor = Color::Red, float outlineThickness = 4); 
 
-	bool collisionCheck(gameObject);
+	bool collisionCheck(FloatRect obstacle);
 
-	void collisionCheckInner(FloatRect); //somewhat excessive (though probably not...)
+	virtual bool collisionCheck(gameObject obstacle);
+
+	virtual void collisionCheckInner(FloatRect area); //somewhat excessive (though probably not...)
 
 	virtual void updatePosition(float elapsedTime);
 	
-	void script(Vector2f node, Vector2f playerPosition, float elapsedTime);
 
-	int movingSwitch = 0;
-	float movingSwitchTime = 0;
-	float latestmove = 0;
-	float movedToNode = 0;
-	
+	bool destroyable;
+
 	// movement
 	bool isMoving;
 	float baseSpeed, speed;

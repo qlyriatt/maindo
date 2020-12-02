@@ -1,6 +1,29 @@
 #pragma once
 #include "Player.h"
 #include "Map.h"
+#include <time.h>
+
+
+String pickName()
+{
+	srand(time(0));
+
+	String window[11];
+
+	window[0] = "VeryGoodGame";
+	window[1] = "Maindo";
+	window[2] = "Unfinished";
+	window[3] = "what";
+	window[4] = "Why are we still here";
+	window[5] = "ovhl 1.xx <----> this string is useless";
+	window[6] = "LOL LOL LOL LOL LOL LOL";
+	window[7] = "Mine is better";
+	window[8] = "Also try Terraria!";
+	window[9] = "When I was/A young boy/My father/Took me into the city";
+	window[10] = "Hajimemashite, chikyuujin-san!";
+
+	return window[rand() % 11];
+}
 
 //clever but not clever enough
 void movement_handler(Event* event, Player* player, int state)
@@ -18,28 +41,66 @@ void movement_handler(Event* event, Player* player, int state)
 		player->leftShiftPressed = state;
 		player->speed = player->baseSpeed * (1 - 0.5 * state);
 	}
-} //let it beeeeeeeeeeeeeeee
+} 
 
-void level_load(RenderWindow* window, vector<gameObject>* objects, int* currentLvl, int* switchLvl)
+void levelLoad(RenderWindow* window, vector<gameObject>* objects, vector<Entity>* entities, int* currentLevel, int switchToLevel, vector<Texture*>* textures)
 {
-	if (*currentLvl != *switchLvl)
+	Clock clock;
+
+	RectangleShape loadScreen;
+	loadScreen.setSize(Vector2f(window->getSize()));
+	loadScreen.setFillColor(Color(Color::Black));
+	window->draw(loadScreen);
+	window->display();
+
+	objects->erase(objects->begin(), objects->end());
+	entities->erase(entities->begin(), entities->end());
+	initialize(switchToLevel, objects, entities, textures);
+	*currentLevel = switchToLevel;
+
+	for (; floor(clock.getElapsedTime().asSeconds() * 2) < 2;); //wait
+	window->clear();
+}
+
+// modified collisionCheckInner
+void cameraCollision(gameObject* area_obj, View* camera, Player* player, Vector2f WINDOW_SIZE)
+{
+	FloatRect area = area_obj->body.getGlobalBounds();
+	camera->setCenter(player->getCenter());
+	Vector2f cameraPosition = camera->getCenter() - camera->getSize() / 2.f;
+	bool TL = area.contains(cameraPosition);
+	bool TR = area.contains(cameraPosition + Vector2f(camera->getSize().x, 0));
+	bool BL = area.contains(cameraPosition + Vector2f(0, camera->getSize().y));
+	bool BR = area.contains(cameraPosition + camera->getSize());
+
+	if (!(TL and TR and BL and BR))
 	{
-		Clock clock;
-		RectangleShape loadScreen;
-		loadScreen.setSize(Vector2f(WINDOW_SIZE_X, WINDOW_SIZE_Y));
-		loadScreen.setFillColor(Color(Color::Black));
-		window->draw(loadScreen);
-		window->display();
+		if (TL)
+		{
+			if (BL)
+				camera->setCenter(Vector2f(WINDOW_SIZE.x - camera->getSize().x / 2, player->getCenter().y));
+			else if (TR)
+				camera->setCenter(Vector2f(player->getCenter().x, WINDOW_SIZE.y - camera->getSize().y / 2));
+			else
+				camera->setCenter(WINDOW_SIZE - camera->getSize() / 2.f);
+		}
 
-		objects->erase(objects->begin(), objects->end());
-		*objects = initialize<gameObject>(*switchLvl);
-		RectangleShape outerBounds = objects->at(0).body;
-		float outline = outerBounds.getOutlineThickness();
-		FloatRect playerBounds(outerBounds.getPosition(), Vector2f(window->getSize().x - 2 * outline, window->getSize().y - 2 * outline));
-		*currentLvl = *switchLvl;
+		else if (BR)
+		{
+			if (TR)
+				camera->setCenter(Vector2f(camera->getSize().x / 2, player->getCenter().y));
+			else if (BL)
+				camera->setCenter(Vector2f(player->getCenter().x, camera->getSize().y / 2));
+			else
+				camera->setCenter(camera->getSize() / 2.f);
+		}
 
-		for (; floor(clock.getElapsedTime().asSeconds() * 2) < 2;); //wait
-		window->clear();
+		else if (BL)
+			camera->setCenter(Vector2f(WINDOW_SIZE.x - camera->getSize().x / 2, camera->getSize().y / 2));
+		else if (TR)
+			camera->setCenter(Vector2f(camera->getSize().x / 2, WINDOW_SIZE.y - camera->getSize().y / 2));
+		else
+			camera->setCenter(player->getCenter()); // precaution
 	}
 }
 
