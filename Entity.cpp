@@ -42,7 +42,7 @@ void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, s
 		movedToNode += elapsedTime - latestUpdate;
 	}
 	bool moveplayer = false;
-	if (sqrt(offsetPlayer.x * offsetPlayer.x + offsetPlayer.y * offsetPlayer.y) < 100 and !movenode)
+	if (sqrt(offsetPlayer.x * offsetPlayer.x + offsetPlayer.y * offsetPlayer.y) < 200 and !movenode)
 	{
 		moveplayer = true;
 		movedToNode = 0;

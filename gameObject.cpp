@@ -4,16 +4,16 @@
 gameObject::gameObject() : gameObjectStationary()
 {
 	destroyable = false;
+	animated = false;
 	isMoving = false;
 	baseSpeed = speed = 0;
 	latestUpdate = 0;
 	latestDistanceCovered = 0;
+	animated = 0;
+	animationCycleTimer = 0;
 }
 
-gameObject::~gameObject()
-{
-
-}
+gameObject::~gameObject() {};
 
 gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float speed,
 	bool allowCollision, Color bodyColor, Color outlineColor, float outlineThickness) : gameObjectStationary(position, size, texture, allowCollision, bodyColor, outlineColor, outlineThickness)
@@ -27,6 +27,10 @@ gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float
 	isMoving = false;
 
 	destroyable = false;
+
+	animated = false;
+
+	animationCycleTimer = 0;
 
 	latestUpdate = 0;
 
@@ -103,6 +107,7 @@ void gameObject::updatePosition(float elapsedTime)
 	if (!(isMoving and speed))
 	{
 		latestUpdate = 0;
+		animationCycleTimer = 0;
 		return;
 	}
 
@@ -111,7 +116,7 @@ void gameObject::updatePosition(float elapsedTime)
 		latestUpdate = elapsedTime;
 		return;
 	}
-
+	
 	latestDistanceCovered = (elapsedTime - latestUpdate) * speed;
 	latestUpdate = elapsedTime;
 	body.move(currentDirection * latestDistanceCovered);

@@ -6,7 +6,6 @@ using namespace sf;
 class gameObjectStationary
 {
 public:
-	
 	gameObjectStationary();
 
 	gameObjectStationary(Vector2f position, Vector2f size, Texture* texture = NULL, bool allowCollision = false, 
@@ -14,11 +13,9 @@ public:
 
 	Vector2f getCenter();
 
+
 	RectangleShape body;
-
 	bool allowCollision;
-
 	int interactionType;
-
 	float interactionRadius;
 };

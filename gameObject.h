@@ -3,9 +3,8 @@
 
 
 class gameObject : public gameObjectStationary
-{
+{	
 public:
-	
 	gameObject();
 	
 	virtual ~gameObject();
@@ -21,14 +20,17 @@ public:
 
 	virtual void updatePosition(float elapsedTime);
 	
-
+	//animation
 	bool destroyable;
-
-	// movement
+	bool animated;
+	float animationCycleTimer;
+	
+	//movement
 	bool isMoving;
-	float baseSpeed, speed;
-
-	Vector2f currentSight, currentDirection;
-
-	float latestUpdate, latestDistanceCovered;
+	float baseSpeed;
+	float speed;
+	float latestUpdate;
+	float latestDistanceCovered;
+	Vector2f currentSight;
+	Vector2f currentDirection;
 };

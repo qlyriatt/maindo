@@ -1,4 +1,6 @@
 #pragma once
+#pragma warning (disable : 4244)	//<----
+
 #include <iostream>
 #include <vector>
 #include <SFML/Graphics.hpp>
@@ -21,42 +23,51 @@ const Vector2f CAMERA_SIZE = Vector2f(400, 300);
 //	 ^													|
 //   |------------------INPUT OVERRIDE-------------------
 
+struct gameTexture
+{
+	Texture* texture;
+	int animationCycles;
+};
+
+enum textureType
+{
+	player = 0,
+	wall
+};
 
 int main()
 {
 	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName());
 	
-	View camera;
-	camera.reset(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
+	View camera(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
-	View minimap;
-	minimap.reset(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
+	View minimap(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
 	minimap.setViewport(FloatRect(0.35, 0.7, 0.3, 0.3)); //0.03, 0.75, 0.2, 0.2
 
 	vector<Texture*> textures;
-
-	Texture* playerTexture = new Texture;
-	playerTexture->loadFromFile("D:/All mine/Game/player.png");
-	Texture* bulletRifleTexture = new Texture;
-	bulletRifleTexture->loadFromFile("D:/All mine/Game/bulletRifle.png");
-	textures.push_back(bulletRifleTexture);
-	Texture* bulletPistolTexture = new Texture;
-	bulletPistolTexture->loadFromFile("D:/All mine/Game/bulletPistol.png");
-	textures.push_back(bulletPistolTexture);
-
-	Weapon rifle(600, 400, NULL, bulletRifleTexture, 5);
-	Weapon pistol(200, 200, NULL, bulletPistolTexture, 3);
-
-	Player player(Vector2f(20, 20), Vector2f(20, 30), playerTexture, 200); //speed is pixels per second
-	player.weapon = pistol;
-	bool switchedWeapon = false;
-	
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 	vector<Entity> entities;
 
+	Texture playerTexture;
+	playerTexture.loadFromFile("D:/All mine/Game/Maindo/player.png");
+	textures.push_back(&playerTexture);
+	Texture bulletRifleTexture;
+	bulletRifleTexture.loadFromFile("D:/All mine/Game/bulletRifle.png");
+	textures.push_back(&bulletRifleTexture);
+	Texture bulletPistolTexture;
+	bulletPistolTexture.loadFromFile("D:/All mine/Game/bulletPistol.png");
+	textures.push_back(&bulletPistolTexture);
 
+	Weapon rifle(600, 400, NULL, &bulletRifleTexture, 5);
+	Weapon pistol(200, 200, NULL, &bulletPistolTexture, 3);
+
+	Player player(Vector2f(20, 20), Vector2f(25, 60), &playerTexture, 200); //speed is pixels per second
+	player.weapon = pistol;
+	bool switchedWeapon = false;
+	
 	int currentLevel = 1;
+	bool drawMinimap = true;
 	levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
 	Clock uni_clock;
 
@@ -76,11 +87,11 @@ int main()
 				{
 					pause(&window, &player, &camera);
 				}
-				if (event.key.code == Keyboard::E)
+				else if (event.key.code == Keyboard::E)
 				{
 					interactionFlag = true;
 				}
-				if (event.key.code == Keyboard::R)
+				else if (event.key.code == Keyboard::R)
 				{
 					if (switchedWeapon)
 					{
@@ -93,6 +104,13 @@ int main()
 						switchedWeapon = true;
 					}
 				}
+				else if (event.key.code == Keyboard::Z)
+					camera.zoom(0.5);
+				else if (event.key.code == Keyboard::X)
+					camera.zoom(2);
+				else if (event.key.code == Keyboard::M)
+					drawMinimap = (drawMinimap ? false : true);
+				
 			}
 		}
 		window.clear();
@@ -167,6 +185,7 @@ int main()
 		//---POSITION PHASE
 		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
 		player.updatePosition(uni_clock.getElapsedTime().asSeconds());
+		player.updateMoveAnimation(uni_clock.getElapsedTime().asSeconds(), textures.at(0));
 		//---POSITION PHASE END
 
 		//---COLLISION PHASE
@@ -197,9 +216,8 @@ int main()
 		bool needOverride_t = false;
 		for (size_t i = 1; i < objects.size(); i++)
 		{			
-			if (!objects.at(i).collisionCheck(cameraBounds))	//questionable
-				continue;
-
+			//if (!objects.at(i).collisionCheck(cameraBounds))	//questionable
+			//	continue;
 			player.collisionCheck(objects.at(i), &needOverride_t);
 			if (needOverride_t)
 				needOverride = true;
@@ -226,7 +244,10 @@ int main()
 			}
 		}
 		if (!needOverride)
-			player.overrideVector = Vector2f(0, 0);
+		{
+			player.overrideInputX = false;
+			player.overrideInputY = false;
+		}
 
 		for (size_t i = 0; i < entities.size(); i++)
 		{
@@ -240,6 +261,11 @@ int main()
 
 		//---DRAW PHASE
 		cameraCollision(&objects.at(0), &camera, &player, WINDOW_SIZE);
+		//if (camera.getSize().x == CAMERA_SIZE.x / 8)
+		//	camera.setCenter(player.getCenter() - Vector2f(0, 10));
+		//if (camera.getSize().x == CAMERA_SIZE.x / 16)
+		//	camera.setCenter(player.getCenter() - Vector2f(0, 20));
+
 		window.setView(camera);
 
 		int draws = 0;
@@ -269,31 +295,33 @@ int main()
 			}
 		}
 
-		cout << objects.size() + projectiles.size() + entities.size() << "  " << draws << endl;
+		//cout << objects.size() + projectiles.size() + entities.size() << "  " << draws << endl;
 
-		window.setView(minimap);
-		for (size_t i = 0; i < objects.size(); i++)
+		if (drawMinimap)
 		{
-			if (objects.at(i).collisionCheck(cameraBounds))
+			window.setView(minimap);
+			for (size_t i = 0; i < objects.size(); i++)
 			{
-				Color color = objects.at(i).body.getFillColor();
-				objects.at(i).body.setFillColor(Color(color.r, color.g, color.b, 150));
-				window.draw(objects.at(i).body);
-				objects.at(i).body.setFillColor(color);
+				if (objects.at(i).collisionCheck(cameraBounds))
+				{
+					Color color = objects.at(i).body.getFillColor();
+					objects.at(i).body.setFillColor(Color(color.r, color.g, color.b, 150));
+					window.draw(objects.at(i).body);
+					objects.at(i).body.setFillColor(color);
+				}
+			}
+			for (size_t i = 0; i < entities.size(); i++)
+			{
+				if (entities.at(i).collisionCheck(cameraBounds))
+					window.draw(entities.at(i).body);
+			}
+			window.draw(player.body);
+			for (size_t i = 0; i < projectiles.size(); i++)
+			{
+				if (projectiles.at(i).collisionCheck(cameraBounds))
+					window.draw(projectiles.at(i).body);
 			}
 		}
-		for (size_t i = 0; i < entities.size(); i++)
-		{
-			if (entities.at(i).collisionCheck(cameraBounds))
-				window.draw(entities.at(i).body);
-		}
-		window.draw(player.body);
-		for (size_t i = 0; i < projectiles.size(); i++)
-		{
-			if(projectiles.at(i).collisionCheck(cameraBounds))
-				window.draw(projectiles.at(i).body);
-		}
-		
 		window.display();
 		//---DRAW PHASE END
 	}

@@ -12,7 +12,7 @@ public:
 
 	void updatePosition(float elapsedTime);
 
-	bool checkPending(gameObject obstacle);
+	void updateMoveAnimation(float elapsedTime, const Texture* texture);
 
 	bool collisionCheck(gameObject obstacle, bool* needOverride);
 
@@ -21,7 +21,13 @@ public:
 	void collisionCheckInner(FloatRect area);
 
 	Vector2f pendingDirection;
-	Vector2f overrideVector;
+	bool overrideInputX;
+	bool overrideInputY;
+
+	Vector2f previousFrameDirection;
+	float latestAnimationUpdate;
+	bool isSetIdle;
+
 	Weapon weapon;
 	bool upPressed;
 	bool rightPressed;

@@ -1,18 +1,21 @@
 #include "Player.h"
-
+#include <iostream>
 
 Player::Player() : gameObject()
 {
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
-	overrideVector = Vector2f(0, 0);
+	overrideInputX = overrideInputY = false;
+	animationCycleTimer = 0;
 }
 
 Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) : gameObject(position, size, texture, speed)
 {
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
-	overrideVector = Vector2f(0, 0);
+	overrideInputX = overrideInputY = false;
 	body.setOutlineThickness(0);
 	body.setFillColor(Color::White);
+	animated = true;
+	animationCycleTimer = 0;
 }
 
 void Player::updatePosition(float elapsedTime)
@@ -30,11 +33,12 @@ void Player::updatePosition(float elapsedTime)
 		speed = baseSpeed / 2;
 	else
 		speed = baseSpeed;
+
 	pendingDirection = currentDirection = Vector2f(x, y);
 
-	if (overrideVector.x)
+	if (overrideInputX)
 		currentDirection.x = 0;
-	else if (overrideVector.y)
+	else if (overrideInputY)
 		currentDirection.y = 0;
 
 	if (currentDirection != Vector2f(0, 0))
@@ -45,13 +49,52 @@ void Player::updatePosition(float elapsedTime)
 	gameObject::updatePosition(elapsedTime);
 }
 
-bool Player::checkPending(gameObject obstacle)
+void Player::updateMoveAnimation(float elapsedTime, const Texture* texture)
 {
-	if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()) and (pendingDirection.x and pendingDirection.y) and !obstacle.allowCollision)
+	if (isMoving)
 	{
-		return true;
+		const int animationCycles = 4; //for now
+
+		isSetIdle = false;
+		if (previousFrameDirection != currentDirection)
+			animationCycleTimer = 0;
+
+		//current texture state, changes every 1/animationCycles sec.
+		int x = 1 + int(floor(animationCycleTimer * animationCycles)) % animationCycles;
+
+		int y;
+		if (currentDirection.y == 1)
+			y = 0;
+		else if (currentDirection.y == -1)
+			y = 1;
+		else if (currentDirection.x == -1)
+			y = 2;
+		else
+			y = 3;
+
+		body.setTextureRect(IntRect(Vector2i(body.getSize().x * x, body.getSize().y * y), Vector2i(body.getSize())));
+
+		animationCycleTimer += elapsedTime - latestAnimationUpdate;
+		latestAnimationUpdate = elapsedTime;
+		previousFrameDirection = currentDirection;
 	}
-	return false;
+	else if(!isSetIdle)
+	{
+		animationCycleTimer = latestAnimationUpdate = 0;
+		previousFrameDirection = Vector2f(0, 0);
+
+		if (currentSight.y == 1)
+			body.setTextureRect(IntRect(Vector2i(0, 0), Vector2i(body.getSize())));
+		else if (currentSight.y == -1)
+			body.setTextureRect(IntRect(Vector2i(0, body.getSize().y), Vector2i(body.getSize())));
+		else if (currentSight.x == -1)
+			body.setTextureRect(IntRect(Vector2i(0, 2 * body.getSize().y), Vector2i(body.getSize())));
+		else
+			body.setTextureRect(IntRect(Vector2i(0, 3 * body.getSize().y), Vector2i(body.getSize())));
+		isSetIdle = true;
+	}
+
+	std::cout << overrideInputY << std::endl;
 }
 
 bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
@@ -81,10 +124,10 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 			if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 			{
 				body.move(latestDistanceCovered * (RIGHT + DOWN));
-				overrideVector = UP; //upPressed = false;
+				overrideInputY = true; //upPressed = false;
 			}
 			else
-				overrideVector = RIGHT; //rightPressed = false;
+				overrideInputX = true; //rightPressed = false;
 		}
 
 		else if (currentDirection == UP + LEFT)
@@ -93,10 +136,10 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 			if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 			{
 				body.move(latestDistanceCovered * (LEFT + DOWN));
-				overrideVector = UP; //upPressed = false;
+				overrideInputY = true; //upPressed = false;
 			}
 			else
-				overrideVector = LEFT; //leftPressed = false;
+				overrideInputX = true; //leftPressed = false;
 		}
 
 		else if (currentDirection == DOWN + RIGHT)
@@ -105,10 +148,10 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 			if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 			{
 				body.move(latestDistanceCovered * (RIGHT + UP));
-				overrideVector = DOWN; //downPressed = false;
+				overrideInputY = true; //downPressed = false;
 			}
 			else
-				overrideVector = RIGHT; //rightPressed = false;
+				overrideInputX = true; //rightPressed = false;
 		}
 
 		else if (currentDirection == DOWN + LEFT)
@@ -117,12 +160,20 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 			if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 			{
 				body.move(latestDistanceCovered * (LEFT + UP));
-				overrideVector = DOWN; //downPressed = false;
+				overrideInputY = true; //downPressed = false;
 			}
 			else
-				overrideVector = LEFT; //leftPressed = false;
+				overrideInputX = true; //leftPressed = false;
 		}
 		return true;
+	}
+	else if (overrideInputX or overrideInputY and currentDirection != Vector2f(0,0))
+	{
+		Vector2f pendingCheck((pendingDirection - currentDirection) * latestDistanceCovered);
+		body.move(pendingCheck);
+		if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
+			*needOverride = true;
+		body.move(-pendingCheck);
 	}
 	return false;
 }

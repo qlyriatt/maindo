@@ -22,9 +22,13 @@ public:
 	void action(Vector2f shotDirection, Vector2f shotPosition, float elapsedTime, std::vector<Projectile>* projectiles);
 
 	float latestShotTime;
+	int projectilePenetration;
 
 	RectangleShape body;
 	Texture* projectileTexture;
-	float range, damage, fireRate, projectileSpeed, projectilePenetration;
+	float range;
+	float damage;
+	float fireRate;
+	float projectileSpeed;
 };
 
