@@ -1,40 +1,23 @@
 #include "gameObject.h"
-#include <iostream>
 
 gameObject::gameObject() : gameObjectStationary()
 {
-	destroyable = false;
-	animated = false;
 	isMoving = false;
-	baseSpeed = speed = 0;
-	latestUpdate = 0;
-	latestDistanceCovered = 0;
-	animated = 0;
-	animationCycleTimer = 0;
+	baseSpeed = speed = latestUpdate = latestDistanceCovered = 0;
 }
-
-gameObject::~gameObject() {};
 
 gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float speed,
 	bool allowCollision, Color bodyColor, Color outlineColor, float outlineThickness) : gameObjectStationary(position, size, texture, allowCollision, bodyColor, outlineColor, outlineThickness)
-{
-	body.setTexture(texture);
-	
+{	
 	this->speed = this->baseSpeed = speed;
 
-	currentSight = Vector2f(1, 0);
+	currentSight = Vector2f(1, 0); //RIGHT
 
 	isMoving = false;
 
-	destroyable = false;
+	isDestroyable = true;
 
-	animated = false;
-
-	animationCycleTimer = 0;
-
-	latestUpdate = 0;
-
-	latestDistanceCovered = 0;
+	latestUpdate = latestDistanceCovered = 0;
 }
 
 bool gameObject::collisionCheck(FloatRect obstacle)
@@ -107,11 +90,11 @@ void gameObject::updatePosition(float elapsedTime)
 	if (!(isMoving and speed))
 	{
 		latestUpdate = 0;
-		animationCycleTimer = 0;
+		//animationCycleTimer = 0;			//eta suka ubila mne 2 chasa blyatttttt
 		return;
 	}
 
-	if (!latestUpdate)
+	if (!latestUpdate)	//skips one still frame after beginning of motion, not essential
 	{
 		latestUpdate = elapsedTime;
 		return;
@@ -121,5 +104,4 @@ void gameObject::updatePosition(float elapsedTime)
 	latestUpdate = elapsedTime;
 	body.move(currentDirection * latestDistanceCovered);
 }
-
 

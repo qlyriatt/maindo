@@ -1,11 +1,12 @@
 #include "Player.h"
 #include <iostream>
+using namespace std;
 
 Player::Player() : gameObject()
 {
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
-	overrideInputX = overrideInputY = false;
-	animationCycleTimer = 0;
+	overrideInputX = overrideInputY = isSetIdle = isUsingWeapon = false;
+	animationCycleTimer = latestAnimationUpdate = 0;
 }
 
 Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) : gameObject(position, size, texture, speed)
@@ -16,6 +17,9 @@ Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) 
 	body.setFillColor(Color::White);
 	animated = true;
 	animationCycleTimer = 0;
+	isSetIdle = false;
+	isUsingWeapon = false;
+	latestAnimationUpdate = 0;
 }
 
 void Player::updatePosition(float elapsedTime)
@@ -49,30 +53,76 @@ void Player::updatePosition(float elapsedTime)
 	gameObject::updatePosition(elapsedTime);
 }
 
-void Player::updateMoveAnimation(float elapsedTime, const Texture* texture)
+void Player::updateAnimation(float elapsedTime, const Texture* texture)
 {
-	if (isMoving)
+	
+	int animationStates = 4; //for now
+
+	if (isUsingWeapon)
 	{
-		const int animationCycles = 4; //for now
+		if (!latestAnimationUpdate)
+		{
+			latestAnimationUpdate = elapsedTime;
+			return;
+		}
+		if (latestAnimationType != 2)
+		{
+			latestAnimationType = 2;
+			animationCycleTimer = 0;
+			return;
+		}
+		if (weapon.isMelee and animationCycleTimer > weapon.projectileLifetime)
+		{
+			isUsingWeapon = false;
+			return;
+		}
+		animationStates *= 2;
+		int x = int(floor(animationCycleTimer * animationStates)) % animationStates % animationStates;
+
+
+		isSetIdle = false;
+
+		IntRect neededTextureRect(Vector2i(weapon.actionSpriteSize.x * x, 4 * body.getSize().y), weapon.actionSpriteSize);
+		sprite.setTextureRect(neededTextureRect);
+		sprite.setPosition(body.getPosition() - Vector2f(weapon.actionSpriteOffset));
+
+		animationCycleTimer += elapsedTime - latestAnimationUpdate;
+		latestAnimationUpdate = elapsedTime;
+	}
+	else if (isMoving)
+	{
+		if (!latestAnimationUpdate)
+		{
+			latestAnimationUpdate = elapsedTime;
+			return;
+		}
+		if (latestAnimationType != 1)
+		{
+			latestAnimationType = 1;
+			animationCycleTimer = 0;
+			return;
+		}
 
 		isSetIdle = false;
 		if (previousFrameDirection != currentDirection)
 			animationCycleTimer = 0;
 
-		//current texture state, changes every 1/animationCycles sec.
-		int x = 1 + int(floor(animationCycleTimer * animationCycles)) % animationCycles;
+		int x = int(floor(animationCycleTimer * animationStates)) % animationStates;
+		int y = 0;
 
-		int y;
-		if (currentDirection.y == 1)
+		//prefers X over Y
+		if (currentDirection.x == 1)
+			y = 3;
+		else if (currentDirection.x == -1)
+			y = 2;
+		else if (currentDirection.y == 1)
 			y = 0;
 		else if (currentDirection.y == -1)
 			y = 1;
-		else if (currentDirection.x == -1)
-			y = 2;
-		else
-			y = 3;
 
-		body.setTextureRect(IntRect(Vector2i(body.getSize().x * x, body.getSize().y * y), Vector2i(body.getSize())));
+		//body.setTextureRect(IntRect(Vector2i(body.getSize().x * x, body.getSize().y * y), Vector2i(body.getSize())));
+		sprite.setTextureRect(IntRect(Vector2i(body.getSize().x * x, body.getSize().y * y), Vector2i(body.getSize())));
+		sprite.setPosition(body.getPosition());
 
 		animationCycleTimer += elapsedTime - latestAnimationUpdate;
 		latestAnimationUpdate = elapsedTime;
@@ -80,21 +130,22 @@ void Player::updateMoveAnimation(float elapsedTime, const Texture* texture)
 	}
 	else if(!isSetIdle)
 	{
+		latestAnimationType = 0;
 		animationCycleTimer = latestAnimationUpdate = 0;
 		previousFrameDirection = Vector2f(0, 0);
 
 		if (currentSight.y == 1)
-			body.setTextureRect(IntRect(Vector2i(0, 0), Vector2i(body.getSize())));
+			sprite.setTextureRect(IntRect(Vector2i(0, 0), Vector2i(body.getSize())));
 		else if (currentSight.y == -1)
-			body.setTextureRect(IntRect(Vector2i(0, body.getSize().y), Vector2i(body.getSize())));
+			sprite.setTextureRect(IntRect(Vector2i(0, body.getSize().y), Vector2i(body.getSize())));
 		else if (currentSight.x == -1)
-			body.setTextureRect(IntRect(Vector2i(0, 2 * body.getSize().y), Vector2i(body.getSize())));
-		else
-			body.setTextureRect(IntRect(Vector2i(0, 3 * body.getSize().y), Vector2i(body.getSize())));
+			sprite.setTextureRect(IntRect(Vector2i(0, 2 * body.getSize().y), Vector2i(body.getSize())));
+		else if (currentSight.x == 1)
+			sprite.setTextureRect(IntRect(Vector2i(0, 3 * body.getSize().y), Vector2i(body.getSize())));
+
 		isSetIdle = true;
 	}
 
-	std::cout << overrideInputY << std::endl;
 }
 
 bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
@@ -103,7 +154,6 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 	{
 		if (obstacle.allowCollision)
 			return true;
-
 		if (pendingDirection.x and pendingDirection.y and needOverride)
 			*needOverride = true;
 
@@ -167,12 +217,12 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 		}
 		return true;
 	}
-	else if (overrideInputX or overrideInputY and currentDirection != Vector2f(0,0))
+	else if ((overrideInputX or overrideInputY) and currentDirection != Vector2f(0,0))
 	{
 		Vector2f pendingCheck((pendingDirection - currentDirection) * latestDistanceCovered);
 		body.move(pendingCheck);
 		if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
-			*needOverride = true;
+			*needOverride = true; //caused nullptr
 		body.move(-pendingCheck);
 	}
 	return false;

@@ -5,6 +5,8 @@ using namespace sf;
 
 class gameObjectStationary
 {
+protected:
+	~gameObjectStationary();
 public:
 	gameObjectStationary();
 
@@ -13,6 +15,12 @@ public:
 
 	Vector2f getCenter();
 
+	virtual void updateAnimation(float elapsedTime, const Texture* texture, int animationCycles);
+
+	bool isDestroyable;
+	bool animated;
+	float animationCycleTimer;
+	float latestAnimationUpdate;
 
 	RectangleShape body;
 	bool allowCollision;

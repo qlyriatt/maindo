@@ -8,7 +8,7 @@ String pickName()
 {
 	srand(time(0));
 
-	String window[11];
+	String window[12];
 
 	window[0] = "VeryGoodGame";
 	window[1] = "Maindo";
@@ -21,8 +21,24 @@ String pickName()
 	window[8] = "Also try Terraria!";
 	window[9] = "When I was/A young boy/My father/Took me into the city";
 	window[10] = "Hajimemashite, chikyuujin-san!";
+	window[11] = "Chocolate cookie ^_^";
 
-	return window[rand() % 11];
+	return window[rand() % 12];
+}
+
+float getTimeDiff(Clock* clock, float time)
+{
+	return clock->getElapsedTime().asSeconds() - time;
+}
+
+int getCount(float storedTimeDifference, int animationStates, int changesPerSecondMultiplier = 1)
+{
+	int a = floor(storedTimeDifference * animationStates * changesPerSecondMultiplier);
+	for (size_t i = 0; i < changesPerSecondMultiplier; i++)
+	{
+		a %= animationStates;
+	}
+	return a;
 }
 
 //clever but not clever enough

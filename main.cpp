@@ -1,5 +1,7 @@
 #pragma once
-#pragma warning (disable : 4244)	//<----
+
+#pragma warning (push)
+#pragma warning (disable : 4244 4305)	//<----
 
 #include <iostream>
 #include <vector>
@@ -18,10 +20,14 @@ using namespace sf;
 const Vector2f WINDOW_SIZE = Vector2f(800, 600);
 const Vector2f CAMERA_SIZE = Vector2f(400, 300);
 #define ESSENTIALS 2
+#define DEBUG_LEVEL 1
 
 // INPUT --> PROJECTILE --> POSITION --> COLLISION CHECK --> CAMERA --> DRAW
 //	 ^													|
 //   |------------------INPUT OVERRIDE-------------------
+//
+//								current
+
 
 struct gameTexture
 {
@@ -29,11 +35,6 @@ struct gameTexture
 	int animationCycles;
 };
 
-enum textureType
-{
-	player = 0,
-	wall
-};
 
 int main()
 {
@@ -59,11 +60,21 @@ int main()
 	bulletPistolTexture.loadFromFile("D:/All mine/Game/bulletPistol.png");
 	textures.push_back(&bulletPistolTexture);
 
-	Weapon rifle(600, 400, NULL, &bulletRifleTexture, 5);
-	Weapon pistol(200, 200, NULL, &bulletPistolTexture, 3);
+	Weapon sniperRifle(3, 800, 600, 5, &bulletRifleTexture, 1, 3);
+	Weapon rifle(2, 600, 400, 30, &bulletRifleTexture, 5, 2);
+	Weapon pistol(1, 200, 200, 15, &bulletPistolTexture, 3, 1.5);
+	Weapon board(0, 0, 0, 0, NULL, 1, 0, 8);
+	board.isMelee = true;
+	board.projectileLifetime = 0.48;
+	board.actionSpriteOffset = Vector2i(10, 25);
+	board.actionSpriteSize = Vector2i(65, 85);
+	board.hitboxSize = Vector2f(30, 20);
+	board.hitboxPositions = { {0,-20},{30,-20},{30,0},{30,30} };
+	
 
 	Player player(Vector2f(20, 20), Vector2f(25, 60), &playerTexture, 200); //speed is pixels per second
 	player.weapon = pistol;
+	player.sprite.setTexture(*textures.at(0));
 	bool switchedWeapon = false;
 	
 	int currentLevel = 1;
@@ -73,6 +84,8 @@ int main()
 
 	while (window.isOpen())
 	{
+		window.clear();
+
 		bool interactionFlag = false;
 		Event event;
 		//---INPUT PHASE
@@ -100,7 +113,7 @@ int main()
 					}
 					else
 					{
-						player.weapon = rifle;
+						player.weapon = board;
 						switchedWeapon = true;
 					}
 				}
@@ -113,30 +126,19 @@ int main()
 				
 			}
 		}
-		window.clear();
 
-		if (Keyboard::isKeyPressed(Keyboard::W))
-			player.upPressed = true;
-		else
-			player.upPressed = false;
-		if (Keyboard::isKeyPressed(Keyboard::D))
-			player.rightPressed = true;
-		else
-			player.rightPressed = false;
-		if (Keyboard::isKeyPressed(Keyboard::S))
-			player.downPressed = true;
-		else
-			player.downPressed = false;
-		if (Keyboard::isKeyPressed(Keyboard::A))
-			player.leftPressed = true;
-		else
-			player.leftPressed = false;
-		if (Keyboard::isKeyPressed(Keyboard::LShift))
-			player.leftShiftPressed = true;
-		else
-			player.leftShiftPressed = false;
+		player.upPressed = (Keyboard::isKeyPressed(Keyboard::W) ? true : false);
+		player.rightPressed = (Keyboard::isKeyPressed(Keyboard::D) ? true : false);
+		player.downPressed = (Keyboard::isKeyPressed(Keyboard::S) ? true : false);
+		player.leftPressed = (Keyboard::isKeyPressed(Keyboard::A) ? true : false);
+		player.leftShiftPressed = (Keyboard::isKeyPressed(Keyboard::LShift) ? true : false);
+
 		if (Keyboard::isKeyPressed(Keyboard::Space))
-			player.weapon.action(player.currentSight, player.getCenter() - Vector2f(0, 5), uni_clock.getElapsedTime().asSeconds(), &projectiles);
+		{
+			player.weapon.action(&player, player.currentSight, player.getCenter() - Vector2f(0, 5), uni_clock.getElapsedTime().asSeconds(), &projectiles);
+			if (player.weapon.isMelee)
+				player.isUsingWeapon = true;
+		}
 		//---INPUT PHASE END
 
 		//---PROJECTILE PHASE
@@ -145,7 +147,43 @@ int main()
 			bool projectileErased = false;
 			float traveledDistance = sqrt(pow(projectiles.at(i).currentPosition.x, 2) + pow(projectiles.at(i).currentPosition.y, 2)); //x^2 + y^2
 
-			if (traveledDistance < projectiles.at(i).range)
+			if (projectiles.at(i).isMelee)
+			{
+				if (uni_clock.getElapsedTime().asSeconds() - projectiles.at(i).creationTime > projectiles.at(i).lifeTime)
+				{
+					if (projectiles.at(i).gameObjectSource == &player)
+					{
+						player.isUsingWeapon = false;
+					}
+					cout << "melee erased" << endl;
+					projectiles.erase(projectiles.begin() + i);
+					i--;
+				}
+				else
+				{
+					vector<Vector2f>* hitboxes = &((Weapon*)projectiles.at(i).weaponSource)->hitboxPositions;
+					Vector2f sourcePosition = ((gameObject*)projectiles.at(i).gameObjectSource)->body.getPosition(); //just plain terribleness
+					if (hitboxes->size() > 1)
+					{
+						//wtf
+						Vector2f currentHitboxPosition = sourcePosition + hitboxes->at(getCount(getTimeDiff(&uni_clock, projectiles.at(i).creationTime), hitboxes->size(), 2));
+						projectiles.at(i).body.setPosition(currentHitboxPosition);
+
+						cout << sourcePosition.x << " " << sourcePosition.y << endl; //<-----
+						cout << currentHitboxPosition.x << " " << currentHitboxPosition.y << endl;
+					}
+
+					for (size_t j = 1; j < objects.size(); j++)
+					{
+						if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable)
+						{
+							objects.erase(objects.begin() + j);
+							j--;
+						}
+					}
+				}
+			}
+			else if (traveledDistance < projectiles.at(i).range)
 			{
 				projectiles.at(i).updatePosition(uni_clock.getElapsedTime().asSeconds());
 
@@ -153,7 +191,7 @@ int main()
 				{
 					if (projectiles.at(i).collisionCheck(objects.at(j)))
 					{
-						if (objects.at(j).destroyable)
+						if (objects.at(j).isDestroyable)
 						{
 							objects.erase(objects.begin() + j);
 							j--;
@@ -185,7 +223,6 @@ int main()
 		//---POSITION PHASE
 		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
 		player.updatePosition(uni_clock.getElapsedTime().asSeconds());
-		player.updateMoveAnimation(uni_clock.getElapsedTime().asSeconds(), textures.at(0));
 		//---POSITION PHASE END
 
 		//---COLLISION PHASE
@@ -260,11 +297,13 @@ int main()
 		//---COLLISION PHASE END
 
 		//---DRAW PHASE
+		player.updateAnimation(uni_clock.getElapsedTime().asSeconds(), textures.at(0));
+
 		cameraCollision(&objects.at(0), &camera, &player, WINDOW_SIZE);
-		//if (camera.getSize().x == CAMERA_SIZE.x / 8)
-		//	camera.setCenter(player.getCenter() - Vector2f(0, 10));
-		//if (camera.getSize().x == CAMERA_SIZE.x / 16)
-		//	camera.setCenter(player.getCenter() - Vector2f(0, 20));
+		if (camera.getSize().x == CAMERA_SIZE.x / 8)
+			camera.setCenter(player.getCenter() - Vector2f(0, 10));
+		if (camera.getSize().x == CAMERA_SIZE.x / 16)
+			camera.setCenter(player.getCenter() - Vector2f(0, 20));
 
 		window.setView(camera);
 
@@ -285,18 +324,34 @@ int main()
 				draws++;
 			}
 		}
-		window.draw(player.body);
 		for (size_t i = 0; i < projectiles.size(); i++)
 		{
 			if (projectiles.at(i).collisionCheck(cameraBounds))
 			{
+				if (projectiles.at(i).isMelee and DEBUG_LEVEL)
+					projectiles.at(i).body.setFillColor(Color(255, 255, 255, 150));
+
 				window.draw(projectiles.at(i).body);
 				draws++;
 			}
 		}
 
+		if (DEBUG_LEVEL)
+		{
+			RectangleShape a;
+			a.setPosition(player.body.getPosition());
+			a.setSize(player.body.getSize());
+			a.setFillColor(Color(255, 0, 0, 150));
+			window.draw(a);
+			a.setPosition(player.sprite.getPosition());
+			a.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
+			a.setFillColor(Color(0, 255, 0, 70));
+			window.draw(a);
+		}
+		window.draw(player.sprite);
+		cout << player.sprite.getPosition().x << " " << player.sprite.getPosition().y << endl;
+		//cout << player.body.getPosition().x << " " << player.body.getPosition().y << endl;
 		//cout << objects.size() + projectiles.size() + entities.size() << "  " << draws << endl;
-
 		if (drawMinimap)
 		{
 			window.setView(minimap);

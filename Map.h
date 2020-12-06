@@ -35,10 +35,10 @@ void initialize(int map_type, vector<gameObject>* objects, vector<Entity>* entit
 		Entity a(0, Vector2f(350, 250), Vector2f(20, 20), NULL, 50);
 		Entity b(0, Vector2f(450, 350), Vector2f(15, 15), NULL, 75);
 		
-		Weapon rifle(600, 400, NULL, textures->at(1), 5);
-		Weapon pistol(200, 200, NULL, textures->at(2), 3);
-		a.weapon = pistol;
-		b.weapon = pistol;
+		Weapon rifle(2, 600, 400, 30, textures->at(1), 5);
+		Weapon pistol(1, 200, 200, 15, textures->at(2), 3);
+		a.weapon = rifle;
+		b.weapon = rifle;
 
 		entities->push_back(a);
 		entities->push_back(b);

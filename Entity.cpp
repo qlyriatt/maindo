@@ -64,7 +64,7 @@ void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, s
 			currentDirection.x = -sqrt(1 / (1 + tan * tan));
 		}
 		currentDirection.y = tan * currentDirection.x;
-		weapon.action(currentDirection, body.getPosition(), elapsedTime, projectiles);
+		weapon.action(this, currentDirection, body.getPosition(), elapsedTime, projectiles);
 	}
 
 	if (!movenode and !moveplayer)

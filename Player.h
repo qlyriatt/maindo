@@ -12,7 +12,7 @@ public:
 
 	void updatePosition(float elapsedTime);
 
-	void updateMoveAnimation(float elapsedTime, const Texture* texture);
+	void updateAnimation(float elapsedTime, const Texture* texture);
 
 	bool collisionCheck(gameObject obstacle, bool* needOverride);
 
@@ -24,9 +24,12 @@ public:
 	bool overrideInputX;
 	bool overrideInputY;
 
+	Sprite sprite;
 	Vector2f previousFrameDirection;
 	float latestAnimationUpdate;
 	bool isSetIdle;
+	bool isUsingWeapon;
+	int latestAnimationType;
 
 	Weapon weapon;
 	bool upPressed;

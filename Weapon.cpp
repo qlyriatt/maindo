@@ -3,15 +3,28 @@
 
 Weapon::Weapon()
 {
+	ID = 0;
 	range = damage = fireRate = projectileSpeed = latestShotTime = projectilePenetration = 0;
+	isMelee = false;
+	currentAmmo = ammoCapacity = latestReloadUpdate = reloadTime = reloadTimer = 0;
+	projectileLifetime = 0;
 	projectileTexture = NULL;
 }
 
-Weapon::Weapon(float range, float projectileSpeed, Texture* weaponTexture, Texture* projectileTexture, float fireRate, float damage)
+Weapon::Weapon(int ID, float range, float projectileSpeed, float ammoCapacity, Texture* projectileTexture, 
+	float fireRate, float reloadTime, float damage)
 {
+	reloadTimer = latestReloadUpdate = isMelee = 0;
+
+	this->ID = ID;
+	
+	this->projectileLifetime = 0;
+
+	this->reloadTime = reloadTime;
+	
 	this->latestShotTime = 0;
 
-	this->projectilePenetration = 2;
+	this->projectilePenetration = 0;
 
 	this->range = range;
 
@@ -21,24 +34,67 @@ Weapon::Weapon(float range, float projectileSpeed, Texture* weaponTexture, Textu
 
 	this->damage = damage;
 
-	this->body.setTexture(weaponTexture);
+	this->projectileTexture = projectileTexture; 
 
-	this->projectileTexture = projectileTexture;
+	this->ammoCapacity = ammoCapacity;
+	
+	this->currentAmmo = ammoCapacity;
 }
 
-void Weapon::action(Vector2f shotDirection, Vector2f shotPosition, float elapsedTime, std::vector<Projectile>* projectiles)
+void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f shotPosition, float elapsedTime, std::vector<Projectile>* projectiles)
 {
 	if (fireRate == 0)
 		return;
 	if (elapsedTime - latestShotTime < 1 / fireRate)	//firerate is shots per second
 		return;
-	else
+	
+	Projectile projectile;
+
+	projectile.isMelee = this->isMelee;
+
+	projectile.penetration = this->projectilePenetration;
+
+	projectile.gameObjectSource = projectileSource;
+
+	projectile.lifeTime = this->projectileLifetime;
+
+	projectile.creationTime = elapsedTime;
+
+	projectile.weaponSource = this;
+
+	if (isMelee)
 	{
 		latestShotTime = elapsedTime;
+		//projectileSource->isUsingWeapon = true;
+		projectile.body.setFillColor(Color::White);
+		//projectile.body.setSize(projectileSource->body.getSize()); //<----
+		projectile.body.setSize(hitboxSize);
+		projectile.allowCollision = true;
+		projectiles->push_back(projectile);
+		return;
+	}
+	if (!currentAmmo)
+	{
+		if (!latestReloadUpdate)
+		{
+			latestReloadUpdate = elapsedTime;
+			return;
+		}
 
-		Projectile projectile;
+		reloadTimer += elapsedTime - latestReloadUpdate;
+		latestReloadUpdate = elapsedTime;
+		if (floor(reloadTime * 10) < floor(reloadTimer * 10))
+		{
+			currentAmmo = ammoCapacity;
+			reloadTimer = 0;
+			latestReloadUpdate = 0;
+		}
+	}
+	else
+	{	
+		latestShotTime = elapsedTime;
 
-		projectile.penetration = this->projectilePenetration;
+		currentAmmo--;
 
 		projectile.body.setTexture(projectileTexture);
 
