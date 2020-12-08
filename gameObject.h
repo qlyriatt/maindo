@@ -27,4 +27,5 @@ public:
 	float latestDistanceCovered;
 	Vector2f currentSight;
 	Vector2f currentDirection;
+	float clockOffset;
 };

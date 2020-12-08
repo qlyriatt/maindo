@@ -3,6 +3,9 @@
 #include "Map.h"
 #include <time.h>
 
+const Vector2f WINDOW_SIZE{ 800,600 };
+const Vector2f CAMERA_SIZE{ WINDOW_SIZE / 2.f };
+const Vector2f INVENTORY_SIZE{ CAMERA_SIZE / 2.f };
 
 String pickName()
 {
@@ -24,6 +27,126 @@ String pickName()
 	window[11] = "Chocolate cookie ^_^";
 
 	return window[rand() % 12];
+}
+
+
+
+void showInventory(RenderWindow* window, RenderTexture* mainGameTexture, View* camera, Player* player)
+{
+	const int ITEM_ROWS = 2;
+	const int ITEM_COLUMNS = 4;
+	const Vector2f INVENTORY_POSITION = Vector2f(window->getSize()) / 4.f;
+	const Vector2f INVENTORY_SIZE = Vector2f(window->getSize()) / 2.f;
+	const Vector2f ITEM_BASE_OFFSET = Vector2f(INVENTORY_SIZE.x / ITEM_COLUMNS / 4, INVENTORY_SIZE.y / ITEM_ROWS / 4);
+	const Vector2f ITEM_BASE_SIZE = 2.f * ITEM_BASE_OFFSET;
+	const Sprite pendingDrawSprite = Sprite(mainGameTexture->getTexture());
+	//mainGameTexture->getTexture().copyToImage().saveToFile("D:/All mine/Game/tmp.png");
+
+	int chosenItem = 0;
+	bool redraw = true;
+	while (true)
+	{
+		Event event;
+		while (window->pollEvent(event))
+		{
+			cout << "ITEM" << chosenItem << "EVENT" << window->pollEvent(event) << endl;
+
+			if (event.type == Event::Closed)
+			{
+				window->close();
+				return;
+			}
+			else if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::I)
+				{
+					player->isInventoryOpen = false;
+					return;
+				}
+				else if (event.key.code == Keyboard::W)
+				{
+					if (chosenItem < ITEM_COLUMNS)
+						chosenItem += ITEM_COLUMNS * (ITEM_ROWS - 1);
+					else
+						chosenItem -= ITEM_COLUMNS;
+				}
+				else if (event.key.code == Keyboard::S)
+				{
+					if (chosenItem > ITEM_COLUMNS * (ITEM_ROWS - 1) - 1)
+						chosenItem -= ITEM_COLUMNS * (ITEM_ROWS - 1);
+					else
+						chosenItem += ITEM_COLUMNS;
+				}
+				else if (event.key.code == Keyboard::A)
+				{
+					if (chosenItem % ITEM_COLUMNS == 0)
+						chosenItem += ITEM_COLUMNS - 1;
+					else
+						chosenItem--;
+				}
+				else if (event.key.code == Keyboard::D)
+				{
+					if (chosenItem % ITEM_COLUMNS == ITEM_COLUMNS - 1)
+						chosenItem -= ITEM_COLUMNS - 1;
+					else
+						chosenItem++;
+				}
+				redraw = true;
+			}
+		}
+
+		if (redraw)
+		{
+			window->draw(pendingDrawSprite);
+
+			RenderTexture inventoryTextureBase;
+			inventoryTextureBase.create(window->getSize().x, window->getSize().y);
+
+			//cout << camera->getSize().x << " " << camera->getSize().y << " " << camera->getCenter().x << " " << camera->getCenter().y << endl;
+			//cout << pendingDrawSprite.getGlobalBounds().width << " " << pendingDrawSprite.getGlobalBounds().height << endl;
+			//cout << (camera->getCenter() - camera->getSize() / 2.f).x << " " << (camera->getCenter() - camera->getSize() / 2.f).y << endl;
+
+			RectangleShape tintedScreen;
+			tintedScreen.setSize(Vector2f(inventoryTextureBase.getSize()));
+			tintedScreen.setPosition(0, 0);
+			tintedScreen.setFillColor(Color(0, 0, 0, 150));
+			inventoryTextureBase.draw(tintedScreen);
+
+			RectangleShape inventoryShape;
+			inventoryShape.setSize(Vector2f(inventoryTextureBase.getSize()) / 2.f);
+			inventoryShape.setPosition(Vector2f(inventoryTextureBase.getSize()) / 4.f);
+			inventoryShape.setFillColor(Color(255, 0, 0, 120));
+			inventoryTextureBase.draw(inventoryShape);
+
+			for (int i = 0; i < ITEM_ROWS; i++)
+			{
+				for (int j = 0; j < ITEM_COLUMNS; j++)
+				{
+					RectangleShape obj;
+					obj.setPosition(INVENTORY_POSITION + Vector2f(j * INVENTORY_SIZE.x / ITEM_COLUMNS, i * INVENTORY_SIZE.y / ITEM_ROWS) + ITEM_BASE_OFFSET);
+					obj.setSize(ITEM_BASE_SIZE);
+					if (i == int(chosenItem / ITEM_COLUMNS) and j == chosenItem % ITEM_COLUMNS)
+					{
+						obj.setFillColor(Color::White);
+					}
+					else
+						obj.setFillColor(Color::Blue);
+					inventoryTextureBase.draw(obj);
+				}
+			}
+
+			inventoryTextureBase.display();
+			//inventoryTextureBase.getTexture().copyToImage().saveToFile("D:/All mine/Game/tmp.png");
+
+			Sprite inventorySprite(inventoryTextureBase.getTexture());
+			//inventorySprite.setPosition(camera->getCenter() - camera->getSize() / 2.f);
+			cout << inventorySprite.getGlobalBounds().left << " " << inventorySprite.getGlobalBounds().top << endl;
+			
+			window->draw(inventorySprite);
+			window->display();
+			redraw = false;
+		}
+	}
 }
 
 float getTimeDiff(Clock* clock, float time)

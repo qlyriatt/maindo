@@ -18,6 +18,8 @@ gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float
 	isDestroyable = true;
 
 	latestUpdate = latestDistanceCovered = 0;
+
+	clockOffset = 0;
 }
 
 bool gameObject::collisionCheck(FloatRect obstacle)

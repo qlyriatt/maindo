@@ -17,8 +17,8 @@
 using namespace std;
 using namespace sf;
 
-const Vector2f WINDOW_SIZE = Vector2f(800, 600);
-const Vector2f CAMERA_SIZE = Vector2f(400, 300);
+//const Vector2f WINDOW_SIZE = Vector2f(800, 600);
+//const Vector2f CAMERA_SIZE = Vector2f(400, 300);
 #define ESSENTIALS 2
 #define DEBUG_LEVEL 1
 
@@ -26,7 +26,7 @@ const Vector2f CAMERA_SIZE = Vector2f(400, 300);
 //	 ^													|
 //   |------------------INPUT OVERRIDE-------------------
 //
-//								current
+//							current
 
 
 struct gameTexture
@@ -39,6 +39,8 @@ struct gameTexture
 int main()
 {
 	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName());
+	RenderTexture mainGameTexture;
+	mainGameTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
 	
 	View camera(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
@@ -68,8 +70,8 @@ int main()
 	board.projectileLifetime = 0.48;
 	board.actionSpriteOffset = Vector2i(10, 25);
 	board.actionSpriteSize = Vector2i(65, 85);
-	board.hitboxSize = Vector2f(30, 20);
-	board.hitboxPositions = { {0,-20},{30,-20},{30,0},{30,30} };
+	board.hitboxSize = Vector2f(30, 25);
+	board.hitboxPositions = { {-10,-20}, {25,-15}, {25,10}, {25,35} };
 	
 
 	Player player(Vector2f(20, 20), Vector2f(25, 60), &playerTexture, 200); //speed is pixels per second
@@ -78,12 +80,15 @@ int main()
 	bool switchedWeapon = false;
 	
 	int currentLevel = 1;
-	bool drawMinimap = true;
+	bool drawMinimap = false;
 	levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
+	bool mainTextureCreated = true;
+
 	Clock uni_clock;
 
 	while (window.isOpen())
 	{
+		mainGameTexture.clear();
 		window.clear();
 
 		bool interactionFlag = false;
@@ -123,7 +128,11 @@ int main()
 					camera.zoom(2);
 				else if (event.key.code == Keyboard::M)
 					drawMinimap = (drawMinimap ? false : true);
-				
+			}
+			else if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::I)
+					player.isInventoryOpen = true;
 			}
 		}
 
@@ -136,7 +145,7 @@ int main()
 		if (Keyboard::isKeyPressed(Keyboard::Space))
 		{
 			player.weapon.action(&player, player.currentSight, player.getCenter() - Vector2f(0, 5), uni_clock.getElapsedTime().asSeconds(), &projectiles);
-			if (player.weapon.isMelee)
+			if (player.weapon.isMelee and !(getTimeDiff(&uni_clock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
 				player.isUsingWeapon = true;
 		}
 		//---INPUT PHASE END
@@ -151,10 +160,10 @@ int main()
 			{
 				if (uni_clock.getElapsedTime().asSeconds() - projectiles.at(i).creationTime > projectiles.at(i).lifeTime)
 				{
-					if (projectiles.at(i).gameObjectSource == &player)
-					{
-						player.isUsingWeapon = false;
-					}
+					//if (projectiles.at(i).gameObjectSource == &player)
+					//{
+					//	player.isUsingWeapon = false;
+					//}
 					cout << "melee erased" << endl;
 					projectiles.erase(projectiles.begin() + i);
 					i--;
@@ -238,6 +247,7 @@ int main()
 				levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
 				currentLevel = 1;
 			}
+			
 			continue;
 		}
 
@@ -305,14 +315,18 @@ int main()
 		if (camera.getSize().x == CAMERA_SIZE.x / 16)
 			camera.setCenter(player.getCenter() - Vector2f(0, 20));
 
-		window.setView(camera);
+		//window.setView(camera);
+		mainGameTexture.setView(camera);
+
+
+
 
 		int draws = 0;
 		for (size_t i = 0; i < objects.size(); i++)
 		{
 			if (objects.at(i).collisionCheck(cameraBounds))
 			{
-				window.draw(objects.at(i).body);
+				mainGameTexture.draw(objects.at(i).body);
 				draws++;
 			}
 		}
@@ -320,7 +334,7 @@ int main()
 		{
 			if (entities.at(i).collisionCheck(cameraBounds))
 			{
-				window.draw(entities.at(i).body);
+				mainGameTexture.draw(entities.at(i).body);
 				draws++;
 			}
 		}
@@ -331,7 +345,7 @@ int main()
 				if (projectiles.at(i).isMelee and DEBUG_LEVEL)
 					projectiles.at(i).body.setFillColor(Color(255, 255, 255, 150));
 
-				window.draw(projectiles.at(i).body);
+				mainGameTexture.draw(projectiles.at(i).body);
 				draws++;
 			}
 		}
@@ -342,16 +356,39 @@ int main()
 			a.setPosition(player.body.getPosition());
 			a.setSize(player.body.getSize());
 			a.setFillColor(Color(255, 0, 0, 150));
-			window.draw(a);
+			mainGameTexture.draw(a);
 			a.setPosition(player.sprite.getPosition());
 			a.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
 			a.setFillColor(Color(0, 255, 0, 70));
-			window.draw(a);
+			mainGameTexture.draw(a);
 		}
-		window.draw(player.sprite);
-		cout << player.sprite.getPosition().x << " " << player.sprite.getPosition().y << endl;
-		//cout << player.body.getPosition().x << " " << player.body.getPosition().y << endl;
-		//cout << objects.size() + projectiles.size() + entities.size() << "  " << draws << endl;
+		mainGameTexture.draw(player.sprite);
+		mainGameTexture.display();
+
+		if (player.isInventoryOpen)
+		{
+			float timeStamp = uni_clock.getElapsedTime().asSeconds();
+			float tmp = 0;
+			float offset = modf(player.animationCycleTimer, &tmp);
+			showInventory(&window, &mainGameTexture, &camera, &player);
+			for (size_t i = 0; i < objects.size(); i++)
+			{
+				objects.at(i).latestUpdate = uni_clock.getElapsedTime().asSeconds();
+				objects.at(i).latestAnimationUpdate = uni_clock.getElapsedTime().asSeconds();
+			}
+			for (size_t i = 0; i < projectiles.size(); i++)
+			{
+				projectiles.at(i).latestUpdate = uni_clock.getElapsedTime().asSeconds();
+				projectiles.at(i).creationTime = uni_clock.getElapsedTime().asSeconds() - (timeStamp - projectiles.at(i).creationTime);
+			}
+			// aCT += eT 21 - lAU 20.5; count = 3; aCT += eT 48 - lAU 21(48); aCT += eT 48.5 - aCT 48; count = 4
+			player.latestUpdate = uni_clock.getElapsedTime().asSeconds();
+			player.latestAnimationUpdate = uni_clock.getElapsedTime().asSeconds(); 
+		}
+
+		Sprite buf(mainGameTexture.getTexture());
+		window.draw(buf);
+
 		if (drawMinimap)
 		{
 			window.setView(minimap);
@@ -376,6 +413,7 @@ int main()
 				if (projectiles.at(i).collisionCheck(cameraBounds))
 					window.draw(projectiles.at(i).body);
 			}
+			window.setView(window.getDefaultView());
 		}
 		window.display();
 		//---DRAW PHASE END

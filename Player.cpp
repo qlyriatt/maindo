@@ -20,6 +20,11 @@ Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) 
 	isSetIdle = false;
 	isUsingWeapon = false;
 	latestAnimationUpdate = 0;
+	latestAnimationType = 0;
+	isInventoryOpen = false;
+	inventorySlots.resize(4);
+	inventorySlots = { 0,0,0,0 };
+	animationTimerOffset = 0;
 }
 
 void Player::updatePosition(float elapsedTime)
@@ -73,6 +78,7 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 		}
 		if (weapon.isMelee and animationCycleTimer > weapon.projectileLifetime)
 		{
+			animationCycleTimer = 0;
 			isUsingWeapon = false;
 			return;
 		}
@@ -87,6 +93,7 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 		sprite.setPosition(body.getPosition() - Vector2f(weapon.actionSpriteOffset));
 
 		animationCycleTimer += elapsedTime - latestAnimationUpdate;
+		animationCycleTimer += animationTimerOffset;
 		latestAnimationUpdate = elapsedTime;
 	}
 	else if (isMoving)
@@ -142,7 +149,7 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 			sprite.setTextureRect(IntRect(Vector2i(0, 2 * body.getSize().y), Vector2i(body.getSize())));
 		else if (currentSight.x == 1)
 			sprite.setTextureRect(IntRect(Vector2i(0, 3 * body.getSize().y), Vector2i(body.getSize())));
-
+		sprite.setPosition(body.getPosition());
 		isSetIdle = true;
 	}
 
@@ -222,7 +229,7 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 		Vector2f pendingCheck((pendingDirection - currentDirection) * latestDistanceCovered);
 		body.move(pendingCheck);
 		if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
-			*needOverride = true; //caused nullptr
+			*needOverride = true; //caused nullptr twice
 		body.move(-pendingCheck);
 	}
 	return false;

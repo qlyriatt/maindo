@@ -30,6 +30,10 @@ public:
 	bool isSetIdle;
 	bool isUsingWeapon;
 	int latestAnimationType;
+	float animationTimerOffset;
+
+	bool isInventoryOpen;
+	std::vector<int> inventorySlots;
 
 	Weapon weapon;
 	bool upPressed;
