@@ -5,6 +5,7 @@
 class gameObject : public gameObjectStationary
 {	
 public:
+
 	gameObject();
 	
 	gameObject(Vector2f position, Vector2f size, Texture* texture = NULL, float speed = 0, bool allowCollision = 0, 
@@ -19,7 +20,7 @@ public:
 	virtual void updatePosition(float elapsedTime);
 	
 
-	//movement
+	int ID;
 	bool isMoving;
 	float baseSpeed;
 	float speed;
@@ -27,5 +28,4 @@ public:
 	float latestDistanceCovered;
 	Vector2f currentSight;
 	Vector2f currentDirection;
-	float clockOffset;
 };

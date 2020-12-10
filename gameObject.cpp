@@ -4,6 +4,7 @@ gameObject::gameObject() : gameObjectStationary()
 {
 	isMoving = false;
 	baseSpeed = speed = latestUpdate = latestDistanceCovered = 0;
+	ID = 0;
 }
 
 gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float speed,
@@ -19,7 +20,7 @@ gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float
 
 	latestUpdate = latestDistanceCovered = 0;
 
-	clockOffset = 0;
+	ID = 0;
 }
 
 bool gameObject::collisionCheck(FloatRect obstacle)
@@ -50,42 +51,6 @@ void gameObject::collisionCheckInner(FloatRect area)
 	if (!(TL and TR and BR and BL))
 		body.move(-currentDirection * latestDistanceCovered);
 }
-
-//void gameObject::collisionCheckInner(FloatRect area)
-//{
-//	bool TL = area.contains(sprite.getPosition());
-//	bool TR = area.contains(sprite.getPosition() + Vector2f(sprite.getGlobalBounds().width,0));
-//	bool BL = area.contains(sprite.getPosition() + Vector2f(0,sprite.getGlobalBounds().height));
-//	bool BR = area.contains(sprite.getPosition() + Vector2f(sprite.getGlobalBounds().width,sprite.getGlobalBounds().height));
-//
-//	if (!(TL and TR and BR and BL))
-//	{
-//		if (TL)
-//		{
-//			if (BL)
-//				sprite.move(-speed, 0);
-//			else if (TR)
-//				sprite.move(0, -speed);
-//			else
-//				sprite.move(-speed, -speed);
-//		}
-//
-//		else if (BR)
-//		{
-//			if (TR)
-//				sprite.move(speed, 0);
-//			else if (BL)
-//				sprite.move(0, speed);
-//			else
-//				sprite.move(speed, speed);
-//		}
-//
-//		else if (BL)
-//			sprite.move(-speed, speed);
-//		else if (TR)
-//			sprite.move(speed, -speed);
-//	}
-//}
 
 void gameObject::updatePosition(float elapsedTime)
 {

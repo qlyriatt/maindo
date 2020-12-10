@@ -1,6 +1,7 @@
 #pragma once
 #include "gameObject.h"
 #include "Weapon.h"
+using std::vector;
 
 class Player : public gameObject
 {
@@ -20,27 +21,37 @@ public:
 
 	void collisionCheckInner(FloatRect area);
 
-	Vector2f pendingDirection;
-	bool overrideInputX;
-	bool overrideInputY;
+	enum animationStates //should be moved to gO or smwh else
+	{
+		idle = 0,
+		moving,
+		usingWeapon
+	};
 
-	Sprite sprite;
-	Vector2f previousFrameDirection;
-	float latestAnimationUpdate;
-	bool isSetIdle;
-	bool isUsingWeapon;
-	int latestAnimationType;
-	float animationTimerOffset;
+	//movement advanced
+	Vector2f	pendingDirection;
+	bool		overrideInputX;
+	bool		overrideInputY;
 
-	bool isInventoryOpen;
-	std::vector<int> inventorySlots;
+	//animation
+	bool		isSetIdle;
+	bool		isUsingWeapon;
+	int			latestAnimationType;
+	float		latestAnimationUpdate;
+	Vector2f	previousFrameDirection;
+	Sprite		sprite;
 
-	Weapon weapon;
-	bool upPressed;
-	bool rightPressed;
-	bool downPressed;
-	bool leftPressed;
-	bool leftShiftPressed;
+	//inventory
+	bool		isInventoryOpen;
+	vector<int> inventorySlots;
+
+	//basic
+	Weapon		weapon;
+	bool		upPressed;
+	bool		rightPressed;
+	bool		downPressed;
+	bool		leftPressed;
+	bool		leftShiftPressed;
 };
 
 

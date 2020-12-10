@@ -4,25 +4,22 @@ gameObjectStationary::~gameObjectStationary() {};
 
 gameObjectStationary::gameObjectStationary()
 {
-	animated = allowCollision = isDestroyable = false;
-	animationCycleTimer = latestAnimationUpdate = interactionRadius = interactionType = 0;
+	isAnimated = allowCollision = isDestroyable = false;
+	animationCycleTimer = latestAnimationUpdate = interactionRadius = interactionType = interactionTypeSpeciality = 0;
 }
 
 gameObjectStationary::gameObjectStationary(Vector2f position, Vector2f size, Texture* texture, bool allowCollision,
 	Color bodyColor, Color outlineColor, float outlineThickness)
 {
+	isAnimated = interactionType = isDestroyable = false;
+	animationCycleTimer = latestAnimationUpdate = interactionType = interactionTypeSpeciality = 0;
+
 	body.setPosition(position);
-
 	body.setSize(size);
-
 	body.setTexture(texture);
 
 	this->allowCollision = allowCollision;
-
-	animated = interactionType = isDestroyable = false;
-	animationCycleTimer = latestAnimationUpdate = interactionRadius = interactionType = 0;
-
-
+	interactionRadius = 10;
 
 	//to be removed
 	body.setFillColor(bodyColor);
@@ -38,7 +35,7 @@ Vector2f gameObjectStationary::getCenter()
 //texture updates every 1/animationCycles sec.
 void gameObjectStationary::updateAnimation(float elapsedTime, const Texture* texture, int animationCycles)
 {
-	if (animated)
+	if (isAnimated)
 	{
 		int x = int(floor(animationCycleTimer * animationCycles)) % animationCycles; 
 

@@ -8,6 +8,7 @@ class gameObjectStationary
 protected:
 	~gameObjectStationary();
 public:
+
 	gameObjectStationary();
 
 	gameObjectStationary(Vector2f position, Vector2f size, Texture* texture = NULL, bool allowCollision = false, 
@@ -17,13 +18,14 @@ public:
 
 	virtual void updateAnimation(float elapsedTime, const Texture* texture, int animationCycles);
 
-	bool isDestroyable;
-	bool animated;
-	float animationCycleTimer;
-	float latestAnimationUpdate;
 
-	RectangleShape body;
+	bool isDestroyable;
+	bool isAnimated;
 	bool allowCollision;
 	int interactionType;
+	int interactionTypeSpeciality;
+	float animationCycleTimer;
+	float latestAnimationUpdate;
 	float interactionRadius;
+	RectangleShape body;
 };

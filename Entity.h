@@ -1,6 +1,8 @@
 #pragma once
 #include "Weapon.h"
 
+//useless but essential
+//either might be wrong
 class Entity : public gameObject
 {
 public:

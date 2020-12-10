@@ -1,13 +1,13 @@
 #pragma once
-#include "gameObject.h"
+//#include "Player.h" ???
 #include "Weapon.h"
 #include "Entity.h"
-#include <vector>
 #include <fstream>
+using std::vector;
+using std::ifstream;
+using std::cout;
 
-using namespace std;
-
-
+//lots of work waiting
 void initialize(int map_type, vector<gameObject>* objects, vector<Entity>* entities, vector<Texture*>* textures)
 {
 	switch (map_type)
@@ -31,6 +31,7 @@ void initialize(int map_type, vector<gameObject>* objects, vector<Entity>* entit
 			obj.body.setFillColor(Color(20 * i, 30 * i, 50 * i));
 			objects->push_back(obj);
 		}
+
 
 		Entity a(0, Vector2f(350, 250), Vector2f(20, 20), NULL, 50);
 		Entity b(0, Vector2f(450, 350), Vector2f(15, 15), NULL, 75);
@@ -100,10 +101,19 @@ void initialize(int map_type, vector<gameObject>* objects, vector<Entity>* entit
 			gameObject obj(Vector2f(30 + i * 20, 200), Vector2f(5, 5), NULL, 0, 0, Color::Black, Color::Green);
 			objects->push_back(obj);
 		}
+
+		for (int i = 0; i < 6; i++)
+		{
+			gameObject obj(Vector2f(250 + 50 * i, 500), Vector2f(15, 15));
+			obj.allowCollision = true;
+			obj.ID = 4;
+			obj.interactionType = 1;
+			objects->push_back(obj);
+		}
+
 		input.close();
 		break;
 	}
 
 	}
-
 }
