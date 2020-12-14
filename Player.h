@@ -9,17 +9,17 @@ public:
 
 	Player();
 
-	Player(Vector2f position, Vector2f size, Texture* texture, float speed);
+	Player(Vector2f position, Vector2f size, const Texture* texture, float speed);
 
 	void updatePosition(float elapsedTime);
 
 	void updateAnimation(float elapsedTime, const Texture* texture);
 
-	bool collisionCheck(gameObject obstacle, bool* needOverride);
+	bool collisionCheck(const gameObject& obstacle, bool* needOverride);
 
-	bool interactionCheck(gameObject object);
+	bool interactionCheck(const gameObject& object);
 
-	void collisionCheckInner(FloatRect area);
+	void collisionCheckInner(const FloatRect& area);
 
 	enum animationStates //should be moved to gO or smwh else
 	{
@@ -43,6 +43,8 @@ public:
 
 	//inventory
 	bool		isInventoryOpen;
+	int			health;
+	int			maxHealth;
 	vector<int> inventorySlots;
 
 	//basic

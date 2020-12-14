@@ -5,13 +5,13 @@ Entity::Entity() : gameObject()
 	type = 0;
 }
 
-Entity::Entity(int type, Vector2f position, Vector2f size, Texture* texture, float speed, bool allowCollision,
+Entity::Entity(int type, Vector2f position, Vector2f size, const Texture* texture, float speed, bool allowCollision,
 	Color bodyColor, Color outlineColor, float outlineThickness) : gameObject(position, size, texture, speed, allowCollision, bodyColor, outlineColor, outlineThickness)
 {
 	this->type = type;
 }
 
-void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, std::vector<Projectile>* projectiles)
+void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, vector<Projectile>& projectiles)
 {
 	srand(elapsedTime);
 	Vector2f offset = node - body.getPosition();

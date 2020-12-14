@@ -8,7 +8,7 @@ Player::Player() : gameObject()
 	animationCycleTimer = latestAnimationUpdate = latestAnimationType = 0;
 }
 
-Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) : gameObject(position, size, texture, speed)
+Player::Player(Vector2f position, Vector2f size, const Texture* texture, float speed) : gameObject(position, size, texture, speed)
 {
 	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
 	overrideInputX = overrideInputY = isSetIdle = isUsingWeapon = isInventoryOpen = false;
@@ -21,6 +21,9 @@ Player::Player(Vector2f position, Vector2f size, Texture* texture, float speed) 
 
 	inventorySlots.resize(8);
 	inventorySlots = { 0,0,0,0,0,0,0,0 };
+
+	health = 40;
+	maxHealth = 100;
 }
 
 void Player::updatePosition(float elapsedTime)
@@ -30,7 +33,7 @@ void Player::updatePosition(float elapsedTime)
 	if (downPressed) y++;
 	if (rightPressed) x++;
 	if (leftPressed) x--;
-	speed = leftShiftPressed ? baseSpeed / 2 : baseSpeed;
+	speed = leftShiftPressed ? basespeed / 2 : basespeed;
 
 	pendingDirection = currentDirection = Vector2f(x, y);
 
@@ -47,11 +50,11 @@ void Player::updatePosition(float elapsedTime)
 
 void Player::updateAnimation(float elapsedTime, const Texture* texture)
 {
-	const int DOWN = 0;
-	const int UP = 1;
-	const int LEFT = 2;
-	const int RIGHT = 3;
-	int animationStates = 4; //for now
+	const int RIGHT = 0;
+	const int LEFT = 1;
+	const int DOWN = 2;
+	const int UP = 3;
+	int animationStates = 6; //for now
 
 	if (isUsingWeapon)
 	{
@@ -97,10 +100,15 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 		}
 
 		isSetIdle = false;
-		if (previousFrameDirection != currentDirection)	//resets animation when direction is changed
-			animationCycleTimer = 0;
+		//resets animation when direction is changed except on Y change while having constant X
+		if (previousFrameDirection != currentDirection)
+		{
+			if (!(previousFrameDirection.x == currentDirection.x and currentDirection.x != 0 and
+				previousFrameDirection.y != currentDirection.y))
+				animationCycleTimer = 0;
+		}
 
-		int x = int(animationCycleTimer * animationStates) % animationStates;
+		int x = 1 + int(animationCycleTimer * animationStates) % animationStates;
 		int y = 0;
 
 		//prefers X over Y
@@ -140,7 +148,7 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 	latestAnimationUpdate = elapsedTime;
 }
 
-bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
+bool Player::collisionCheck(const gameObject& obstacle, bool* needOverride)
 {
 	if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 	{
@@ -222,7 +230,7 @@ bool Player::collisionCheck(gameObject obstacle, bool* needOverride)
 	return false;
 }
 
-bool Player::interactionCheck(gameObject object)
+bool Player::interactionCheck(const gameObject& object)
 {
 	const Vector2f interactionRadius = Vector2f(object.interactionRadius, object.interactionRadius);
 	
@@ -231,7 +239,7 @@ bool Player::interactionCheck(gameObject object)
 	return gameObject::collisionCheck(interactionZone);
 }
 
-void Player::collisionCheckInner(FloatRect area)
+void Player::collisionCheckInner(const FloatRect& area)
 {
 	bool TL = area.contains(body.getPosition());
 	bool TR = area.contains(body.getPosition() + Vector2f(body.getGlobalBounds().width, 0));

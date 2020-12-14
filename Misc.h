@@ -3,11 +3,35 @@
 #include "Map.h"
 #include <time.h>
 using std::vector;
+using std::cout;
+using std::endl;
 
-const Vector2f WINDOW_SIZE{ 800,600 };
+const Vector2f WINDOW_SIZE{ 1066, 600 };
 const Vector2f CAMERA_SIZE{ WINDOW_SIZE / 2.f };
 const Vector2f INVENTORY_SIZE{ CAMERA_SIZE / 2.f };
+
 #define DEBUG_LEVEL 1
+#define SHRINK_FACTOR Vector2f{WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080}
+
+
+//pls help
+namespace sf
+{
+	template <typename T, typename U>
+	Vector2f operator *(const Vector2<T>& left, const Vector2<U>& right)
+	{
+		return Vector2f(left.x * right.x, left.y * right.y);
+	}
+
+	template<typename T>
+	Vector2<T> operator *(const Vector2<T>& left, const Vector2<T>& right)
+	{
+		return Vector2<T>(left.x * right.x, left.y * right.y);
+	}
+};
+
+
+
 
 //every possible use(less)(ful) function that can be thought of
 
@@ -41,8 +65,8 @@ String pickName()
 	names.push_back("You want my property - you can't have it!");
 	names.push_back("Dorimin chuchu / Chocola-ta-ta-ta-ta!");
 	names.push_back("Certainly not a case of lupus");
-	names.push_back("Soretomo... wa - ta - shi?");
-	names.push_back("...'Cause we'll be doing this till 6 in the morning"); //whoops
+	names.push_back("Soretomo...	wa...ta...shi?");
+	names.push_back("...'cause we'll be doing this till 6 in the morning"); //whoops
 	names.push_back("Full sail ahead!");
 	names.push_back("cout << vector.x << " " << vector.y << endl;");
 	names.push_back("For $%@^$%^# sake, would you work already?");
@@ -57,243 +81,125 @@ String pickName()
 	names.push_back("Number 15: Burger King foot lettuce");
 	names.push_back("Oyasumi");
 	names.push_back("Back in the zenzenzense till this day been looking everywhere for you...");
+	names.push_back("pickName()");
+	names.push_back("Welcome back, Commander");
+	names.push_back("Daijoubu da yo!");
+	names.push_back("B7 flat 9 flat 13");
+	names.push_back("I guess you guys aren't ready for that yet... but your kids are gonna love it");
 
 	return names.at(rand() % names.size());
 }
 
+
 //aligns latestTimeUpdate (or else) for everything after additional rendering
-void alignTime(float timestamp, Clock* clock, Player* player, vector<gameObject>* objects, vector<Projectile>* projectiles)
+void alignTime(float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles)
 {
-	for (size_t i = 0; i < objects->size(); i++)
+	for (auto& i : objects)
 	{
-		objects->at(i).latestUpdate = clock->getElapsedTime().asSeconds();
-		objects->at(i).latestAnimationUpdate = clock->getElapsedTime().asSeconds();
+		i.latestUpdate = clock.getElapsedTime().asSeconds();
+		i.latestAnimationUpdate = clock.getElapsedTime().asSeconds();
 	}
-	for (size_t i = 0; i < projectiles->size(); i++)
+
+	for (auto& i : projectiles)
 	{
-		projectiles->at(i).latestUpdate = clock->getElapsedTime().asSeconds();
-		projectiles->at(i).creationTime = clock->getElapsedTime().asSeconds() - (timestamp - projectiles->at(i).creationTime);
+		i.latestUpdate = clock.getElapsedTime().asSeconds();
+		i.creationTime = clock.getElapsedTime().asSeconds() - (timestamp - i.creationTime);
 	}
 
 	// aCT += eT 21 - lAU 20.5; count = 3; aCT += eT 48 - lAU 21(48); aCT += eT 48.5 - aCT 48; count = 4
-	player->latestUpdate = clock->getElapsedTime().asSeconds();
-	player->latestAnimationUpdate = clock->getElapsedTime().asSeconds();
-	player->weapon.latestShotTime = clock->getElapsedTime().asSeconds() - (timestamp - player->weapon.latestShotTime);
+	player.latestUpdate = clock.getElapsedTime().asSeconds();
+	player.latestAnimationUpdate = clock.getElapsedTime().asSeconds();
+	player.weapon.latestShotTime = clock.getElapsedTime().asSeconds() - (timestamp - player.weapon.latestShotTime);
 }
 
-void showInventory(RenderWindow* window, const RenderTexture* mainGameTexture, const View* camera, Player* player)
+
+void finalDraw(RenderTarget& renderTarget, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles, 
+	Player& player) 
 {
-	//everything you can tweak to change inventory appearance
-	const int ITEM_ROWS = 2;
-	const int ITEM_COLUMNS = 4;
-	const Vector2f INVENTORY_POSITION = Vector2f(window->getSize()) / 4.f;
-	const Vector2f INVENTORY_SIZE = Vector2f(window->getSize()) / 2.f;
-	const Vector2f ITEM_BASE_OFFSET = Vector2f(INVENTORY_SIZE.x / ITEM_COLUMNS / 4, INVENTORY_SIZE.y / ITEM_ROWS / 4);
-	const Vector2f ITEM_BASE_SIZE = 2.f * ITEM_BASE_OFFSET;
-	
-	//everything waiting to be drawn behind inventory textures
-	const Sprite pendingDrawSprite = Sprite(mainGameTexture->getTexture());
+	FloatRect cameraBounds(renderTarget.getView().getCenter() - renderTarget.getView().getSize() / 2.f, renderTarget.getView().getSize());
 
-
-
-	int chosenItem = 0;
-	bool redraw = true;
-	while (true)
+	for (const auto& i : objects)
 	{
-		Event event;
-		while (window->pollEvent(event))
-		{
-			if (event.type == Event::Closed)
-			{
-				window->close();
-				return;
-			}
-			else if (event.type == Event::KeyReleased)
-			{
-				if (event.key.code == Keyboard::I)
-				{
-					player->isInventoryOpen = false;
-					return;
-				}
-				else if (event.key.code == Keyboard::W)
-				{
-					if (chosenItem < ITEM_COLUMNS)
-						chosenItem += ITEM_COLUMNS * (ITEM_ROWS - 1);
-					else
-						chosenItem -= ITEM_COLUMNS;
-				}
-				else if (event.key.code == Keyboard::S)
-				{
-					if (chosenItem > ITEM_COLUMNS * (ITEM_ROWS - 1) - 1)
-						chosenItem -= ITEM_COLUMNS * (ITEM_ROWS - 1);
-					else
-						chosenItem += ITEM_COLUMNS;
-				}
-				else if (event.key.code == Keyboard::A)
-				{
-					if (chosenItem % ITEM_COLUMNS == 0)
-						chosenItem += ITEM_COLUMNS - 1;
-					else
-						chosenItem--;
-				}
-				else if (event.key.code == Keyboard::D)
-				{
-					if (chosenItem % ITEM_COLUMNS == ITEM_COLUMNS - 1)
-						chosenItem -= ITEM_COLUMNS - 1;
-					else
-						chosenItem++;
-				}
-				else if (event.key.code == Keyboard::E)
-				{
-					player->inventorySlots.at(chosenItem) = 0;
-				}
-				redraw = true;	//redraw on chosen item change
-			}
-		}
-
-		if (redraw)
-		{
-			window->draw(pendingDrawSprite); //draw background
-
-			//create inventory texture 
-			RenderTexture inventoryTextureBase;
-			inventoryTextureBase.create(window->getSize().x, window->getSize().y);
-
-			RectangleShape tintedScreen;
-			tintedScreen.setSize(Vector2f(inventoryTextureBase.getSize()));
-			tintedScreen.setFillColor(Color(0, 0, 0, 140));
-			inventoryTextureBase.draw(tintedScreen);
-
-			RectangleShape inventoryShape;
-			inventoryShape.setSize(Vector2f(inventoryTextureBase.getSize()) / 2.f);
-			inventoryShape.setPosition(Vector2f(inventoryTextureBase.getSize()) / 4.f);
-			inventoryShape.setFillColor(Color(255, 0, 0, 180));
-			inventoryTextureBase.draw(inventoryShape);
-
-			for (int i = 0; i < ITEM_ROWS; i++)
-			{
-				for (int j = 0; j < ITEM_COLUMNS; j++)
-				{
-					RectangleShape obj;
-					obj.setPosition(INVENTORY_POSITION + Vector2f(j * INVENTORY_SIZE.x / ITEM_COLUMNS, i * INVENTORY_SIZE.y / ITEM_ROWS) + ITEM_BASE_OFFSET);
-					obj.setSize(ITEM_BASE_SIZE);
-
-					if (i == int(chosenItem / ITEM_COLUMNS) and j == chosenItem % ITEM_COLUMNS)
-					{
-						RectangleShape frame = obj;
-						frame.setOutlineColor(Color::Green);
-						frame.setOutlineThickness(3);
-						inventoryTextureBase.draw(frame);
-					}
-					if (player->inventorySlots.at(j + i * ITEM_COLUMNS))
-						obj.setFillColor(Color::Blue);
-					else
-					{
-						obj.setFillColor(Color::Black);
-					}
-
-					inventoryTextureBase.draw(obj);
-				}
-			}
-			inventoryTextureBase.display();
-			Sprite inventorySpriteBase(inventoryTextureBase.getTexture());
-			
-			window->draw(inventorySpriteBase);
-			window->display();
-			redraw = false;
-			//done redrawing
-		}
-	}
-}
-
-void finalDraw(RenderTarget* renderTarget, vector<gameObject>* objects, vector<Entity>* entities, vector<Projectile>* projectiles, Player* player, int* drawCalls = NULL) 
-{
-	FloatRect cameraBounds(renderTarget->getView().getCenter() - renderTarget->getView().getSize() / 2.f, renderTarget->getView().getSize());
-
-	for (size_t i = 0; i < objects->size(); i++)
-	{
-		if (objects->at(i).collisionCheck(cameraBounds))
-		{
-			renderTarget->draw(objects->at(i).body);
-			if(drawCalls)
-				(*drawCalls)++;
-		}
+		if (i.collisionCheck(cameraBounds))
+			renderTarget.draw(i.body);
 	}
 
-	for (size_t i = 0; i < entities->size(); i++)
+	for (const auto& i : entities)
 	{
-		if (entities->at(i).collisionCheck(cameraBounds))
-		{
-			renderTarget->draw(entities->at(i).body);
-			if(drawCalls)
-				(*drawCalls)++;
-		}
+		if (i.collisionCheck(cameraBounds))
+			renderTarget.draw(i.body);
 	}
 
-	for (size_t i = 0; i < projectiles->size(); i++)
+	for (const auto& i : projectiles)
 	{
-		if (projectiles->at(i).collisionCheck(cameraBounds))
+		if (i.collisionCheck(cameraBounds))
 		{
-			if (projectiles->at(i).isMelee and DEBUG_LEVEL)
-				projectiles->at(i).body.setFillColor(Color(255, 255, 255, 150));
-
-			renderTarget->draw(projectiles->at(i).body);
-			if(drawCalls)
-				(*drawCalls)++;
+			if (i.isMelee and DEBUG_LEVEL)
+				i.body.setFillColor(Color(255, 255, 255, 150));
+			renderTarget.draw(i.body);
 		}
 	}
 
 	if (DEBUG_LEVEL)
 	{
 		RectangleShape tmp;
-		tmp.setPosition(player->body.getPosition());
-		tmp.setSize(player->body.getSize());
+		tmp.setPosition(player.body.getPosition());
+		tmp.setSize(player.body.getSize());
 		tmp.setFillColor(Color(255, 0, 0, 150));
-		renderTarget->draw(tmp);
-		tmp.setPosition(player->sprite.getPosition());
-		tmp.setSize(Vector2f(player->sprite.getGlobalBounds().width, player->sprite.getGlobalBounds().height));
+		renderTarget.draw(tmp);
+		tmp.setPosition(player.sprite.getPosition());
+		tmp.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
 		tmp.setFillColor(Color(0, 255, 0, 70));
-		renderTarget->draw(tmp);
+		renderTarget.draw(tmp);
 	}
-	renderTarget->draw(player->sprite);
 
+	renderTarget.draw(player.sprite);
 }
 
-void setOpacity(gameObject* object, int opacity = 255)
+
+void setOpacity(gameObject& object, int opacity = 255)
 {
-	Color tmp = object->body.getFillColor();
-	object->body.setFillColor(Color(tmp.r, tmp.g, tmp.b, opacity));
+	Color tmp = object.body.getFillColor();
+	object.body.setFillColor(Color(tmp.r, tmp.g, tmp.b, opacity));
+	tmp = object.body.getOutlineColor();
+	object.body.setOutlineColor(Color(tmp.r, tmp.g, tmp.b, opacity));
 }
 
-void finalDrawMinimap(RenderTarget* renderTarget, vector<gameObject>* objects, vector<Entity>* entities, vector<Projectile>* projectiles, Player* player)
+
+void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
+	vector<Projectile>& projectiles, Player& player, const FloatRect& cameraBounds)
 {
-	for (size_t i = 0; i < objects->size(); i++)
+	renderTexture.clear(Color::Transparent);
+	
+	for (auto& i : objects)
 	{
-		setOpacity(&objects->at(i), 150);
-		renderTarget->draw(objects->at(i).body);
-		setOpacity(&objects->at(i));
+		setOpacity(i, i.collisionCheck(cameraBounds) ? 200 : 70);
+		renderTexture.draw(i.body);
+		setOpacity(i);
 	}
 
-	for (size_t i = 0; i < entities->size(); i++)
+	for (auto& i : entities)
 	{
-		setOpacity(&entities->at(i), 150);
-		renderTarget->draw(entities->at(i).body);
-		setOpacity(&entities->at(i));
+		renderTexture.draw(i.body);
 	}
-	for (size_t i = 0; i < projectiles->size(); i++)
+
+	for (auto& i : projectiles)
 	{
-		setOpacity(&projectiles->at(i), 150);
-		renderTarget->draw(projectiles->at(i).body);
-		setOpacity(&projectiles->at(i));
+		renderTexture.draw(i.body);
 	}
-	renderTarget->draw(player->sprite);
-	//setOpacity(player, 150);
+	
+	setOpacity(player, 150);
+	renderTexture.draw(player.sprite);
+	setOpacity(player);
+	renderTexture.display();
 }
 
-float getTimeDiff(Clock* clock, float time)
+
+float getTimeDiff(const Clock& clock, float time) 
 {
-	return clock->getElapsedTime().asSeconds() - time;
+	return clock.getElapsedTime().asSeconds() - time;
 }
+
 
 int getCount(float storedTimeDifference, int animationStates, int changesPerSecondMultiplier = 1)
 {
@@ -305,165 +211,628 @@ int getCount(float storedTimeDifference, int animationStates, int changesPerSeco
 	return a;
 }
 
-void levelLoad(RenderWindow* window, vector<gameObject>* objects, vector<Entity>* entities, int* currentLevel, int switchToLevel, vector<Texture*>* textures)
+
+void levelLoad(RenderWindow& window, vector<gameObject>& objects, vector<Entity>& entities, int& currentLevel, int switchToLevel, const vector<Texture>& textures)
 {
 	Clock clock;
 
 	RectangleShape loadScreen;
-	loadScreen.setSize(Vector2f(window->getSize()));
+	loadScreen.setSize(Vector2f(window.getSize()));
 	loadScreen.setFillColor(Color(Color::Black));
-	window->draw(loadScreen);
-	window->display();
+	window.draw(loadScreen);
+	window.display();
 
-	objects->erase(objects->begin(), objects->end());
-	entities->erase(entities->begin(), entities->end());
+	objects.erase(objects.begin(), objects.end());
+	entities.erase(entities.begin(), entities.end());
 	initialize(switchToLevel, objects, entities, textures);
-	*currentLevel = switchToLevel;
+	currentLevel = switchToLevel;
 
 	for (; floor(clock.getElapsedTime().asSeconds() * 2) < 2;); //wait
-	window->clear();
+	window.clear();
 }
 
-void cameraCollision(gameObject* area, View* camera, Player* player, Vector2f WINDOW_SIZE)
+
+void cameraCollision(const gameObject& area, View& camera, const Player& player, const Vector2f WINDOW_SIZE)
 {
-	camera->setCenter(player->getCenter());
-	const FloatRect allowedCameraArea = area->body.getGlobalBounds();
-	const Vector2f cameraPosition = camera->getCenter() - camera->getSize() / 2.f;
+	camera.setCenter(player.getCenter());
+	const FloatRect allowedCameraArea = area.body.getGlobalBounds();
+	const Vector2f cameraPosition = camera.getCenter() - camera.getSize() / 2.f;
 
 	bool TL = allowedCameraArea.contains(cameraPosition); 
-	bool TR = allowedCameraArea.contains(cameraPosition + Vector2f(camera->getSize().x, 0));
-	bool BL = allowedCameraArea.contains(cameraPosition + Vector2f(0, camera->getSize().y));
-	bool BR = allowedCameraArea.contains(cameraPosition + camera->getSize());
+	bool TR = allowedCameraArea.contains(cameraPosition + Vector2f(camera.getSize().x, 0));
+	bool BL = allowedCameraArea.contains(cameraPosition + Vector2f(0, camera.getSize().y));
+	bool BR = allowedCameraArea.contains(cameraPosition + camera.getSize());
 
 	if (!(TL and TR and BL and BR))
 	{
 		if (TL)
 		{
 			if (BL)
-				camera->setCenter(Vector2f(WINDOW_SIZE.x - camera->getSize().x / 2, player->getCenter().y));
+				camera.setCenter(Vector2f(WINDOW_SIZE.x - camera.getSize().x / 2, player.getCenter().y));
 			else if (TR)
-				camera->setCenter(Vector2f(player->getCenter().x, WINDOW_SIZE.y - camera->getSize().y / 2));
+				camera.setCenter(Vector2f(player.getCenter().x, WINDOW_SIZE.y - camera.getSize().y / 2));
 			else
-				camera->setCenter(WINDOW_SIZE - camera->getSize() / 2.f);
+				camera.setCenter(WINDOW_SIZE - camera.getSize() / 2.f);
 		}
 
 		else if (BR)
 		{
 			if (TR)
-				camera->setCenter(Vector2f(camera->getSize().x / 2, player->getCenter().y));
+				camera.setCenter(Vector2f(camera.getSize().x / 2, player.getCenter().y));
 			else if (BL)
-				camera->setCenter(Vector2f(player->getCenter().x, camera->getSize().y / 2));
+				camera.setCenter(Vector2f(player.getCenter().x, camera.getSize().y / 2));
 			else
-				camera->setCenter(camera->getSize() / 2.f);
+				camera.setCenter(camera.getSize() / 2.f);
 		}
 
 		else if (BL)
-			camera->setCenter(Vector2f(WINDOW_SIZE.x - camera->getSize().x / 2, camera->getSize().y / 2));
+			camera.setCenter(Vector2f(WINDOW_SIZE.x - camera.getSize().x / 2, camera.getSize().y / 2));
 		else if (TR)
-			camera->setCenter(Vector2f(camera->getSize().x / 2, WINDOW_SIZE.y - camera->getSize().y / 2));
+			camera.setCenter(Vector2f(camera.getSize().x / 2, WINDOW_SIZE.y - camera.getSize().y / 2));
 		else
-			camera->setCenter(player->getCenter()); // precaution
+			camera.setCenter(player.getCenter()); // precaution
 	}
 }
 
-//should be merged with showInventory ???
-void pause(RenderWindow* window, vector<Texture>* textures)
+
+
+void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& count)
 {
-	const int ROWS = 4;
-	const int COLUMNS = 1;
-	const float	BUTTON_SPACING = 10;
-	const Vector2f BUTTON_SIZE{ 200, 30 };
-	const Vector2f BUTTON_OFFSET{ window->getSize().x / 2 - BUTTON_SIZE.x / 2,window->getSize().y / 2 - (ROWS - 1) / 2 * BUTTON_SPACING - ROWS * BUTTON_SIZE.y };
+	const auto columns = gridDimensions.x;
+	const auto rows = gridDimensions.y;
+	
+	if (event.key.code == Keyboard::W)
+	{
+		if (count < columns)
+			count += columns * (rows - 1);
+		else
+			count -= columns;
+	}
+	else if (event.key.code == Keyboard::S)
+	{
+		if (count > columns * (rows - 1) - 1)
+			count -= columns * (rows - 1);
+		else
+			count += columns;
+	}
+	else if (event.key.code == Keyboard::A)
+	{
+		if (count % columns == 0)
+			count += columns - 1;
+		else
+			count--;
+	}
+	else if (event.key.code == Keyboard::D)
+	{
+		if (count % columns == columns - 1)
+			count -= columns - 1;
+		else
+			count++;
+	}
+}
 
-	RenderTexture pauseTexture;
-	pauseTexture.create(window->getSize().x, window->getSize().y);
+
+/////////////////////////////////////////////////
+///
+/// @brief Draws an additional texture layer alone or on top of other texture
+/// 
+/// @param	targetTexture RenderTexture to draw to
+/// @param	objectsToRender Objects to draw to targetTexture
+/// @param  pendingDraw Texture that should be behind what is going to be rendered
+/// 
+/// @return Sprite ready for display
+///
+/////////////////////////////////////////////////
+Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<RectangleShape>& objectsToRender, const RenderTexture* pendingDraw = NULL)
+{
+	targetTexture.clear();
+
+	if (pendingDraw) //draw background if present
+		targetTexture.draw(Sprite(pendingDraw->getTexture()));
+
+	for (auto& i : objectsToRender)	//draw the rest
+	{
+		targetTexture.draw(i);
+	}
+	
+	targetTexture.display();
+
+	return Sprite(targetTexture.getTexture());
+}
 
 
-	int chosenButton = 0;
+Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprite>& spritesToRender, const RenderTexture* pendingDraw = NULL)
+{
+	targetTexture.clear();
+
+	if (pendingDraw) //draw background if present
+		targetTexture.draw(Sprite(pendingDraw->getTexture()));
+
+	for (auto& i : spritesToRender)	//draw the rest
+	{
+		targetTexture.draw(i);
+	}
+
+	targetTexture.display();
+
+	return Sprite(targetTexture.getTexture());
+}
+
+
+/////////////////////////////////////////////////
+///
+/// @brief Constructs a rectangle grid of graphic vectors
+///
+/// @param cellCount Grid dimensions as X - columns and Y - rows. Either must be non-zero
+/// @param gridSize Size of constructed grid
+/// @param gridPosition Starting point of the grid
+/// @param cellSize Size of the inside cell, base grid is divided instead if left default
+/// @deprecated Actually it's deprecated since day 1
+/// 
+/// @return An array of vectors
+/// 
+/////////////////////////////////////////////////
+const vector<Vector2f> constructRectangleGridVectors(const Vector2u cellCount, const Vector2u gridSize, 
+	const Vector2u gridPosition = { 0,0 }, const Vector2u cellSize = { 0,0 })
+{	
+	//everything is proportional to the window size for now
+
+	const size_t rows = cellCount.y;
+	const size_t columns = cellCount.x;
+	
+	vector<Vector2f> gridVectors;
+	gridVectors.reserve(rows * columns);
+
+	for (size_t i = 0; i < rows; i++)
+	{
+		for (size_t j = 0; j < columns; j++)
+		{
+			Vector2f initialOffset = { Vector2f(gridPosition) + Vector2f(gridSize.x / columns * j, gridSize.y / rows * i) };
+			
+			if (cellSize == Vector2u{ 0,0 })
+				gridVectors.push_back(initialOffset);
+			else
+			{
+				Vector2f cellOffset = { (Vector2f(gridSize.x / columns, gridSize.y / rows) - Vector2f(cellSize)) / 2.f };
+				gridVectors.push_back(initialOffset + cellOffset);
+			}
+		}
+	}
+	return gridVectors;
+}
+
+
+vector<RectangleShape> defineInventory(const Vector2u renderTargetSize, const Player& player, const Vector2u itemGrid,  const int chosenItem)
+{
+	//everything you can tweak to change inventory appearance
+	const Vector2u INVENTORY_POSITION = renderTargetSize / size_t(4); 
+	const Vector2u INVENTORY_SIZE = INVENTORY_POSITION * size_t(2);
+	const Vector2u ITEM_SIZE = { 50,50 };
+
+	vector<RectangleShape> objects;
+
+	RectangleShape tintedScreen;
+	tintedScreen.setSize(Vector2f(renderTargetSize));
+	tintedScreen.setFillColor(Color(0, 0, 0, 140));
+	objects.push_back(tintedScreen);
+
+	RectangleShape inventoryShape;
+	inventoryShape.setSize(Vector2f(INVENTORY_SIZE));
+	inventoryShape.setPosition(Vector2f(INVENTORY_POSITION));
+	inventoryShape.setFillColor(Color(255, 0, 0, 170));
+	objects.push_back(inventoryShape);
+
+	if (DEBUG_LEVEL)
+	{
+		for (auto& i : constructRectangleGridVectors(itemGrid, INVENTORY_SIZE, INVENTORY_POSITION))
+		{
+			RectangleShape obj;
+			obj.setPosition(i);
+			obj.setSize(Vector2f(INVENTORY_SIZE.x / itemGrid.x, INVENTORY_SIZE.y / itemGrid.y));
+			obj.setFillColor(Color::Transparent);
+			obj.setOutlineColor(Color(150, 150, 0, 200));
+			obj.setOutlineThickness(3);
+			objects.push_back(obj);
+		}
+	}
+
+	size_t count = 0;
+	for (auto& i : constructRectangleGridVectors(itemGrid, INVENTORY_SIZE, INVENTORY_POSITION, ITEM_SIZE))
+	{
+		RectangleShape obj;
+		obj.setPosition(i);
+		obj.setSize(Vector2f(ITEM_SIZE));
+		if (count == chosenItem)
+		{
+			obj.setOutlineThickness(3);
+			obj.setOutlineColor(Color::Green);
+		}
+		
+		if (count < player.inventorySlots.size())
+		{
+			if (player.inventorySlots.at(count) == 1)
+				obj.setFillColor(Color::Blue);
+			else if (player.inventorySlots.at(count) == 2)
+				obj.setFillColor(Color::Yellow);
+			else
+				obj.setFillColor(Color::Black);
+		}
+
+		objects.push_back(obj);
+		count++;
+	}
+
+	return objects;
+}
+
+
+void showScreenInventory(RenderWindow& window, const RenderTexture& mainGameTexture, Player& player)
+{
+	const Vector2u itemGrid = { 4,2 };
+	RenderTexture finalTexture;
+	finalTexture.create(window.getSize().x, window.getSize().y);
+
+
+	int chosenItem = 0;
 	bool redraw = true;
 	Event event;
 
 	while (true)
 	{
-		while (window->pollEvent(event))
+		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
 			{
-				window->close();
+				window.close();
 				return;
 			}
+
+			else if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::I)
+				{
+					player.isInventoryOpen = false;
+					return;
+				}
+
+				//any interactions should be here
+				else if (event.key.code == Keyboard::E)
+				{
+					if (player.inventorySlots.at(chosenItem) == 1 and player.health < player.maxHealth)
+					{
+						player.health += 20;
+						player.inventorySlots.at(chosenItem) = 0;
+					}
+					else if (player.inventorySlots.at(chosenItem) == 2 and player.health > 0)
+					{
+						player.health -= 20;
+						player.inventorySlots.at(chosenItem) = 0;
+					}
+					else continue; //<---
+				}
+
+				else
+					menuNavigation(event, itemGrid, chosenItem);
+
+				redraw = true;	//redraw on chosen item change
+			}
+		}
+
+		if (redraw)
+		{
+			window.draw(additionalLayerRendering(finalTexture, defineInventory(window.getSize(), player, itemGrid, chosenItem), &mainGameTexture));
+			window.display();
+			redraw = false;
+		}
+	}
+}
+
+
+vector<RectangleShape> definePause(const Vector2u renderTargetSize, const Vector2u pauseGrid, const int chosenButton)
+{
+	const size_t BUTTON_OFFSET = 10;
+	const Vector2u BUTTON_SIZE = { 200, 30 };
+
+	vector<RectangleShape> objects;
+
+	RectangleShape blackScreen;
+	blackScreen.setSize(Vector2f(renderTargetSize));
+	blackScreen.setFillColor(Color(20, 30, 20));
+	objects.push_back(blackScreen);
+
+	//that is important (actually not so m..%&^FUCK OFF IT'S IMPORTANT)
+	auto menuPosition = Vector2u(constructRectangleGridVectors({ 3,3 }, renderTargetSize, { 0,0 }, { BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET) * pauseGrid.y }).at(4));
+
+	if (DEBUG_LEVEL)
+	{
+		for (auto& i : constructRectangleGridVectors({ 3,3 }, renderTargetSize, { 0,0 }))
+		{
+			RectangleShape obj;
+			obj.setPosition(i);
+			obj.setSize(Vector2f(renderTargetSize / 3u));
+			obj.setFillColor(Color::Transparent);
+			obj.setOutlineColor(Color(30, 120, 50, 220));
+			obj.setOutlineThickness(3);
+			objects.push_back(obj);
+		}
+
+		for (auto& i : constructRectangleGridVectors({ 3,3 }, renderTargetSize, { 0,0 }, { BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET) * pauseGrid.y }))
+		{
+			RectangleShape obj;
+			obj.setPosition(i);
+			obj.setSize(Vector2f(BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET)* pauseGrid.y ));
+			obj.setFillColor(Color::Transparent);
+			obj.setOutlineColor(Color(130, 30, 80, 200));
+			obj.setOutlineThickness(3);
+			objects.push_back(obj);
+		}
+	}
+
+	size_t count = 0;
+	for (auto& i : constructRectangleGridVectors(pauseGrid, { BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET) * pauseGrid.y }, menuPosition, BUTTON_SIZE))
+	{
+		RectangleShape obj;
+		obj.setPosition(i);
+		obj.setSize(Vector2f(BUTTON_SIZE));
+		obj.setFillColor(count == chosenButton ? Color::White : Color::Blue);
+		objects.push_back(obj);
+		count++;
+	}
+	
+	return objects; // i cant return reference fuuuuuuuuuck my life
+}
+
+
+int showScreenPause(RenderWindow& window)
+{
+	const Vector2u pauseGrid= { 1, 4 };
+	RenderTexture pauseTexture;
+	pauseTexture.create(window.getSize().x, window.getSize().y);
+
+
+	int chosenButton = 0;
+	bool redraw = true;
+	Event event;
+	while (true)
+	{
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::Closed)
+			{
+				window.close();
+				return -1;
+			}
+
 			else if (event.type == Event::KeyReleased)
 			{
 				if (event.key.code == Keyboard::Escape)
 				{
-					return;
+					return 1;
 				}
-				else if (event.key.code == Keyboard::W)
+				else if (event.key.code == Keyboard::E)
 				{
-					if (chosenButton < COLUMNS)
-						chosenButton += COLUMNS * (ROWS - 1);
-					else
-						chosenButton -= COLUMNS;
+					if (chosenButton == 0)
+						return 1;
+					else if (chosenButton == 1)
+						return 2;
+					else if (chosenButton == pauseGrid.y - 1)
+						return 0;
 				}
-				else if (event.key.code == Keyboard::S)
-				{
-					if (chosenButton > COLUMNS * (ROWS - 1) - 1)
-						chosenButton -= COLUMNS * (ROWS - 1);
-					else
-						chosenButton += COLUMNS;
-				}
-				else if (event.key.code == Keyboard::A)
-				{
-					if (chosenButton % COLUMNS == 0)
-						chosenButton += COLUMNS - 1;
-					else
-						chosenButton--;
-				}
-				else if (event.key.code == Keyboard::D)
-				{
-					if (chosenButton % COLUMNS == COLUMNS - 1)
-						chosenButton -= COLUMNS - 1;
-					else
-						chosenButton++;
-				}
+				else
+					menuNavigation(event, pauseGrid, chosenButton);
+
 				redraw = true;
 			}
 		}
 
 		if (redraw)
 		{
-			window->clear();
-			pauseTexture.clear();
-
-			RectangleShape blackScreen;
-			blackScreen.setSize(Vector2f(window->getSize()));
-			blackScreen.setFillColor(Color(20,30,20));
-			pauseTexture.draw(blackScreen);
-
-			for (int i = 0; i < ROWS; i++)
-			{
-				for (int j = 0; j < COLUMNS; j++)
-				{
-					RectangleShape obj;
-					obj.setPosition(BUTTON_OFFSET + Vector2f(0, (BUTTON_SIZE.y + BUTTON_SPACING) * i));
-					obj.setSize(BUTTON_SIZE);
-					if (i == int(chosenButton / COLUMNS) and j == chosenButton % COLUMNS)
-					{
-						obj.setFillColor(Color::White);
-					}
-					else
-						obj.setFillColor(Color::Blue);
-					pauseTexture.draw(obj);
-				}
-			}
-
-			pauseTexture.display();
-			Sprite pauseSpriteBase(pauseTexture.getTexture());
-
-			window->draw(pauseSpriteBase);
-			window->display();
+			window.draw(additionalLayerRendering(pauseTexture, definePause(window.getSize(), pauseGrid, chosenButton)));
+			window.display();
 			redraw = false;
-			//done redrawing
 		}
 	}
 }
+
+
+/////////////////////////////////////////////////
+// Very (not)useful calculations that help solve the great (unexisting) problem of
+// having to construct many grid-like sets of objects by making it ten millions times harder 
+// than it actually is, and all thanks to standartisation and code reusage, 
+// because making one function do anything for everything was a BRILLIANT IDEA!!!
+/////////////////////////////////////////////////
+vector<Vector2f> constructGrid(const Vector2u cellCount, const Texture& texture, const RenderTarget& renderTarget, 
+	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor = { 0, 0 })
+{
+	const auto rows = cellCount.y;
+	const auto columns = cellCount.x;
+	const Vector2f spriteSize = texture.getSize() * SHRINK_FACTOR;
+	const Vector2f targetSize = Vector2f{ renderTarget.getSize() };
+	const Vector2f alignmentCenter = targetSize * alignmentFactor;
+	const Vector2f spriteGap = cellOffsetFactor != Vector2f{ 0, 0 } ? spriteSize * cellOffsetFactor : Vector2f{30, 15};
+	const float offsetEdgeX = spriteSize.x * columns / 2 + spriteGap.x * (columns - 1) / 2;
+	const float offsetEdgeY = spriteSize.y * rows / 2 + spriteGap.y * (rows - 1) / 2;
+	const Vector2f edgePoint = alignmentCenter - Vector2f{ offsetEdgeX, offsetEdgeY };
+	const Vector2f finalOffset = spriteSize + spriteGap;
+	//...hence fuck off
+
+	vector<Vector2f> gridVectors;
+	gridVectors.reserve(rows * columns);
+
+	for (size_t i = 0; i < rows; i++)
+	{
+		for (size_t j = 0; j < columns; j++)
+		{
+			gridVectors.push_back({ edgePoint + Vector2f{finalOffset.x * j, finalOffset.y * i} });
+		}
+	}
+	
+	return gridVectors;
+}
+
+
+
+
+
+Sprite defineMenu(RenderTexture& menuTexture, const Vector2u& menuGrid, const int chosenButton,
+	const vector<Texture>& texturesMenu, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
+{		
+	const float firstDrawTime = 3;
+	menuTexture.clear();
+
+	vector<Sprite> sprites;
+	
+	Sprite background(texturesMenu.at(0));
+	sprites.push_back(background);
+	
+
+	Sprite button;
+	size_t count = 0;
+	for (auto& i : constructGrid(menuGrid, texturesMenu.at(2), menuTexture, { 0.5, 0.6 }))
+	{
+		button.setTexture(count == chosenButton ? texturesMenu.at(2) : texturesMenu.at(3));
+		button.setPosition(i);
+		sprites.push_back(button);
+		count++;
+	}
+
+	for (auto& i : sprites)
+	{
+		i.setScale(SHRINK_FACTOR);
+		menuTexture.draw(i);
+	}
+
+	if (isFirstDraw)
+	{
+		RectangleShape tint;
+		tint.setSize(Vector2f{ menuTexture.getSize() });
+		if (storedTime < firstDrawTime)
+		{
+			tint.setFillColor(Color(0, 0, 0, 255 * (1 - storedTime / firstDrawTime)));
+			menuTexture.draw(tint);
+			storedTime += clock.getElapsedTime().asSeconds() - latestAnimationUpdate;
+			latestAnimationUpdate = clock.getElapsedTime().asSeconds();
+		}
+		else
+		{
+			isFirstDraw = false;
+			storedTime = 0;
+		}
+	}
+
+
+	menuTexture.display();
+	return Sprite(menuTexture.getTexture());
+}
+
+// -1 = window closed
+// 0 = load saved level (stored in current)
+// int = load chosen level
+int showScreenMenu(RenderWindow& window, vector<Texture>& texturesMenu)
+{
+	const Vector2u menuGrid = { 1, 4 };
+	
+	
+	RenderTexture menuTexture;
+	menuTexture.create(window.getSize().x, window.getSize().y);
+	bool isFirstDraw = true;
+	bool entryAnimationFinished = false;
+	bool redraw = true;
+	int chosenButton = 0;
+	float storedTime = 0;
+	float latestAnimationUpdate = 0;
+	Event event;
+	Clock clock;
+
+	while (true)
+	{
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::E)
+				{
+					if (chosenButton == 0)
+						return 0;
+					else if (chosenButton == 1)
+						return 1;
+					else if (chosenButton == menuGrid.y - 1)
+						return -1;
+				}
+
+				else menuNavigation(event, menuGrid, chosenButton);
+				redraw = true;
+			}
+			else if (event.type == Event::Closed)
+			{
+				window.close();
+				return -1;
+			}
+		}
+
+		if (redraw or isFirstDraw)
+		{
+			window.draw(defineMenu(menuTexture, menuGrid, chosenButton, texturesMenu, clock, storedTime, latestAnimationUpdate, isFirstDraw));
+			window.display();
+			redraw = false;
+		}
+	}
+}
+
+
+vector<Texture> loadTexturesMenu()
+{
+	vector<Texture> texturesMenu;
+	
+	Texture menuLight;
+	menuLight.loadFromFile("D:/All mine/Game/Maindo/menuLight.png");
+	texturesMenu.push_back(menuLight);
+
+	Texture menuDark;
+	menuDark.loadFromFile("D:/All mine/Game/Maindo/menuDark.png");
+	texturesMenu.push_back(menuDark);
+
+	Texture menuButtonLight;
+	menuButtonLight.loadFromFile("D:/All mine/Game/Maindo/menuButtonLight.png");
+	texturesMenu.push_back(menuButtonLight);
+
+	Texture menuButtonDark;
+	menuButtonDark.loadFromFile("D:/All mine/Game/Maindo/menuButtonDark.png");
+	texturesMenu.push_back(menuButtonDark);
+
+	return texturesMenu;
+}
+
+vector<Texture> loadTextures()
+{
+	vector<Texture> textures;
+	
+	Texture playerTexture;
+	playerTexture.loadFromFile("D:/All mine/Game/Maindo/player.png");
+	textures.push_back(playerTexture);
+	Texture bulletRifleTexture;
+	bulletRifleTexture.loadFromFile("D:/All mine/Game/bulletRifle.png");
+	textures.push_back(bulletRifleTexture);
+	Texture bulletPistolTexture;
+	bulletPistolTexture.loadFromFile("D:/All mine/Game/bulletPistol.png");
+	textures.push_back(bulletPistolTexture);
+
+	return textures;
+}
+
+void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock)
+{
+	player.upPressed = (Keyboard::isKeyPressed(Keyboard::W) ? true : false);
+	player.rightPressed = (Keyboard::isKeyPressed(Keyboard::D) ? true : false);
+	player.downPressed = (Keyboard::isKeyPressed(Keyboard::S) ? true : false);
+	player.leftPressed = (Keyboard::isKeyPressed(Keyboard::A) ? true : false);
+	player.leftShiftPressed = (Keyboard::isKeyPressed(Keyboard::LShift) ? true : false);
+
+	if (Keyboard::isKeyPressed(Keyboard::Space))
+	{
+		player.weapon.action(&player, player.currentSight, player.getCenter() - Vector2f(0, 5), mainClock.getElapsedTime().asSeconds(), projectiles);
+		if (player.weapon.isMelee and !(getTimeDiff(mainClock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
+			player.isUsingWeapon = true; //false?
+	}
+}
+

@@ -3,14 +3,14 @@
 gameObject::gameObject() : gameObjectStationary()
 {
 	isMoving = false;
-	baseSpeed = speed = latestUpdate = latestDistanceCovered = 0;
+	basespeed = speed = latestUpdate = latestDistanceCovered = 0;
 	ID = 0;
 }
 
-gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float speed,
+gameObject::gameObject(Vector2f position, Vector2f size, const Texture* texture, float speed,
 	bool allowCollision, Color bodyColor, Color outlineColor, float outlineThickness) : gameObjectStationary(position, size, texture, allowCollision, bodyColor, outlineColor, outlineThickness)
 {	
-	this->speed = this->baseSpeed = speed;
+	this->speed = this->basespeed = speed;
 
 	currentSight = Vector2f(1, 0); //RIGHT
 
@@ -23,14 +23,14 @@ gameObject::gameObject(Vector2f position, Vector2f size, Texture* texture, float
 	ID = 0;
 }
 
-bool gameObject::collisionCheck(FloatRect obstacle)
+bool gameObject::collisionCheck(const FloatRect& obstacle) const
 {
 	if (obstacle.intersects(body.getGlobalBounds()))
 		return true;
 	return false;
 }
 
-bool gameObject::collisionCheck(gameObject obstacle)
+bool gameObject::collisionCheck(const gameObject& obstacle)
 {
 	if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 	{
@@ -41,7 +41,7 @@ bool gameObject::collisionCheck(gameObject obstacle)
 	return false;
 }
 
-void gameObject::collisionCheckInner(FloatRect area)
+void gameObject::collisionCheckInner(const FloatRect& area)
 {
 	bool TL = area.contains(body.getPosition());
 	bool TR = area.contains(body.getPosition() + Vector2f(body.getGlobalBounds().width, 0));

@@ -1,5 +1,5 @@
 #include "Weapon.h"
-
+using std::vector;
 
 Weapon::Weapon()
 {
@@ -11,7 +11,7 @@ Weapon::Weapon()
 	projectileTexture = NULL;
 }
 
-Weapon::Weapon(int ID, float range, float projectileSpeed, float ammoCapacity, Texture* projectileTexture, 
+Weapon::Weapon(int ID, float range, float projectileSpeed, float ammoCapacity, const Texture* projectileTexture, 
 	float fireRate, float reloadTime, float damage)
 {
 	reloadTimer = latestReloadUpdate = isMelee = 0;
@@ -41,13 +41,12 @@ Weapon::Weapon(int ID, float range, float projectileSpeed, float ammoCapacity, T
 	this->currentAmmo = ammoCapacity;
 }
 
-void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f shotPosition, float elapsedTime, std::vector<Projectile>* projectiles)
+void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f shotPosition, float elapsedTime, vector<Projectile>& projectiles)
 {
-	if (fireRate == 0)
+	if (fireRate == 0 or elapsedTime - latestShotTime < 1 / fireRate) //firerate is shots per second
 		return;
-	if (elapsedTime - latestShotTime < 1 / fireRate)	//firerate is shots per second
-		return;
-	
+
+
 	Projectile projectile;
 
 	projectile.isMelee = this->isMelee;
@@ -70,9 +69,10 @@ void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f sho
 		//projectile.body.setSize(projectileSource->body.getSize()); //<----
 		projectile.body.setSize(hitboxSize);
 		projectile.allowCollision = true;
-		projectiles->push_back(projectile);
+		projectiles.push_back(projectile);
 		return;
 	}
+
 	if (!currentAmmo)
 	{
 		if (!latestReloadUpdate)
@@ -90,6 +90,7 @@ void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f sho
 			latestReloadUpdate = 0;
 		}
 	}
+
 	else
 	{	
 		latestShotTime = elapsedTime;
@@ -124,6 +125,6 @@ void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f sho
 			projectile.body.setRotation(atan2(shotDirection.y, shotDirection.x) * 180 / 3.14);
 		}
 
-		projectiles->push_back(projectile);
+		projectiles.push_back(projectile);
 	}
 }

@@ -8,7 +8,7 @@ gameObjectStationary::gameObjectStationary()
 	animationCycleTimer = latestAnimationUpdate = interactionRadius = interactionType = interactionTypeSpeciality = 0;
 }
 
-gameObjectStationary::gameObjectStationary(Vector2f position, Vector2f size, Texture* texture, bool allowCollision,
+gameObjectStationary::gameObjectStationary(Vector2f position, Vector2f size, const Texture* texture, bool allowCollision,
 	Color bodyColor, Color outlineColor, float outlineThickness)
 {
 	isAnimated = interactionType = isDestroyable = false;
@@ -21,13 +21,15 @@ gameObjectStationary::gameObjectStationary(Vector2f position, Vector2f size, Tex
 	this->allowCollision = allowCollision;
 	interactionRadius = 10;
 
+
+
 	//to be removed
 	body.setFillColor(bodyColor);
 	body.setOutlineColor(outlineColor);
 	body.setOutlineThickness(outlineThickness);
 }
 
-Vector2f gameObjectStationary::getCenter()
+const Vector2f gameObjectStationary::getCenter() const 
 {
 	return Vector2f(body.getPosition() + body.getSize() / 2.f);
 }
@@ -39,8 +41,8 @@ void gameObjectStationary::updateAnimation(float elapsedTime, const Texture* tex
 	{
 		int x = int(floor(animationCycleTimer * animationCycles)) % animationCycles; 
 
-		IntRect neededTextureRect(Vector2i(body.getSize().x * x, 0), Vector2i(body.getSize()));
-		body.setTextureRect(neededTextureRect);
+		IntRect TextureRect(Vector2i(body.getSize().x * x, 0), Vector2i(body.getSize()));
+		body.setTextureRect(TextureRect);
 
 		animationCycleTimer += elapsedTime - latestAnimationUpdate;
 		latestAnimationUpdate = elapsedTime;

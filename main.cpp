@@ -35,33 +35,28 @@ struct gameTexture
 
 int main()
 {
-	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName());
-	RenderTexture mainGameTexture;
-	mainGameTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
-	
+	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*,Style::Fullscreen*/);
+	 
 	View camera(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
 	View minimap(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
 	minimap.setViewport(FloatRect(0.35, 0.7, 0.3, 0.3)); //0.03, 0.75, 0.2, 0.2
+	
+	RenderTexture mainGameTexture;
+	mainGameTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
+	RenderTexture minimapTexture;
+	minimapTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
 
-	vector<Texture*> textures;
+	
+	vector<Texture> texturesMenu = loadTexturesMenu();
+	vector<Texture> textures = loadTextures();
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 	vector<Entity> entities;
 
-	Texture playerTexture;
-	playerTexture.loadFromFile("D:/All mine/Game/Maindo/player.png");
-	textures.push_back(&playerTexture);
-	Texture bulletRifleTexture;
-	bulletRifleTexture.loadFromFile("D:/All mine/Game/bulletRifle.png");
-	textures.push_back(&bulletRifleTexture);
-	Texture bulletPistolTexture;
-	bulletPistolTexture.loadFromFile("D:/All mine/Game/bulletPistol.png");
-	textures.push_back(&bulletPistolTexture);
-
-	Weapon sniperRifle(3, 800, 600, 5, &bulletRifleTexture, 1, 3);
-	Weapon rifle(2, 600, 400, 30, &bulletRifleTexture, 5, 2);
-	Weapon pistol(1, 200, 200, 15, &bulletPistolTexture, 3, 1.5);
+	Weapon sniperRifle(3, 800, 600, 5, &textures.at(2), 1, 3);
+	Weapon pistol(1, 200, 200, 15, &textures.at(2), 3, 1.5);
+	Weapon rifle(2, 600, 400, 30, &textures.at(1), 5, 2);
 	Weapon board(0, 0, 0, 0, NULL, 1, 0, 8);
 	board.isMelee = true;
 	board.projectileLifetime = 0.48;
@@ -70,29 +65,31 @@ int main()
 	board.hitboxSize = Vector2f(30, 25);
 	board.hitboxPositions = { {-10,-20}, {25,-15}, {25,10}, {25,35} };
 	
-	Player player(Vector2f(20, 20), Vector2f(25, 60), &playerTexture, 200); //speed is pixels per second
+	Player player(Vector2f(20, 20), Vector2f(40, 90), &textures.at(0), 200); //speed is pixels per second
 	player.weapon = pistol;
-	player.sprite.setTexture(*textures.at(0));
+	player.sprite.setTexture(textures.at(0));
 	bool switchedWeapon = false;
 	
 	int currentLevel = 1;
 	bool drawMinimap = false;
 	bool mainTextureCreated = true;
-	levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
+	levelLoad(window, objects, entities, currentLevel, 1, textures);
 
 	Clock mainClock;
 
+	bool requestMenu = true;
+
+	Event event;
 	while (window.isOpen())
 	{
 		mainGameTexture.clear();
 		window.clear();
-		
-		bool interactionFlag = false;
-		Event event;
 
+		bool interactionFlag = false;
 		//---INPUT PHASE
 		while (window.pollEvent(event)) 
 		{
+			
 			if (event.type == Event::Closed)
 				window.close();
 
@@ -124,6 +121,10 @@ int main()
 					camera.zoom(2);
 				else if (event.key.code == Keyboard::M)
 					drawMinimap = (drawMinimap ? false : true);
+				else if (event.key.code == Keyboard::Hyphen)
+					minimap.zoom(2);
+				else if (event.key.code == Keyboard::Equal)
+					minimap.zoom(0.5);
 			}
 			else if (event.type == Event::KeyReleased)
 			{
@@ -132,25 +133,44 @@ int main()
 				else if (event.key.code == Keyboard::Escape)
 				{
 					float timestamp = mainClock.getElapsedTime().asSeconds();
-					pause(&window, NULL);
-					alignTime(timestamp, &mainClock, &player, &objects, &projectiles);
+
+					switch (showScreenPause(window))
+					{
+					case -1: return -13;
+					case 0: requestMenu = true;
+					case 1: break;
+					case 2: saveLevel(currentLevel, objects, entities, textures);
+					}
+					alignTime(timestamp, mainClock, player, objects, projectiles);
 				}
 			}
 		}
 
-		player.upPressed =			(Keyboard::isKeyPressed(Keyboard::W) ? true : false);
-		player.rightPressed =		(Keyboard::isKeyPressed(Keyboard::D) ? true : false);
-		player.downPressed =		(Keyboard::isKeyPressed(Keyboard::S) ? true : false);
-		player.leftPressed =		(Keyboard::isKeyPressed(Keyboard::A) ? true : false);
-		player.leftShiftPressed =	(Keyboard::isKeyPressed(Keyboard::LShift) ? true : false);
 
-		if (Keyboard::isKeyPressed(Keyboard::Space))
+		if (requestMenu)
 		{
-			player.weapon.action(&player, player.currentSight, player.getCenter() - Vector2f(0, 5), mainClock.getElapsedTime().asSeconds(), &projectiles);
-			if (player.weapon.isMelee and !(getTimeDiff(&mainClock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
-				player.isUsingWeapon = true; //false?
+			objects.erase(objects.begin(), objects.end());
+			entities.erase(entities.begin(), entities.end());
+			projectiles.erase(projectiles.begin(), projectiles.end());
+
+			switch (int chosenLevel = showScreenMenu(window, texturesMenu))
+			{
+			case -1:
+				return -15;
+			case 0:
+				loadLevel(objects, currentLevel);
+				break;
+			default:
+				levelLoad(window, objects, entities, currentLevel, chosenLevel, textures);
+				break;
+			}
+
+			requestMenu = false;
 		}
+
+		applyPlayerInput(player, projectiles, mainClock);
 		//---INPUT PHASE END
+
 
 		//---PROJECTILE PHASE
 		for (size_t i = 0; i < projectiles.size(); i++)
@@ -171,12 +191,12 @@ int main()
 				}
 				else
 				{
-					vector<Vector2f>* hitboxes = &((Weapon*)projectiles.at(i).weaponSource)->hitboxPositions;
+					/*vector<Vector2f>* */ auto hitboxes = &((Weapon*)projectiles.at(i).weaponSource)->hitboxPositions;
 					Vector2f sourcePosition = ((gameObject*)projectiles.at(i).gameObjectSource)->body.getPosition(); //just plain terribleness
 					if (hitboxes->size() > 1)
 					{
 						//wtf
-						Vector2f currentHitboxPosition = sourcePosition + hitboxes->at(getCount(getTimeDiff(&mainClock, projectiles.at(i).creationTime), hitboxes->size(), 2));
+						Vector2f currentHitboxPosition = sourcePosition + hitboxes->at(getCount(getTimeDiff(mainClock, projectiles.at(i).creationTime), hitboxes->size(), 2));
 						projectiles.at(i).body.setPosition(currentHitboxPosition);
 					}
 
@@ -238,12 +258,12 @@ int main()
 		{
 			if (currentLevel == 1)
 			{
-				levelLoad(&window, &objects, &entities, &currentLevel, 0, &textures);
+				levelLoad(window, objects, entities, currentLevel, 0, textures);
 				currentLevel = 0;
 			}
 			else
 			{
-				levelLoad(&window, &objects, &entities, &currentLevel, 1, &textures);
+				levelLoad(window, objects, entities, currentLevel, 1, textures);
 				currentLevel = 1;
 			}
 
@@ -255,7 +275,7 @@ int main()
 		player.collisionCheckInner(playerBounds);
 
 		FloatRect cameraBounds(camera.getCenter() - camera.getSize() / 2.f, camera.getSize());
-
+		
 		// Interactions and Collisions
 		bool interactionMessageDisplayed = false;
 		bool needOverride = false;
@@ -305,12 +325,13 @@ int main()
 				}
 			}
 		}
+
 		if (!needOverride)
 			player.overrideInputX = player.overrideInputY = false;
 
 		for (size_t i = 0; i < entities.size(); i++)
 		{
-			entities.at(i).script(Vector2f(400 + 100 * i, 300 + 100 * i), player.getCenter(), mainClock.getElapsedTime().asSeconds(), &projectiles);
+			entities.at(i).script(Vector2f(400 + 100 * i, 300 + 100 * i), player.getCenter(), mainClock.getElapsedTime().asSeconds(), projectiles);
 			for (size_t j = 1; j < objects.size(); j++)
 			{
 				entities.at(i).collisionCheck(objects.at(j));
@@ -319,65 +340,54 @@ int main()
 		//---COLLISION PHASE END
 
 		//---DRAW PHASE
-		player.updateAnimation(mainClock.getElapsedTime().asSeconds(), textures.at(0));
+		player.updateAnimation(mainClock.getElapsedTime().asSeconds(), &textures.at(0));
 
-		cameraCollision(&objects.at(0), &camera, &player, WINDOW_SIZE);//Vector2f(mainGameTexture.getSize()));
+		cameraCollision(objects.at(0), camera, player, WINDOW_SIZE); //Vector2f(mainGameTexture.getSize()));
 		if (camera.getSize().x == CAMERA_SIZE.x / 8)
 			camera.setCenter(player.getCenter() - Vector2f(0, 10));
 		if (camera.getSize().x == CAMERA_SIZE.x / 16)
 			camera.setCenter(player.getCenter() - Vector2f(0, 20));
 
-
 		mainGameTexture.setView(camera);
-		int drawCalls = 0;
-		finalDraw(&mainGameTexture, &objects, &entities, &projectiles, &player, &drawCalls);
-		
-		//cout << objects.size() + projectiles.size() + entities.size() << " " << drawCalls << endl;
+		minimapTexture.setView(minimap);
+		minimap.setCenter(player.getCenter());
+
+
+		finalDraw(mainGameTexture, objects, entities, projectiles, player);
 		mainGameTexture.display();
 
+
 		if (player.isInventoryOpen)
-		{
+		{			
 			float timestamp = mainClock.getElapsedTime().asSeconds();
-			showInventory(&window, &mainGameTexture, &camera, &player);
-			alignTime(timestamp, &mainClock, &player, &objects, &projectiles);
+			showScreenInventory(window, mainGameTexture, player);
+			alignTime(timestamp, mainClock, player, objects, projectiles);
 		}
 
 		Sprite buf(mainGameTexture.getTexture());
 		window.draw(buf);
 
+		RectangleShape hpBase;
+		hpBase.setPosition(30, 30);
+		hpBase.setSize(Vector2f(102, 22));
+		hpBase.setFillColor(Color::White);
+		window.draw(hpBase);
+		RectangleShape hpBar;
+		hpBar.setPosition(31, 31);
+		hpBar.setSize(Vector2f(player.health, 20));
+		hpBar.setFillColor(Color::Red);
+		window.draw(hpBar);
+
+
 		if (drawMinimap)
 		{
-			RenderTexture minimapTexture;
-			minimapTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
-			minimapTexture.setView(minimap);
-
-			//finalDrawMinimap(&minimapTexture, &objects, &entities, &projectiles, &player);
-			for (size_t i = 0; i < objects.size(); i++)
-			{
-				if (objects.at(i).collisionCheck(cameraBounds))
-				{
-					Color color = objects.at(i).body.getFillColor();
-					objects.at(i).body.setFillColor(Color(color.r, color.g, color.b, 150));
-					minimapTexture.draw(objects.at(i).body);
-					objects.at(i).body.setFillColor(color);
-				}
-			}
-			for (size_t i = 0; i < entities.size(); i++)
-			{
-				if (entities.at(i).collisionCheck(cameraBounds))
-					minimapTexture.draw(entities.at(i).body);
-			}
-			minimapTexture.draw(player.body);
-			for (size_t i = 0; i < projectiles.size(); i++)
-			{
-				if (projectiles.at(i).collisionCheck(cameraBounds))
-					minimapTexture.draw(projectiles.at(i).body);
-			}
-
-
-			minimapTexture.display();
-			Sprite buf(minimapTexture.getTexture());
-			window.draw(buf);
+			finalDrawMinimap(minimapTexture, objects, entities, projectiles, player, cameraBounds);
+			RectangleShape black;
+			black.setPosition(window.getSize()* Vector2f{ minimap.getViewport().left, minimap.getViewport().top });
+			black.setSize(window.getSize() * Vector2f{ minimap.getViewport().width, minimap.getViewport().height });
+			black.setFillColor(Color(0,0,0, 255));
+			window.draw(black);
+			window.draw(Sprite(minimapTexture.getTexture()));
 		}
 		window.display();
 		//---DRAW PHASE END
