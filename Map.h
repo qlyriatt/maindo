@@ -9,6 +9,8 @@ using std::ofstream;
 using std::cout;
 using std::endl;
 
+extern const std::string DIRECTORY;
+
 //lots of work waiting
 void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entities, const vector<Texture>& textures)
 {
@@ -50,7 +52,7 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 	}
 	case 1:
 	{
-		ifstream input("D:/All mine/Game/Maindo/map1.txt");
+		ifstream input(DIRECTORY + "map1.txt");
 		if (!input.is_open())
 			cout << "VERY BAD";
 		
@@ -133,12 +135,12 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 
 void saveLevel(const int currentLevel, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Texture>& textures)
 {
-	ofstream save("D:/All mine/Game/Maindo/save.txt");
+	ofstream save(DIRECTORY + "save.txt");
 	if (!save.is_open())
 		cout << "VERY BAD";
 
 	save << currentLevel << endl;
-	save << "#Objects: " << endl;
+	save << "###### Objects ####### " << endl;
 	for (auto& i : objects)
 		save << i.body.getPosition().x << "," << i.body.getPosition().y << "," << i.body.getSize().x << "," << i.body.getSize().y << ";" << endl;
 
@@ -148,7 +150,7 @@ void saveLevel(const int currentLevel, const vector<gameObject>& objects, const 
 
 void loadLevel(vector<gameObject>& objects, int& currentLevel)
 {
-	ifstream load("D:/All mine/Game/Maindo/save.txt");
+	ifstream load(DIRECTORY + "save.txt");
 	if (!load.is_open())
 		cout << "very bad";
 
@@ -158,6 +160,7 @@ void loadLevel(vector<gameObject>& objects, int& currentLevel)
 	char* buf = new char[10];
 	for (;!load.eof();)
 	{	
+		load >> std::ws;
 		if (char(load.peek()) == '#')
 		{
 			load.ignore(250, '\n');
@@ -166,12 +169,12 @@ void loadLevel(vector<gameObject>& objects, int& currentLevel)
 		if (!levelFound)
 		{
 			load.get(buf, '\n');
-			load.getline(buf, 5, '\n');
+			load.getline(buf, 10, '\n');
 			currentLevel = atoi(buf);
 			levelFound = true;
 			continue;
 		}
-
+		
 		load.getline(buf, 5, ',');
 		position.x = atoi(buf);
 		load.getline(buf, 5, ',');

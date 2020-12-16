@@ -6,12 +6,16 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+extern const std::string DIRECTORY;
 const Vector2f WINDOW_SIZE{ 1066, 600 };
 const Vector2f CAMERA_SIZE{ WINDOW_SIZE / 2.f };
 const Vector2f INVENTORY_SIZE{ CAMERA_SIZE / 2.f };
+const Vector2u NATIVE_RESOLUTION = { 1920, 1080 };
+Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
 
 #define DEBUG_LEVEL 1
-#define SHRINK_FACTOR Vector2f{WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080}
+
+
 
 
 //pls help
@@ -27,6 +31,12 @@ namespace sf
 	Vector2<T> operator *(const Vector2<T>& left, const Vector2<T>& right)
 	{
 		return Vector2<T>(left.x * right.x, left.y * right.y);
+	}
+
+	template<typename T, typename U>
+	Vector2f operator /(const Vector2<T>& left, const Vector2<U>& right)
+	{
+		return Vector2f(float(left.x) / float(right.x), float(left.y) / float(right.y));
 	}
 };
 
@@ -646,7 +656,7 @@ vector<Vector2f> constructGrid(const Vector2u cellCount, const Texture& texture,
 {
 	const auto rows = cellCount.y;
 	const auto columns = cellCount.x;
-	const Vector2f spriteSize = texture.getSize() * SHRINK_FACTOR;
+	const Vector2f spriteSize = Vector2f{ texture.getSize() };
 	const Vector2f targetSize = Vector2f{ renderTarget.getSize() };
 	const Vector2f alignmentCenter = targetSize * alignmentFactor;
 	const Vector2f spriteGap = cellOffsetFactor != Vector2f{ 0, 0 } ? spriteSize * cellOffsetFactor : Vector2f{30, 15};
@@ -670,46 +680,74 @@ vector<Vector2f> constructGrid(const Vector2u cellCount, const Texture& texture,
 	return gridVectors;
 }
 
-
-
-
-
-Sprite defineMenu(RenderTexture& menuTexture, const Vector2u& menuGrid, const int chosenButton,
-	const vector<Texture>& texturesMenu, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
+/////////////////////////////////////////////////
+/// @brief Internal function that draws menu elements to the window
+///
+/// @param window Window to draw to
+/// @param menuTextures A vector of menu textures
+/// @param menuGrid How much columns and rows are in the menu (Vector2u {columns, rows} )
+/// @param menuFont Font to use with menu
+/// @param chosenButton Current chosen button
+/// @param clock Internal clock
+/// @param storedTime Time storage for animation
+/// @param latestAnimationUpdate Timestamp of latest animation update
+/// @param isFirstDraw Does the menu require special intro animation
+/////////////////////////////////////////////////
+void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont, const Vector2u& menuGrid,
+	const int chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
 {		
-	const float firstDrawTime = 3;
-	menuTexture.clear();
+	const size_t lightUpTime = 3;
+	
+
+	window.clear();
+
+	RenderTexture nativeResolutionBuffer;
+	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
 
 	vector<Sprite> sprites;
-	
-	Sprite background(texturesMenu.at(0));
+	vector<Text> texts;
+
+	Sprite background(menuTextures.at(0));
 	sprites.push_back(background);
-	
 
 	Sprite button;
+	Text text[]{ {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
 	size_t count = 0;
-	for (auto& i : constructGrid(menuGrid, texturesMenu.at(2), menuTexture, { 0.5, 0.6 }))
+
+	for (auto& i : constructGrid(menuGrid, menuTextures.at(2), nativeResolutionBuffer, { 0.5, 0.6 }))
 	{
-		button.setTexture(count == chosenButton ? texturesMenu.at(2) : texturesMenu.at(3));
+		button.setTexture(count == chosenButton ? menuTextures.at(2) : menuTextures.at(3));
 		button.setPosition(i);
 		sprites.push_back(button);
+
+		text[count].setFillColor(Color::Black);
+		text[count].setOutlineColor(count == chosenButton ? Color(175, 58, 210) : Color(112, 37, 135));
+		text[count].setOutlineThickness(2);
+		text[count].setCharacterSize(button.getGlobalBounds().height / 2);
+
+		float textOffsetX = (button.getGlobalBounds().width - text[count].getGlobalBounds().width) / 2;
+		float textOffsetY = (button.getGlobalBounds().height - text[count].getCharacterSize()) / 2;
+		Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
+		
+		text[count].setPosition(textPosition);
+		texts.push_back(text[count]);
 		count++;
 	}
 
 	for (auto& i : sprites)
-	{
-		i.setScale(SHRINK_FACTOR);
-		menuTexture.draw(i);
-	}
+		nativeResolutionBuffer.draw(i);
 
+	for (auto& i : texts)
+		nativeResolutionBuffer.draw(i);
+	
 	if (isFirstDraw)
 	{
 		RectangleShape tint;
-		tint.setSize(Vector2f{ menuTexture.getSize() });
-		if (storedTime < firstDrawTime)
+		tint.setSize(Vector2f{ nativeResolutionBuffer.getSize() });
+		if (storedTime < lightUpTime)
 		{
-			tint.setFillColor(Color(0, 0, 0, 255 * (1 - storedTime / firstDrawTime)));
-			menuTexture.draw(tint);
+			tint.setFillColor(Color(0, 0, 0, 255 * (1 - storedTime / lightUpTime)));
+			nativeResolutionBuffer.draw(tint);
 			storedTime += clock.getElapsedTime().asSeconds() - latestAnimationUpdate;
 			latestAnimationUpdate = clock.getElapsedTime().asSeconds();
 		}
@@ -720,21 +758,39 @@ Sprite defineMenu(RenderTexture& menuTexture, const Vector2u& menuGrid, const in
 		}
 	}
 
+	nativeResolutionBuffer.display();
+	Sprite finalOutput(nativeResolutionBuffer.getTexture());
 
-	menuTexture.display();
-	return Sprite(menuTexture.getTexture());
+	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
+
+	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
+	{
+		finalOutput.setScale(SHRINK_FACTOR);
+	}
+
+	cout << window.getSize().x << " " << window.getSize().y << endl;
+	cout << finalOutput.getGlobalBounds().width << " " << finalOutput.getGlobalBounds().height << endl;
+
+	window.draw(finalOutput);
+	window.display();
 }
 
-// -1 = window closed
-// 0 = load saved level (stored in current)
-// int = load chosen level
-int showScreenMenu(RenderWindow& window, vector<Texture>& texturesMenu)
+/////////////////////////////////////////////////
+/// @brief Draws menu and allows menu interaction
+///
+/// @param window Main render window
+/// @param menuTextures Textures used in menu drawing
+/// @param menuFont Font used in menu drawing
+/// 
+/// @return -1 if the window was closed, 0 if level is loading from save, otherwise a level to load
+/////////////////////////////////////////////////
+int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont)
 {
+	window.clear();
+
 	const Vector2u menuGrid = { 1, 4 };
-	
-	
-	RenderTexture menuTexture;
-	menuTexture.create(window.getSize().x, window.getSize().y);
+
+	//tech stuff
 	bool isFirstDraw = true;
 	bool entryAnimationFinished = false;
 	bool redraw = true;
@@ -756,6 +812,7 @@ int showScreenMenu(RenderWindow& window, vector<Texture>& texturesMenu)
 						return 0;
 					else if (chosenButton == 1)
 						return 1;
+					//else if (chosenButton == 2)
 					else if (chosenButton == menuGrid.y - 1)
 						return -1;
 				}
@@ -763,17 +820,23 @@ int showScreenMenu(RenderWindow& window, vector<Texture>& texturesMenu)
 				else menuNavigation(event, menuGrid, chosenButton);
 				redraw = true;
 			}
+
 			else if (event.type == Event::Closed)
 			{
 				window.close();
 				return -1;
 			}
+
+			else if (event.type == Event::Resized)
+			{
+				//SHRINK_FACTOR = window.getSize() / NATIVE_RESOLUTION;
+				redraw = true;
+			}
 		}
 
 		if (redraw or isFirstDraw)
 		{
-			window.draw(defineMenu(menuTexture, menuGrid, chosenButton, texturesMenu, clock, storedTime, latestAnimationUpdate, isFirstDraw));
-			window.display();
+			drawMenu(window, menuTextures, menuFont, menuGrid, chosenButton, clock, storedTime, latestAnimationUpdate, isFirstDraw);
 			redraw = false;
 		}
 	}
@@ -785,19 +848,19 @@ vector<Texture> loadTexturesMenu()
 	vector<Texture> texturesMenu;
 	
 	Texture menuLight;
-	menuLight.loadFromFile("D:/All mine/Game/Maindo/menuLight.png");
+	menuLight.loadFromFile(DIRECTORY + "menuLight.png");
 	texturesMenu.push_back(menuLight);
 
 	Texture menuDark;
-	menuDark.loadFromFile("D:/All mine/Game/Maindo/menuDark.png");
+	menuDark.loadFromFile(DIRECTORY + "menuDark.png");
 	texturesMenu.push_back(menuDark);
 
 	Texture menuButtonLight;
-	menuButtonLight.loadFromFile("D:/All mine/Game/Maindo/menuButtonLight.png");
+	menuButtonLight.loadFromFile(DIRECTORY + "menuButtonLight.png");
 	texturesMenu.push_back(menuButtonLight);
 
 	Texture menuButtonDark;
-	menuButtonDark.loadFromFile("D:/All mine/Game/Maindo/menuButtonDark.png");
+	menuButtonDark.loadFromFile(DIRECTORY + "menuButtonDark.png");
 	texturesMenu.push_back(menuButtonDark);
 
 	return texturesMenu;
@@ -808,13 +871,13 @@ vector<Texture> loadTextures()
 	vector<Texture> textures;
 	
 	Texture playerTexture;
-	playerTexture.loadFromFile("D:/All mine/Game/Maindo/player.png");
+	playerTexture.loadFromFile(DIRECTORY + "player.png");
 	textures.push_back(playerTexture);
 	Texture bulletRifleTexture;
-	bulletRifleTexture.loadFromFile("D:/All mine/Game/bulletRifle.png");
+	bulletRifleTexture.loadFromFile(DIRECTORY + "bulletRifle.png");
 	textures.push_back(bulletRifleTexture);
 	Texture bulletPistolTexture;
-	bulletPistolTexture.loadFromFile("D:/All mine/Game/bulletPistol.png");
+	bulletPistolTexture.loadFromFile(DIRECTORY + "bulletPistol.png");
 	textures.push_back(bulletPistolTexture);
 
 	return textures;

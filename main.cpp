@@ -32,11 +32,18 @@ struct gameTexture
 	int animationCycles;
 };
 
+// SPECIFY FOLDER WITH GAME FILES
+const std::string DIRECTORY{ "D:/All mine/Game/Maindo/" };
 
 int main()
 {
-	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*,Style::Fullscreen*/);
-	 
+	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*,Style::Fullscreen*/);	
+
+	Image* icon = new Image;
+	icon->loadFromFile(DIRECTORY + "icon.png");
+	window.setIcon(icon->getSize().x, icon->getSize().y, icon->getPixelsPtr());
+	delete icon;
+
 	View camera(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
 	View minimap(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
@@ -47,13 +54,15 @@ int main()
 	RenderTexture minimapTexture;
 	minimapTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
 
-	
+	Font fontMenu;
+	fontMenu.loadFromFile(DIRECTORY + "VERYBADFONT.ttf");
+
 	vector<Texture> texturesMenu = loadTexturesMenu();
 	vector<Texture> textures = loadTextures();
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 	vector<Entity> entities;
-
+	
 	Weapon sniperRifle(3, 800, 600, 5, &textures.at(2), 1, 3);
 	Weapon pistol(1, 200, 200, 15, &textures.at(2), 3, 1.5);
 	Weapon rifle(2, 600, 400, 30, &textures.at(1), 5, 2);
@@ -78,7 +87,6 @@ int main()
 	Clock mainClock;
 
 	bool requestMenu = true;
-
 	Event event;
 	while (window.isOpen())
 	{
@@ -126,6 +134,7 @@ int main()
 				else if (event.key.code == Keyboard::Equal)
 					minimap.zoom(0.5);
 			}
+
 			else if (event.type == Event::KeyReleased)
 			{
 				if (event.key.code == Keyboard::I)
@@ -153,7 +162,7 @@ int main()
 			entities.erase(entities.begin(), entities.end());
 			projectiles.erase(projectiles.begin(), projectiles.end());
 
-			switch (int chosenLevel = showScreenMenu(window, texturesMenu))
+			switch (int chosenLevel = showScreenMenu(window, texturesMenu, fontMenu))
 			{
 			case -1:
 				return -15;
