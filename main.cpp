@@ -38,6 +38,7 @@ enum ExitCodes
 	windowClosedFunction
 };
 
+
 // SPECIFY FOLDER WITH GAME FILES
 const std::string DIRECTORY{ "D:/All mine/Game/Maindo/" };
 
@@ -73,17 +74,33 @@ int main()
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 	vector<Entity> entities;
+
+
+	//MELEE WEAPONS
+	//
+	//---ID---DAMAGE---ADDITIONAL PENETRATION---SWING DELAY---HITBOX LIFETIME---HITBOX POSITIONS---HITBOX SIZE---
+	//
+	// 1 / FIRERATE - HB LIFETIME == TIME BETWEEN SWINGS ----> 1 / FIRERATE SHOULD BE >= HB LIFETIME
+	//
+	//
+	Vector2f hitboxSizeBoardStandart = { 30,25 };
+	vector<Vector2f> hitboxesBoardStandart = { {-10,-20}, {25,-15}, {25,10}, {25,35} };
+	Weapon board(1, 8, 1, 1, 0.7, hitboxesBoardStandart, hitboxSizeBoardStandart);
+
+	// RANGED WEAPONS
+	//
+	//---ID---DAMAGE---ADDITIONAL PENETRATION---SHOT DELAY---RANGE---PROJECTILE SPEED---AMMO CAPACITY---RELOAD TIME---PROJECTILE TEXTURE---
+	//
+	//
+	Weapon pistol(1, 8, 0, 0.5, 400, 400, 12, 1.5, textures.at(1));
+	Weapon rifle(2, 12, 1, 0.3, 600, 600, 25, 2, textures.at(2));
+	Weapon sniperRifle(4, 20, 2, 2, 800, 800, 5, 3, textures.at(2));
+
+
+
 	
-	Weapon sniperRifle(3, 800, 600, 5, &textures.at(2), 1, 3);
-	Weapon pistol(1, 200, 200, 15, &textures.at(2), 3, 1.5);
-	Weapon rifle(2, 600, 400, 30, &textures.at(1), 5, 2);
-	Weapon board(0, 0, 0, 0, NULL, 1, 0, 8);
-	board.isMelee = true;
-	board.projectileLifetime = 0.48;
 	board.actionSpriteOffset = Vector2i(10, 25);
 	board.actionSpriteSize = Vector2i(65, 85);
-	board.hitboxSize = Vector2f(30, 25);
-	board.hitboxPositions = { {-10,-20}, {25,-15}, {25,10}, {25,35} };
 	
 	Player player(Vector2f(20, 20), Vector2f(40, 90), &textures.at(0), 200); //speed is pixels per second
 	player.weapon = pistol;
@@ -103,7 +120,7 @@ int main()
 		cout << "test 2 " << endl;
 
 	bool inMenu = true;
-	
+	player.isUsingWeapon = false;
 
 	Clock mainClock;
 	Event event;
@@ -174,7 +191,6 @@ int main()
 			}
 		}
 
-
 		if (inMenu)
 		{
 			objects.erase(objects.begin(), objects.end());
@@ -201,46 +217,34 @@ int main()
 
 
 		//---PROJECTILE PHASE
+
+			//pre-remove of melee HB with expired swing or ranged projectiles with exceeding distance
+			projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
+			{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
+			!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
+
+
 		for (size_t i = 0; i < projectiles.size(); i++)
 		{
-			bool projectileErased = false;
-			float traveledDistance = sqrt(pow(projectiles.at(i).currentPosition.x, 2) + pow(projectiles.at(i).currentPosition.y, 2)); //x^2 + y^2
-
 			if (projectiles.at(i).isMelee)
 			{
-				if (getTimeDiff(mainClock, projectiles.at(i).creationTime) > projectiles.at(i).lifeTime)
-				{
-					//if (projectiles.at(i).gameObjectSource == &player)
-					//{
-					//	player.isUsingWeapon = false;
-					//}
-					projectiles.erase(projectiles.begin() + i);
-					i--;
-				}
-				else
-				{
-					/*vector<Vector2f>* */ auto hitboxes = &((Weapon*)projectiles.at(i).weaponSource)->hitboxPositions;
-					Vector2f sourcePosition = ((gameObject*)projectiles.at(i).gameObjectSource)->body.getPosition(); //just plain terribleness
-					if (hitboxes->size() > 1)
-					{
-						//wtf
-						Vector2f currentHitboxPosition = sourcePosition + hitboxes->at(getCount(getTimeDiff(mainClock, projectiles.at(i).creationTime), hitboxes->size(), 2));
-						projectiles.at(i).body.setPosition(currentHitboxPosition);
-					}
+				projectiles.at(i).body.setPosition(player.body.getPosition() + projectiles.at(i).swingHandle(mainClock));
 
-					for (size_t j = 1; j < objects.size(); j++)
+				for (size_t j = 1; j < objects.size(); j++)
+				{
+					if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectiles.at(i).penetration)
 					{
-						if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable)
-						{
-							objects.erase(objects.begin() + j);
-							j--;
-						}
+						projectiles.at(i).penetration--;
+						objects.erase(objects.begin() + j);
+						j--;
 					}
 				}
 			}
-			else if (traveledDistance < projectiles.at(i).range)
+
+			else 
 			{
 				projectiles.at(i).updatePosition(mainClock.getElapsedTime().asSeconds());
+				projectiles.at(i).traveledDistance += projectiles.at(i).latestDistanceCovered;
 
 				for (size_t j = 1; j < objects.size(); j++)
 				{
@@ -248,38 +252,33 @@ int main()
 					{
 						if (objects.at(j).isDestroyable)
 						{
-							//objects.at(j).hp -=
 							objects.erase(objects.begin() + j);
 							j--;
+
 							if (projectiles.at(i).penetration)
 							{
 								projectiles.at(i).penetration--;
-								continue;
+								continue; //continue checking collisions for the same projectile
 							}
 						}
 
 						projectiles.erase(projectiles.begin() + i);
 						i--;
-						projectileErased = true;
 						break;
 					}
 				}
-				
-				if(!projectileErased)
-					projectiles.at(i).currentPosition += projectiles.at(i).currentDirection * projectiles.at(i).latestDistanceCovered;
-			}
-			else
-			{
-				projectiles.erase(projectiles.begin() + i);
-				i--;
 			}
 		}
+
+		player.weapon.reloadHandle(mainClock);
 		//---PROJECTILE PHASE END
+
 
 		//---POSITION PHASE
 		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
 		player.updatePosition(mainClock.getElapsedTime().asSeconds());
 		//---POSITION PHASE END
+
 
 		//---COLLISION PHASE
 		if (player.collisionCheck(objects.at(1), NULL))

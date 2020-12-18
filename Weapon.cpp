@@ -1,81 +1,120 @@
 #include "Weapon.h"
-using std::vector;
+
+
+Vector2f Projectile::swingHandle(const Clock& clock)
+{
+	int count = (clock.getElapsedTime().asSeconds() - creationTime) / lifeTime * hitboxPositions->size();
+	return hitboxPositions->at(count);
+}
+
 
 Weapon::Weapon()
 {
-	ID = 0;
-	range = damage = fireRate = projectileSpeed = latestShotTime = projectilePenetration = 0;
-	isMelee = false;
-	currentAmmo = ammoCapacity = latestReloadUpdate = reloadTime = reloadTimer = 0;
-	projectileLifetime = 0;
-	projectileTexture = NULL;
+	ID = penetration = ammoCapacity = currentAmmo = isMelee = 0;
+	projectileLifetime = latestShotTime = damage = shotDelay = range = projectileSpeed = reloadTimer = latestReloadUpdate = reloadTime = 0;
+	projectileTexture = nullptr;
 }
 
-Weapon::Weapon(int ID, float range, float projectileSpeed, float ammoCapacity, const Texture* projectileTexture, 
-	float fireRate, float reloadTime, float damage)
+
+//melee
+Weapon::Weapon(int ID, float damage, int penetration, float swingDelay, float swingTime,
+	const vector<Vector2f>& hitboxPositions, const Vector2f& hitboxSize)
 {
-	reloadTimer = latestReloadUpdate = isMelee = 0;
+	this->isMelee = true;
+
 
 	this->ID = ID;
-	
-	this->projectileLifetime = 0;
-
-	this->reloadTime = reloadTime;
-	
-	this->latestShotTime = 0;
-
-	this->projectilePenetration = 0;
-
-	this->range = range;
-
-	this->projectileSpeed = projectileSpeed;
-
-	this->fireRate = fireRate;
-
 	this->damage = damage;
-
-	this->projectileTexture = projectileTexture; 
-
-	this->ammoCapacity = ammoCapacity;
-	
-	this->currentAmmo = ammoCapacity;
+	this->penetration = penetration;
+	this->shotDelay = swingDelay;
+	this->projectileLifetime = swingTime;
+	this->hitboxPositions = hitboxPositions;
+	this->hitboxSize = hitboxSize;
 }
 
-void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f shotPosition, float elapsedTime, vector<Projectile>& projectiles)
+//ranged
+Weapon::Weapon(int ID, float damage, int penetration, float shotDelay, float range, float projectileSpeed, 
+	int ammoCapacity, float reloadTime, const Texture& projectileTexture)
 {
-	if (fireRate == 0 or elapsedTime - latestShotTime < 1 / fireRate) //firerate is shots per second
+	this->isMelee = false;
+	this->latestReloadUpdate = this->latestShotTime = this->reloadTimer = 0;
+
+
+	this->ID = ID;
+	this->damage = damage;
+	this->penetration = penetration;
+	this->shotDelay = shotDelay;
+	this->range = range;
+	this->projectileSpeed = projectileSpeed;
+	this->currentAmmo = this->ammoCapacity = ammoCapacity;
+	this->reloadTime = reloadTime;
+	this->projectileTexture = &projectileTexture;
+}
+
+
+void Weapon::action(vector<Projectile>& projectiles, const gameObject& projectileSource, const Clock& clock)
+{
+	if (clock.getElapsedTime().asSeconds() - latestShotTime < shotDelay or (!isMelee and !currentAmmo))
 		return;
 
-
-	Projectile projectile;
-
-	projectile.isMelee = this->isMelee;
-
-	projectile.penetration = this->projectilePenetration;
-
-	projectile.gameObjectSource = projectileSource;
-
-	projectile.lifeTime = this->projectileLifetime;
-
-	projectile.creationTime = elapsedTime;
-
-	projectile.weaponSource = this;
-
-	if (isMelee)
+	if (this->isMelee)
 	{
-		latestShotTime = elapsedTime;
-		//projectileSource->isUsingWeapon = true;
-		projectile.body.setFillColor(Color::White);
-		//projectile.body.setSize(projectileSource->body.getSize()); //<----
-		projectile.body.setSize(hitboxSize);
-		projectile.allowCollision = true;
-		projectiles.push_back(projectile);
-		return;
+		Projectile hitbox(penetration, clock.getElapsedTime().asSeconds(), projectileLifetime, hitboxPositions);
+
+		//debug
+		hitbox.body.setFillColor(Color::White);
+		hitbox.body.setSize(hitboxSize);
+		hitbox.body.setPosition(this->hitboxPositions.at(0));
+		
+		//time
+		latestShotTime = hitbox.creationTime;
+
+		projectiles.push_back(hitbox);
 	}
-
-	if (!currentAmmo)
+	else
 	{
-		if (!latestReloadUpdate)
+		currentAmmo--;
+
+		Projectile projectile(penetration, range);
+
+		//tech
+		projectile.currentDirection = projectileSource.currentSight;
+		projectile.body.setPosition(projectileSource.body.getPosition());
+
+		//gO stuff
+		projectile.basespeed = projectile.speed = projectileSpeed;
+		projectile.body.setSize(Vector2f{ projectileTexture->getSize() });
+		projectile.body.setTexture(projectileTexture);
+
+		//default rotation is ---->0
+		if (projectile.currentDirection == Vector2f(0, -1))
+			projectile.body.setRotation(-90);
+		else if (projectile.currentDirection == Vector2f(0, 1))
+			projectile.body.setRotation(90);
+		else if (projectile.currentDirection == Vector2f(-1, 0))
+			projectile.body.setRotation(180);
+		else
+		{
+			projectile.body.setRotation(atan2(projectile.currentDirection.y, projectile.currentDirection.x) * 180 / 3.14);
+		}
+
+		//time
+		latestShotTime = clock.getElapsedTime().asSeconds();
+
+		projectiles.push_back(projectile);
+	}
+}
+
+
+//calling clock internally instead of getting elapsed time is cheaper
+//because not every call meets first condition
+void Weapon::reloadHandle(const Clock& clock)
+{
+	if (!currentAmmo and !isMelee)
+	{
+		float elapsedTime = clock.getElapsedTime().asSeconds();
+
+		if (!latestReloadUpdate) //skips 1 call of lRU == elapsedTime
 		{
 			latestReloadUpdate = elapsedTime;
 			return;
@@ -83,48 +122,11 @@ void Weapon::action(void* projectileSource, Vector2f shotDirection, Vector2f sho
 
 		reloadTimer += elapsedTime - latestReloadUpdate;
 		latestReloadUpdate = elapsedTime;
-		if (floor(reloadTime * 10) < floor(reloadTimer * 10))
+		if (reloadTimer > reloadTime)
 		{
 			currentAmmo = ammoCapacity;
 			reloadTimer = 0;
 			latestReloadUpdate = 0;
 		}
-	}
-
-	else
-	{	
-		latestShotTime = elapsedTime;
-
-		currentAmmo--;
-
-		projectile.body.setTexture(projectileTexture);
-
-		projectile.body.setSize(Vector2f(projectile.body.getTextureRect().width, projectile.body.getTextureRect().height));
-
-		projectile.speed = this->projectileSpeed;
-
-		projectile.range = this->range;
-
-		projectile.currentDirection = shotDirection;
-
-		projectile.currentPosition = Vector2f(0, 0);
-
-		projectile.body.setPosition(shotPosition);
-
-		projectile.isMoving = true;
-
-		//default rotation is ---->0
-		if (shotDirection == Vector2f(0, -1))
-			projectile.body.setRotation(-90);
-		else if (shotDirection == Vector2f(0, 1))
-			projectile.body.setRotation(90);
-		else if (shotDirection == Vector2f(-1, 0))
-			projectile.body.setRotation(180);
-		else
-		{
-			projectile.body.setRotation(atan2(shotDirection.y, shotDirection.x) * 180 / 3.14);
-		}
-
-		projectiles.push_back(projectile);
 	}
 }

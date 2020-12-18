@@ -978,12 +978,12 @@ vector<Texture> loadTextures()
 	Texture playerTexture;
 	playerTexture.loadFromFile(DIRECTORY + "Textures/player.png");
 	textures.push_back(playerTexture);
-	Texture bulletRifleTexture;
-	bulletRifleTexture.loadFromFile(DIRECTORY + "Textures/bulletRifle.png");
-	textures.push_back(bulletRifleTexture);
 	Texture bulletPistolTexture;
 	bulletPistolTexture.loadFromFile(DIRECTORY + "Textures/bulletPistol.png");
 	textures.push_back(bulletPistolTexture);
+	Texture bulletRifleTexture;
+	bulletRifleTexture.loadFromFile(DIRECTORY + "Textures/bulletRifle.png");
+	textures.push_back(bulletRifleTexture);
 
 	return textures;
 }
@@ -999,9 +999,9 @@ void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clo
 
 	if (Keyboard::isKeyPressed(Keyboard::Space))
 	{
-		player.weapon.action(&player, player.currentSight, player.getCenter() - Vector2f(0, 5), mainClock.getElapsedTime().asSeconds(), projectiles);
-		if (player.weapon.isMelee and !(getTimeDiff(mainClock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
-			player.isUsingWeapon = true; //false?
+		player.weapon.action(projectiles, player, mainClock);
+		//if (player.weapon.isMelee and !(getTimeDiff(mainClock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
+		//	player.isUsingWeapon = true; //false?
 	}
 }
 
