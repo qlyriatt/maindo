@@ -17,7 +17,6 @@ Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
 
 
 
-
 //pls help
 namespace sf
 {
@@ -84,7 +83,7 @@ String pickName()
 	names.push_back("JOJO!-da-da-da-dum-dum-dum-dum-dum-GOLD WIND!");
 	names.push_back("Bangarang!");
 	names.push_back("This game is not suitable for children or those who are easily disturbed");
-	names.push_back("");
+	names.push_back(" ");
 	names.push_back("It's because the heart of mine has made it here before my body");
 	names.push_back("Seven circles of OOP");
 	names.push_back("Sleep is overrated");
@@ -96,6 +95,8 @@ String pickName()
 	names.push_back("Daijoubu da yo!");
 	names.push_back("B7 flat 9 flat 13");
 	names.push_back("I guess you guys aren't ready for that yet... but your kids are gonna love it");
+	names.push_back("F - Fm - C");
+	names.push_back("Microsoft C++ exception: std::length_error at memory location 0x0055BA50");
 
 	return names.at(rand() % names.size());
 }
@@ -284,8 +285,12 @@ void cameraCollision(const gameObject& area, View& camera, const Player& player,
 	}
 }
 
-
-
+/////////////////////////////////////////////////
+/// @brief Simple function to navigate any menu
+/// @param event Event to handle
+/// @param gridDimensions Menu grid dimensions (X = rows, Y = columns)
+/// @param count Current menu count (button, item, etc.)
+/////////////////////////////////////////////////
 void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& count)
 {
 	const auto columns = gridDimensions.x;
@@ -321,42 +326,47 @@ void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& cou
 	}
 }
 
-
 /////////////////////////////////////////////////
 ///
-/// @brief Draws an additional texture layer alone or on top of other texture
+/// @brief Draws an additional texture layer
 /// 
 /// @param	targetTexture RenderTexture to draw to
-/// @param	objectsToRender Objects to draw to targetTexture
+/// @param	spritesToRender Objects to draw to targetTexture
 /// @param  pendingDraw Texture that should be behind what is going to be rendered
 /// 
 /// @return Sprite ready for display
 ///
 /////////////////////////////////////////////////
-Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<RectangleShape>& objectsToRender, const RenderTexture* pendingDraw = NULL)
+Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprite>& spritesToRender)
 {
 	targetTexture.clear();
 
-	if (pendingDraw) //draw background if present
-		targetTexture.draw(Sprite(pendingDraw->getTexture()));
-
-	for (auto& i : objectsToRender)	//draw the rest
+	for (auto& i : spritesToRender)
 	{
 		targetTexture.draw(i);
 	}
-	
+
 	targetTexture.display();
 
 	return Sprite(targetTexture.getTexture());
 }
 
-
-Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprite>& spritesToRender, const RenderTexture* pendingDraw = NULL)
+/////////////////////////////////////////////////
+///
+/// @brief Overload that draws an additional texture layer on top of other texture
+/// 
+/// @param	targetTexture RenderTexture to draw to
+/// @param	spritesToRender Objects to draw to targetTexture
+/// @param  pendingDraw Texture that should be behind what is going to be rendered
+/// 
+/// @return Sprite ready for display
+///
+/////////////////////////////////////////////////
+Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprite>& spritesToRender, const RenderTexture& pendingDraw)
 {
 	targetTexture.clear();
 
-	if (pendingDraw) //draw background if present
-		targetTexture.draw(Sprite(pendingDraw->getTexture()));
+	targetTexture.draw(Sprite(pendingDraw.getTexture())); //draw background
 
 	for (auto& i : spritesToRender)	//draw the rest
 	{
@@ -364,10 +374,9 @@ Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprit
 	}
 
 	targetTexture.display();
-
+	
 	return Sprite(targetTexture.getTexture());
 }
-
 
 /////////////////////////////////////////////////
 ///
@@ -476,66 +485,66 @@ vector<RectangleShape> defineInventory(const Vector2u renderTargetSize, const Pl
 }
 
 
-void showScreenInventory(RenderWindow& window, const RenderTexture& mainGameTexture, Player& player)
-{
-	const Vector2u itemGrid = { 4,2 };
-	RenderTexture finalTexture;
-	finalTexture.create(window.getSize().x, window.getSize().y);
-
-
-	int chosenItem = 0;
-	bool redraw = true;
-	Event event;
-
-	while (true)
-	{
-		while (window.pollEvent(event))
-		{
-			if (event.type == Event::Closed)
-			{
-				window.close();
-				return;
-			}
-
-			else if (event.type == Event::KeyReleased)
-			{
-				if (event.key.code == Keyboard::I)
-				{
-					player.isInventoryOpen = false;
-					return;
-				}
-
-				//any interactions should be here
-				else if (event.key.code == Keyboard::E)
-				{
-					if (player.inventorySlots.at(chosenItem) == 1 and player.health < player.maxHealth)
-					{
-						player.health += 20;
-						player.inventorySlots.at(chosenItem) = 0;
-					}
-					else if (player.inventorySlots.at(chosenItem) == 2 and player.health > 0)
-					{
-						player.health -= 20;
-						player.inventorySlots.at(chosenItem) = 0;
-					}
-					else continue; //<---
-				}
-
-				else
-					menuNavigation(event, itemGrid, chosenItem);
-
-				redraw = true;	//redraw on chosen item change
-			}
-		}
-
-		if (redraw)
-		{
-			window.draw(additionalLayerRendering(finalTexture, defineInventory(window.getSize(), player, itemGrid, chosenItem), &mainGameTexture));
-			window.display();
-			redraw = false;
-		}
-	}
-}
+//void showScreenInventory(RenderWindow& window, const RenderTexture& mainGameTexture, Player& player)
+//{
+//	const Vector2u itemGrid = { 4,2 };
+//	RenderTexture finalTexture;
+//	finalTexture.create(window.getSize().x, window.getSize().y);
+//
+//
+//	int chosenItem = 0;
+//	bool redraw = true;
+//	Event event;
+//
+//	while (true)
+//	{
+//		while (window.pollEvent(event))
+//		{
+//			if (event.type == Event::Closed)
+//			{
+//				window.close();
+//				return;
+//			}
+//
+//			else if (event.type == Event::KeyReleased)
+//			{
+//				if (event.key.code == Keyboard::I)
+//				{
+//					player.isInventoryOpen = false;
+//					return;
+//				}
+//
+//				//any interactions should be here
+//				else if (event.key.code == Keyboard::E)
+//				{
+//					if (player.inventorySlots.at(chosenItem) == 1 and player.health < player.maxHealth)
+//					{
+//						player.health += 20;
+//						player.inventorySlots.at(chosenItem) = 0;
+//					}
+//					else if (player.inventorySlots.at(chosenItem) == 2 and player.health > 0)
+//					{
+//						player.health -= 20;
+//						player.inventorySlots.at(chosenItem) = 0;
+//					}
+//					else continue; //<---
+//				}
+//
+//				else
+//					menuNavigation(event, itemGrid, chosenItem);
+//
+//				redraw = true;	//redraw on chosen item change
+//			}
+//		}
+//
+//		if (redraw)
+//		{
+//			window.draw(additionalLayerRendering(finalTexture, defineInventory(window.getSize(), player, itemGrid, chosenItem), mainGameTexture));
+//			window.display();
+//			redraw = false;
+//		}
+//	}
+//}
 
 
 vector<RectangleShape> definePause(const Vector2u renderTargetSize, const Vector2u pauseGrid, const int chosenButton)
@@ -593,9 +602,105 @@ vector<RectangleShape> definePause(const Vector2u renderTargetSize, const Vector
 }
 
 
-int showScreenPause(RenderWindow& window)
+
+
+/////////////////////////////////////////////////
+// Very (not)useful calculations that help solve the great (unexisting) problem of
+// having to construct many grid-like sets of objects by making it ten millions times harder 
+// than it actually is, and all thanks to standartisation and code reusage, 
+// because making one function do anything for everything was a BRILLIANT IDEA!!!
+/////////////////////////////////////////////////
+vector<Vector2f> constructGrid(const Vector2u cellCount, const Texture& texture, const RenderTarget& renderTarget, 
+	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor = { 0, 0 })
 {
-	const Vector2u pauseGrid= { 1, 4 };
+	const auto rows = cellCount.y == 0 ? 1 : cellCount.y;
+	const auto columns = cellCount.x == 0 ? 1 : cellCount.x;
+	const Vector2f spriteSize = Vector2f{ texture.getSize() };
+	const Vector2f targetSize = Vector2f{ renderTarget.getSize() };
+	const Vector2f alignmentCenter = targetSize * alignmentFactor;
+	const Vector2f spriteGap = cellOffsetFactor == Vector2f{ 0, 0 } ? Vector2f{ 15, 15 } : spriteSize * cellOffsetFactor;
+	const float offsetEdgeX = spriteSize.x * columns / 2 + spriteGap.x * (columns - 1) / 2;
+	const float offsetEdgeY = spriteSize.y * rows / 2 + spriteGap.y * (rows - 1) / 2;
+	const Vector2f edgePoint = alignmentCenter - Vector2f{ offsetEdgeX, offsetEdgeY };
+	const Vector2f finalOffset = spriteSize + spriteGap;
+	//...hence fuck off
+
+	vector<Vector2f> gridVectors;
+	gridVectors.reserve(rows * columns);
+
+	for (size_t i = 0; i < rows; i++)
+	{
+		for (size_t j = 0; j < columns; j++)
+		{
+			gridVectors.push_back({ edgePoint + Vector2f{finalOffset.x * j, finalOffset.y * i} });
+		}
+	}
+	
+	return gridVectors;
+}
+
+
+void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont, const Vector2u& pauseGrid,
+	const int chosenButton)
+{
+	window.clear();
+
+	RenderTexture nativeResolutionBuffer;
+	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
+
+	vector<Sprite> sprites;
+	vector<Text> texts;
+
+	Sprite background(pauseTextures.at(1));
+	sprites.push_back(background);
+
+	Text text[]{ {"Continue", pauseFont}, {"Save game", pauseFont}, {"Whatever", pauseFont}, {"Quit to menu", pauseFont} };
+	size_t count = 0;
+	for (auto& i : constructGrid(pauseGrid, pauseTextures.at(2), nativeResolutionBuffer, { 0.5, 0.6 }))
+	{	
+		Sprite button(count == chosenButton ? pauseTextures.at(2) : pauseTextures.at(3));
+		button.setPosition(i);
+		sprites.push_back(button);
+
+		if (count < sizeof(text) / sizeof(Text)) //precaution
+		{
+			text[count].setFillColor(Color::Black);
+			text[count].setOutlineColor(count == chosenButton ? Color(77, 193, 193) : Color(82, 119, 119));
+			text[count].setOutlineThickness(2);
+			text[count].setCharacterSize(button.getGlobalBounds().height / 2);
+
+			float textOffsetX = (button.getGlobalBounds().width - text[count].getGlobalBounds().width) / 2;
+			float textOffsetY = (button.getGlobalBounds().height - text[count].getCharacterSize()) / 2;
+			Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
+			text[count].setPosition(textPosition);
+			texts.push_back(text[count]);
+		}
+
+		count++;
+	}
+
+	for (auto& i : sprites)
+		nativeResolutionBuffer.draw(i);
+
+	for (auto& i : texts)
+		nativeResolutionBuffer.draw(i);
+
+	nativeResolutionBuffer.display();
+	Sprite finalOutput(nativeResolutionBuffer.getTexture());
+
+	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
+	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
+		finalOutput.setScale(SHRINK_FACTOR);
+
+
+	window.draw(finalOutput);
+	window.display();
+}
+
+
+int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont)
+{
+	const Vector2u pauseGrid = { 1, 4 };
 	RenderTexture pauseTexture;
 	pauseTexture.create(window.getSize().x, window.getSize().y);
 
@@ -637,48 +742,40 @@ int showScreenPause(RenderWindow& window)
 
 		if (redraw)
 		{
-			window.draw(additionalLayerRendering(pauseTexture, definePause(window.getSize(), pauseGrid, chosenButton)));
-			window.display();
+			drawPause(window, pauseTextures, pauseFont, pauseGrid, chosenButton);
 			redraw = false;
 		}
 	}
 }
 
 
-/////////////////////////////////////////////////
-// Very (not)useful calculations that help solve the great (unexisting) problem of
-// having to construct many grid-like sets of objects by making it ten millions times harder 
-// than it actually is, and all thanks to standartisation and code reusage, 
-// because making one function do anything for everything was a BRILLIANT IDEA!!!
-/////////////////////////////////////////////////
-vector<Vector2f> constructGrid(const Vector2u cellCount, const Texture& texture, const RenderTarget& renderTarget, 
-	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor = { 0, 0 })
-{
-	const auto rows = cellCount.y;
-	const auto columns = cellCount.x;
-	const Vector2f spriteSize = Vector2f{ texture.getSize() };
-	const Vector2f targetSize = Vector2f{ renderTarget.getSize() };
-	const Vector2f alignmentCenter = targetSize * alignmentFactor;
-	const Vector2f spriteGap = cellOffsetFactor != Vector2f{ 0, 0 } ? spriteSize * cellOffsetFactor : Vector2f{30, 15};
-	const float offsetEdgeX = spriteSize.x * columns / 2 + spriteGap.x * (columns - 1) / 2;
-	const float offsetEdgeY = spriteSize.y * rows / 2 + spriteGap.y * (rows - 1) / 2;
-	const Vector2f edgePoint = alignmentCenter - Vector2f{ offsetEdgeX, offsetEdgeY };
-	const Vector2f finalOffset = spriteSize + spriteGap;
-	//...hence fuck off
 
-	vector<Vector2f> gridVectors;
-	gridVectors.reserve(rows * columns);
 
-	for (size_t i = 0; i < rows; i++)
-	{
-		for (size_t j = 0; j < columns; j++)
-		{
-			gridVectors.push_back({ edgePoint + Vector2f{finalOffset.x * j, finalOffset.y * i} });
-		}
-	}
-	
-	return gridVectors;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////
 /// @brief Internal function that draws menu elements to the window
@@ -698,7 +795,7 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 {		
 	const size_t lightUpTime = 3;
 	
-
+	
 	window.clear();
 
 	RenderTexture nativeResolutionBuffer;
@@ -707,16 +804,14 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	vector<Sprite> sprites;
 	vector<Text> texts;
 
-	Sprite background(menuTextures.at(0));
+	Sprite background(menuTextures.at(1));
 	sprites.push_back(background);
 
-	Sprite button;
 	Text text[]{ {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
 	size_t count = 0;
-
 	for (auto& i : constructGrid(menuGrid, menuTextures.at(2), nativeResolutionBuffer, { 0.5, 0.6 }))
 	{
-		button.setTexture(count == chosenButton ? menuTextures.at(2) : menuTextures.at(3));
+		Sprite button(count == chosenButton ? menuTextures.at(2) : menuTextures.at(3));
 		button.setPosition(i);
 		sprites.push_back(button);
 
@@ -728,9 +823,9 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 		float textOffsetX = (button.getGlobalBounds().width - text[count].getGlobalBounds().width) / 2;
 		float textOffsetY = (button.getGlobalBounds().height - text[count].getCharacterSize()) / 2;
 		Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
-		
 		text[count].setPosition(textPosition);
 		texts.push_back(text[count]);
+		
 		count++;
 	}
 
@@ -754,7 +849,7 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 		else
 		{
 			isFirstDraw = false;
-			storedTime = 0;
+			storedTime = latestAnimationUpdate = 0;
 		}
 	}
 
@@ -762,14 +857,9 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	Sprite finalOutput(nativeResolutionBuffer.getTexture());
 
 	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
-
 	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
-	{
 		finalOutput.setScale(SHRINK_FACTOR);
-	}
 
-	cout << window.getSize().x << " " << window.getSize().y << endl;
-	cout << finalOutput.getGlobalBounds().width << " " << finalOutput.getGlobalBounds().height << endl;
 
 	window.draw(finalOutput);
 	window.display();
@@ -786,8 +876,6 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 /////////////////////////////////////////////////
 int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont)
 {
-	window.clear();
-
 	const Vector2u menuGrid = { 1, 4 };
 
 	//tech stuff
@@ -843,45 +931,63 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 }
 
 
-vector<Texture> loadTexturesMenu()
+void loadTexturesMenu(vector<Texture>& texturesMenu)
 {
-	vector<Texture> texturesMenu;
-	
 	Texture menuLight;
-	menuLight.loadFromFile(DIRECTORY + "menuLight.png");
+	menuLight.loadFromFile(DIRECTORY + "Textures/menuLight.png");
 	texturesMenu.push_back(menuLight);
 
 	Texture menuDark;
-	menuDark.loadFromFile(DIRECTORY + "menuDark.png");
+	menuDark.loadFromFile(DIRECTORY + "Textures/menuDark.png");
 	texturesMenu.push_back(menuDark);
 
 	Texture menuButtonLight;
-	menuButtonLight.loadFromFile(DIRECTORY + "menuButtonLight.png");
+	menuButtonLight.loadFromFile(DIRECTORY + "Textures/menuButtonLight.png");
 	texturesMenu.push_back(menuButtonLight);
 
 	Texture menuButtonDark;
-	menuButtonDark.loadFromFile(DIRECTORY + "menuButtonDark.png");
+	menuButtonDark.loadFromFile(DIRECTORY + "Textures/menuButtonDark.png");
 	texturesMenu.push_back(menuButtonDark);
-
-	return texturesMenu;
 }
+
+
+void loadTexturesPause(vector<Texture>& texturesPause)
+{
+	Texture menuLight;
+	menuLight.loadFromFile(DIRECTORY + "Textures/pauseLight.png");
+	texturesPause.push_back(menuLight);
+
+	Texture menuDark;
+	menuDark.loadFromFile(DIRECTORY + "Textures/pauseDark.png");
+	texturesPause.push_back(menuDark);
+
+	Texture menuButtonLight;
+	menuButtonLight.loadFromFile(DIRECTORY + "Textures/pauseButtonLight.png");
+	texturesPause.push_back(menuButtonLight);
+
+	Texture menuButtonDark;
+	menuButtonDark.loadFromFile(DIRECTORY + "Textures/pauseButtonDark.png");
+	texturesPause.push_back(menuButtonDark);
+}
+
 
 vector<Texture> loadTextures()
 {
 	vector<Texture> textures;
 	
 	Texture playerTexture;
-	playerTexture.loadFromFile(DIRECTORY + "player.png");
+	playerTexture.loadFromFile(DIRECTORY + "Textures/player.png");
 	textures.push_back(playerTexture);
 	Texture bulletRifleTexture;
-	bulletRifleTexture.loadFromFile(DIRECTORY + "bulletRifle.png");
+	bulletRifleTexture.loadFromFile(DIRECTORY + "Textures/bulletRifle.png");
 	textures.push_back(bulletRifleTexture);
 	Texture bulletPistolTexture;
-	bulletPistolTexture.loadFromFile(DIRECTORY + "bulletPistol.png");
+	bulletPistolTexture.loadFromFile(DIRECTORY + "Textures/bulletPistol.png");
 	textures.push_back(bulletPistolTexture);
 
 	return textures;
 }
+
 
 void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock)
 {

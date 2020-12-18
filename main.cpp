@@ -32,6 +32,12 @@ struct gameTexture
 	int animationCycles;
 };
 
+enum ExitCodes
+{
+	windowClosedMain = 0,
+	windowClosedFunction
+};
+
 // SPECIFY FOLDER WITH GAME FILES
 const std::string DIRECTORY{ "D:/All mine/Game/Maindo/" };
 
@@ -40,25 +46,30 @@ int main()
 	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*,Style::Fullscreen*/);	
 
 	Image* icon = new Image;
-	icon->loadFromFile(DIRECTORY + "icon.png");
+	icon->loadFromFile(DIRECTORY + "Textures/icon.png");
 	window.setIcon(icon->getSize().x, icon->getSize().y, icon->getPixelsPtr());
 	delete icon;
 
 	View camera(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
 	View minimap(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
-	minimap.setViewport(FloatRect(0.35, 0.7, 0.3, 0.3)); //0.03, 0.75, 0.2, 0.2
+	minimap.setViewport(FloatRect(0.35, 0.7, 0.28, 0.28)); //0.03, 0.75, 0.2, 0.2
 	
 	RenderTexture mainGameTexture;
 	mainGameTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
 	RenderTexture minimapTexture;
 	minimapTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
 
-	Font fontMenu;
-	fontMenu.loadFromFile(DIRECTORY + "VERYBADFONT.ttf");
+	Font fontMain;
+	fontMain.loadFromFile(DIRECTORY + "VERYBADFONT.ttf");
 
-	vector<Texture> texturesMenu = loadTexturesMenu();
+	vector<Texture> texturesMenu;
+	loadTexturesMenu(texturesMenu);
+	vector<Texture> texturesPause;
+	loadTexturesPause(texturesPause);
+
 	vector<Texture> textures = loadTextures();
+
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 	vector<Entity> entities;
@@ -80,28 +91,32 @@ int main()
 	bool switchedWeapon = false;
 	
 	int currentLevel = 1;
-	bool drawMinimap = false;
+	bool drawMinimap = true;
 	bool mainTextureCreated = true;
 	levelLoad(window, objects, entities, currentLevel, 1, textures);
 
-	Clock mainClock;
+	ifstream test1("D:/All mine/Game/test1.txt");
+	if (!test1.is_open())
+		cout << "TEST 1" << endl;
+	ofstream test2("D:/All mine/Game/test2.txt");
+	if (!test2.is_open())
+		cout << "test 2 " << endl;
 
-	bool requestMenu = true;
+	bool inMenu = true;
+	
+
+	Clock mainClock;
 	Event event;
 	while (window.isOpen())
 	{
-		mainGameTexture.clear();
 		window.clear();
-
+		mainGameTexture.clear();
 		bool interactionFlag = false;
+
 		//---INPUT PHASE
 		while (window.pollEvent(event)) 
 		{
-			
-			if (event.type == Event::Closed)
-				window.close();
-
-			else if (event.type == Event::KeyPressed)
+			if (event.type == Event::KeyPressed)
 			{
 				if (event.key.code == Keyboard::E)
 				{
@@ -134,7 +149,6 @@ int main()
 				else if (event.key.code == Keyboard::Equal)
 					minimap.zoom(0.5);
 			}
-
 			else if (event.type == Event::KeyReleased)
 			{
 				if (event.key.code == Keyboard::I)
@@ -143,38 +157,43 @@ int main()
 				{
 					float timestamp = mainClock.getElapsedTime().asSeconds();
 
-					switch (showScreenPause(window))
+					switch (showScreenPause(window, texturesPause, fontMain))
 					{
 					case -1: return -13;
-					case 0: requestMenu = true;
+					case 0: inMenu = true;
 					case 1: break;
 					case 2: saveLevel(currentLevel, objects, entities, textures);
 					}
 					alignTime(timestamp, mainClock, player, objects, projectiles);
 				}
 			}
+			else if (event.type == Event::Closed)
+			{
+				window.close();
+				return ExitCodes::windowClosedMain;
+			}
 		}
 
 
-		if (requestMenu)
+		if (inMenu)
 		{
 			objects.erase(objects.begin(), objects.end());
 			entities.erase(entities.begin(), entities.end());
 			projectiles.erase(projectiles.begin(), projectiles.end());
 
-			switch (int chosenLevel = showScreenMenu(window, texturesMenu, fontMenu))
+			switch (int chosenLevel = showScreenMenu(window, texturesMenu, fontMain))
 			{
 			case -1:
 				return -15;
 			case 0:
-				loadLevel(objects, currentLevel);
+				//loadLevel(objects, currentLevel);
 				break;
 			default:
 				levelLoad(window, objects, entities, currentLevel, chosenLevel, textures);
 				break;
 			}
 
-			requestMenu = false;
+			inMenu = false;
 		}
 
 		applyPlayerInput(player, projectiles, mainClock);
@@ -189,7 +208,7 @@ int main()
 
 			if (projectiles.at(i).isMelee)
 			{
-				if (mainClock.getElapsedTime().asSeconds() - projectiles.at(i).creationTime > projectiles.at(i).lifeTime)
+				if (getTimeDiff(mainClock, projectiles.at(i).creationTime) > projectiles.at(i).lifeTime)
 				{
 					//if (projectiles.at(i).gameObjectSource == &player)
 					//{
@@ -369,7 +388,7 @@ int main()
 		if (player.isInventoryOpen)
 		{			
 			float timestamp = mainClock.getElapsedTime().asSeconds();
-			showScreenInventory(window, mainGameTexture, player);
+			//showScreenInventory(window, mainGameTexture, player);
 			alignTime(timestamp, mainClock, player, objects, projectiles);
 		}
 
@@ -394,7 +413,9 @@ int main()
 			RectangleShape black;
 			black.setPosition(window.getSize()* Vector2f{ minimap.getViewport().left, minimap.getViewport().top });
 			black.setSize(window.getSize() * Vector2f{ minimap.getViewport().width, minimap.getViewport().height });
-			black.setFillColor(Color(0,0,0, 255));
+			black.setFillColor(Color(0,0,0, 180));
+			black.setOutlineColor(Color::Red);
+			black.setOutlineThickness(2);
 			window.draw(black);
 			window.draw(Sprite(minimapTexture.getTexture()));
 		}

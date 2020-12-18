@@ -52,7 +52,7 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 	}
 	case 1:
 	{
-		ifstream input(DIRECTORY + "map1.txt");
+		ifstream input(DIRECTORY + "Txt/map1.txt");
 		if (!input.is_open())
 			cout << "VERY BAD";
 		
@@ -135,7 +135,9 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 
 void saveLevel(const int currentLevel, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Texture>& textures)
 {
-	ofstream save(DIRECTORY + "save.txt");
+	char buf[10];
+	_itoa_s(currentLevel, buf, 10);
+	ofstream save(DIRECTORY + "Txt/level" + buf + "Save.txt");
 	if (!save.is_open())
 		cout << "VERY BAD";
 
@@ -148,16 +150,16 @@ void saveLevel(const int currentLevel, const vector<gameObject>& objects, const 
 }
 
 
-void loadLevel(vector<gameObject>& objects, int& currentLevel)
+void loadLevel(const int number, vector<gameObject>& objects)
 {
-	ifstream load(DIRECTORY + "save.txt");
+	ifstream load;
 	if (!load.is_open())
 		cout << "very bad";
 
 	bool levelFound = false;
 	Vector2f position;
 	Vector2f size;
-	char* buf = new char[10];
+	char buf[7];
 	for (;!load.eof();)
 	{	
 		load >> std::ws;
@@ -170,22 +172,22 @@ void loadLevel(vector<gameObject>& objects, int& currentLevel)
 		{
 			load.get(buf, '\n');
 			load.getline(buf, 10, '\n');
-			currentLevel = atoi(buf);
+			//currentLevel = atoi(buf);
 			levelFound = true;
 			continue;
 		}
 		
-		load.getline(buf, 5, ',');
+		load.getline(buf, 7, ',');
 		position.x = atoi(buf);
-		load.getline(buf, 5, ',');
+		load.getline(buf, 7, ',');
 		position.y = atoi(buf);
 
-		load.getline(buf, 5, ',');
+		load.getline(buf, 7, ',');
 		size.x = atoi(buf);
-		load.getline(buf, 5, ';');
+		load.getline(buf, 7, ';');
 		size.y = atoi(buf);
 
-		load.getline(buf, 5, '\n');
+		load.getline(buf, 7, '\n');
 
 		objects.push_back(gameObject(position, size));
 	}
