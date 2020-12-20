@@ -1,6 +1,4 @@
 #pragma once
-
-#pragma warning (push)
 #pragma warning (disable : 4244 4305)	//<----
 
 #include <iostream>
@@ -80,7 +78,7 @@ int main()
 	//
 	//---ID---DAMAGE---ADDITIONAL PENETRATION---SWING DELAY---HITBOX LIFETIME---HITBOX POSITIONS---HITBOX SIZE---
 	//
-	// 1 / FIRERATE - HB LIFETIME == TIME BETWEEN SWINGS ----> 1 / FIRERATE SHOULD BE >= HB LIFETIME
+	// SWING DELAY - HB LIFETIME == TIME BETWEEN SWINGS ----> SWING DELAY SHOULD BE >= HB LIFETIME
 	//
 	//
 	Vector2f hitboxSizeBoardStandart = { 30,25 };
@@ -92,13 +90,10 @@ int main()
 	//---ID---DAMAGE---ADDITIONAL PENETRATION---SHOT DELAY---RANGE---PROJECTILE SPEED---AMMO CAPACITY---RELOAD TIME---PROJECTILE TEXTURE---
 	//
 	//
-	Weapon pistol(1, 8, 0, 0.5, 400, 400, 12, 1.5, textures.at(1));
-	Weapon rifle(2, 12, 1, 0.3, 600, 600, 25, 2, textures.at(2));
+	Weapon pistol(2, 8, 0, 0.5, 400, 400, 12, 1.5, textures.at(1));
+	Weapon rifle(3, 12, 1, 0.3, 600, 600, 25, 2, textures.at(2));
 	Weapon sniperRifle(4, 20, 2, 2, 800, 800, 5, 3, textures.at(2));
 
-
-
-	
 	board.actionSpriteOffset = Vector2i(10, 25);
 	board.actionSpriteSize = Vector2i(65, 85);
 	
@@ -218,11 +213,11 @@ int main()
 
 		//---PROJECTILE PHASE
 
-			//pre-remove of melee HB with expired swing or ranged projectiles with exceeding distance
+			// remove melee HB with expired swing or ranged projectiles with exceeding distance
+			// before anything else
 			projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
 			{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
 			!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
-
 
 		for (size_t i = 0; i < projectiles.size(); i++)
 		{
@@ -240,7 +235,6 @@ int main()
 					}
 				}
 			}
-
 			else 
 			{
 				projectiles.at(i).updatePosition(mainClock.getElapsedTime().asSeconds());
@@ -269,13 +263,11 @@ int main()
 				}
 			}
 		}
-
 		player.weapon.reloadHandle(mainClock);
 		//---PROJECTILE PHASE END
 
 
 		//---POSITION PHASE
-		player.isMoving = player.upPressed or player.rightPressed or player.downPressed or player.leftPressed;
 		player.updatePosition(mainClock.getElapsedTime().asSeconds());
 		//---POSITION PHASE END
 
@@ -309,8 +301,6 @@ int main()
 		bool needOverride_t = false;
 		for (size_t i = 1; i < objects.size(); i++)
 		{			
-			//if (!objects.at(i).collisionCheck(cameraBounds))	//questionable
-			//	continue;
 			player.collisionCheck(objects.at(i), &needOverride_t);
 			if (needOverride_t)
 				needOverride = true;
@@ -352,7 +342,6 @@ int main()
 				}
 			}
 		}
-
 		if (!needOverride)
 			player.overrideInputX = player.overrideInputY = false;
 
@@ -391,8 +380,7 @@ int main()
 			alignTime(timestamp, mainClock, player, objects, projectiles);
 		}
 
-		Sprite buf(mainGameTexture.getTexture());
-		window.draw(buf);
+		window.draw(Sprite{ mainGameTexture.getTexture() });
 
 		RectangleShape hpBase;
 		hpBase.setPosition(30, 30);
@@ -409,12 +397,14 @@ int main()
 		if (drawMinimap)
 		{
 			finalDrawMinimap(minimapTexture, objects, entities, projectiles, player, cameraBounds);
+			
 			RectangleShape black;
 			black.setPosition(window.getSize()* Vector2f{ minimap.getViewport().left, minimap.getViewport().top });
 			black.setSize(window.getSize() * Vector2f{ minimap.getViewport().width, minimap.getViewport().height });
 			black.setFillColor(Color(0,0,0, 180));
 			black.setOutlineColor(Color::Red);
 			black.setOutlineThickness(2);
+			
 			window.draw(black);
 			window.draw(Sprite(minimapTexture.getTexture()));
 		}

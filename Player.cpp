@@ -34,6 +34,7 @@ void Player::updatePosition(float elapsedTime)
 	if (rightPressed) x++;
 	if (leftPressed) x--;
 	speed = leftShiftPressed ? basespeed / 2 : basespeed;
+	isMoving = x or y ? true : false;
 
 	pendingDirection = currentDirection = Vector2f(x, y);
 

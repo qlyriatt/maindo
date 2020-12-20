@@ -42,6 +42,7 @@ public:
 	Sprite		sprite;
 
 	//inventory
+	bool		interactionFlag;
 	bool		isInventoryOpen;
 	int			health;
 	int			maxHealth;

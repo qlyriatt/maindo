@@ -20,7 +20,7 @@ Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
 //pls help
 namespace sf
 {
-	template <typename T, typename U>
+	template<typename T, typename U>
 	Vector2f operator *(const Vector2<T>& left, const Vector2<U>& right)
 	{
 		return Vector2f(left.x * right.x, left.y * right.y);
@@ -97,6 +97,7 @@ String pickName()
 	names.push_back("I guess you guys aren't ready for that yet... but your kids are gonna love it");
 	names.push_back("F - Fm - C");
 	names.push_back("Microsoft C++ exception: std::length_error at memory location 0x0055BA50");
+	names.push_back("Please be quiet");
 
 	return names.at(rand() % names.size());
 }
@@ -214,12 +215,12 @@ float getTimeDiff(const Clock& clock, float time)
 
 int getCount(float storedTimeDifference, int animationStates, int changesPerSecondMultiplier = 1)
 {
-	int a = floor(storedTimeDifference * animationStates * changesPerSecondMultiplier);
+	int count = storedTimeDifference * animationStates * changesPerSecondMultiplier;
 	for (size_t i = 0; i < changesPerSecondMultiplier; i++)
 	{
-		a %= animationStates;
+		count %= animationStates;
 	}
-	return a;
+	return count;
 }
 
 
@@ -547,63 +548,6 @@ vector<RectangleShape> defineInventory(const Vector2u renderTargetSize, const Pl
 //}
 
 
-vector<RectangleShape> definePause(const Vector2u renderTargetSize, const Vector2u pauseGrid, const int chosenButton)
-{
-	const size_t BUTTON_OFFSET = 10;
-	const Vector2u BUTTON_SIZE = { 200, 30 };
-
-	vector<RectangleShape> objects;
-
-	RectangleShape blackScreen;
-	blackScreen.setSize(Vector2f(renderTargetSize));
-	blackScreen.setFillColor(Color(20, 30, 20));
-	objects.push_back(blackScreen);
-
-	//that is important (actually not so m..%&^FUCK OFF IT'S IMPORTANT)
-	auto menuPosition = Vector2u(constructRectangleGridVectors({ 3,3 }, renderTargetSize, { 0,0 }, { BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET) * pauseGrid.y }).at(4));
-
-	if (DEBUG_LEVEL)
-	{
-		for (auto& i : constructRectangleGridVectors({ 3,3 }, renderTargetSize, { 0,0 }))
-		{
-			RectangleShape obj;
-			obj.setPosition(i);
-			obj.setSize(Vector2f(renderTargetSize / 3u));
-			obj.setFillColor(Color::Transparent);
-			obj.setOutlineColor(Color(30, 120, 50, 220));
-			obj.setOutlineThickness(3);
-			objects.push_back(obj);
-		}
-
-		for (auto& i : constructRectangleGridVectors({ 3,3 }, renderTargetSize, { 0,0 }, { BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET) * pauseGrid.y }))
-		{
-			RectangleShape obj;
-			obj.setPosition(i);
-			obj.setSize(Vector2f(BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET)* pauseGrid.y ));
-			obj.setFillColor(Color::Transparent);
-			obj.setOutlineColor(Color(130, 30, 80, 200));
-			obj.setOutlineThickness(3);
-			objects.push_back(obj);
-		}
-	}
-
-	size_t count = 0;
-	for (auto& i : constructRectangleGridVectors(pauseGrid, { BUTTON_SIZE.x, (BUTTON_SIZE.y + BUTTON_OFFSET) * pauseGrid.y }, menuPosition, BUTTON_SIZE))
-	{
-		RectangleShape obj;
-		obj.setPosition(i);
-		obj.setSize(Vector2f(BUTTON_SIZE));
-		obj.setFillColor(count == chosenButton ? Color::White : Color::Blue);
-		objects.push_back(obj);
-		count++;
-	}
-	
-	return objects; // i cant return reference fuuuuuuuuuck my life
-}
-
-
-
-
 /////////////////////////////////////////////////
 // Very (not)useful calculations that help solve the great (unexisting) problem of
 // having to construct many grid-like sets of objects by making it ten millions times harder 
@@ -749,34 +693,6 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /////////////////////////////////////////////////
 /// @brief Internal function that draws menu elements to the window
 ///
@@ -864,6 +780,7 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	window.draw(finalOutput);
 	window.display();
 }
+
 
 /////////////////////////////////////////////////
 /// @brief Draws menu and allows menu interaction

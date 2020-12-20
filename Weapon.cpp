@@ -54,6 +54,7 @@ Weapon::Weapon(int ID, float damage, int penetration, float shotDelay, float ran
 
 void Weapon::action(vector<Projectile>& projectiles, const gameObject& projectileSource, const Clock& clock)
 {
+							//delay between shots or swings					//out of ammo (ranged)
 	if (clock.getElapsedTime().asSeconds() - latestShotTime < shotDelay or (!isMelee and !currentAmmo))
 		return;
 
