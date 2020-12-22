@@ -25,7 +25,14 @@ gameObject::gameObject(Vector2f position, Vector2f size, const Texture* texture,
 
 bool gameObject::collisionCheck(const FloatRect& obstacle) const
 {
-	if (obstacle.intersects(body.getGlobalBounds()))
+	if (body.getGlobalBounds().intersects(obstacle))
+		return true;
+	return false;
+}
+
+bool gameObject::collisionCheck(const gameObject& obstacle) const
+{
+	if (body.getGlobalBounds().intersects(obstacle.body.getGlobalBounds()))
 		return true;
 	return false;
 }

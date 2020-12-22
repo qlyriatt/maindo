@@ -5,6 +5,7 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 
+#include "Init.h"
 #include "Weapon.h"
 #include "gameObject.h"
 #include "Misc.h"
@@ -38,11 +39,11 @@ enum ExitCodes
 
 
 // SPECIFY FOLDER WITH GAME FILES
-const std::string DIRECTORY{ "D:/All mine/Game/Maindo/" };
+const std::string DIRECTORY = { "D:/All mine/Game/Maindo/" };
 
 int main()
 {
-	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*,Style::Fullscreen*/);	
+	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*, Style::Fullscreen*/);
 
 	Image* icon = new Image;
 	icon->loadFromFile(DIRECTORY + "Textures/icon.png");
@@ -97,11 +98,11 @@ int main()
 	board.actionSpriteOffset = Vector2i(10, 25);
 	board.actionSpriteSize = Vector2i(65, 85);
 	
-	Player player(Vector2f(20, 20), Vector2f(40, 90), &textures.at(0), 200); //speed is pixels per second
+	Player player(Vector2f(20, 20), Vector2f(70, 155), &textures.at(0), 400); //speed is pixels per second
 	player.weapon = pistol;
 	player.sprite.setTexture(textures.at(0));
 	bool switchedWeapon = false;
-	
+
 	int currentLevel = 1;
 	bool drawMinimap = true;
 	bool mainTextureCreated = true;
@@ -221,10 +222,12 @@ int main()
 
 		for (size_t i = 0; i < projectiles.size(); i++)
 		{
+			//MELEE
 			if (projectiles.at(i).isMelee)
 			{
 				projectiles.at(i).body.setPosition(player.body.getPosition() + projectiles.at(i).swingHandle(mainClock));
 
+				//check collisions
 				for (size_t j = 1; j < objects.size(); j++)
 				{
 					if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectiles.at(i).penetration)
@@ -235,11 +238,13 @@ int main()
 					}
 				}
 			}
+			//RANGED
 			else 
 			{
 				projectiles.at(i).updatePosition(mainClock.getElapsedTime().asSeconds());
 				projectiles.at(i).traveledDistance += projectiles.at(i).latestDistanceCovered;
 
+				//check collisions
 				for (size_t j = 1; j < objects.size(); j++)
 				{
 					if (projectiles.at(i).collisionCheck(objects.at(j)))
@@ -273,25 +278,25 @@ int main()
 
 
 		//---COLLISION PHASE
-		if (player.collisionCheck(objects.at(1), NULL))
-		{
-			if (currentLevel == 1)
-			{
-				levelLoad(window, objects, entities, currentLevel, 0, textures);
-				currentLevel = 0;
-			}
-			else
-			{
-				levelLoad(window, objects, entities, currentLevel, 1, textures);
-				currentLevel = 1;
-			}
+		//if (player.collisionCheck(objects.at(1), NULL))
+		//{
+		//	if (currentLevel == 1)
+		//	{
+		//		levelLoad(window, objects, entities, currentLevel, 0, textures);
+		//		currentLevel = 0;
+		//	}
+		//	else
+		//	{
+		//		levelLoad(window, objects, entities, currentLevel, 1, textures);
+		//		currentLevel = 1;
+		//	}
 
-			continue;
-		}
+		//	continue;
+		//}
 
-		float outline = objects.at(0).body.getOutlineThickness();
-		FloatRect playerBounds(objects.at(0).body.getPosition(), WINDOW_SIZE - 2.f * Vector2f(outline, outline));
-		player.collisionCheckInner(playerBounds);
+		//float outline = objects.at(0).body.getOutlineThickness();
+		//FloatRect playerBounds(objects.at(0).body.getPosition(), WINDOW_SIZE - 2.f * Vector2f(outline, outline));
+		//player.collisionCheckInner(playerBounds);
 
 		FloatRect cameraBounds(camera.getCenter() - camera.getSize() / 2.f, camera.getSize());
 		
@@ -358,7 +363,8 @@ int main()
 		//---DRAW PHASE
 		player.updateAnimation(mainClock.getElapsedTime().asSeconds(), &textures.at(0));
 
-		cameraCollision(objects.at(0), camera, player, WINDOW_SIZE); //Vector2f(mainGameTexture.getSize()));
+		camera.setCenter(player.getCenter());
+		//cameraCollision(objects.at(0), camera, player, WINDOW_SIZE); //Vector2f(mainGameTexture.getSize()));
 		if (camera.getSize().x == CAMERA_SIZE.x / 8)
 			camera.setCenter(player.getCenter() - Vector2f(0, 10));
 		if (camera.getSize().x == CAMERA_SIZE.x / 16)

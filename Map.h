@@ -25,6 +25,7 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 
 		gameObject exit(Vector2f(20, 50), Vector2f(25, 25));
 		exit.body.setFillColor(Color(Color::Blue));
+		exit.interactionType = 1;
 
 		objects.push_back(outerBounds);
 		objects.push_back(exit);
@@ -129,15 +130,32 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 		input.close();
 		break;
 	}
+	case 2:
+	{
+		gameObject roomTop({ 0,0 }, { 1920, 1080 * 2 });
+		roomTop.allowCollision = true;
+		roomTop.body.setFillColor(Color(120, 200, 30, 150));
+		objects.push_back(roomTop);
+
+		gameObject roomMiddle(roomTop.body.getPosition() + roomTop.body.getPoint(3), { 1920, 1080 * 1.5 });
+		roomMiddle.allowCollision = true;
+		roomMiddle.body.setFillColor(Color(200, 30, 120, 150));
+		objects.push_back(roomMiddle);
+
+		gameObject roomBottom(roomMiddle.body.getPosition() + roomMiddle.body.getPoint(3), { 1920 * 0.875, 1080 });
+		roomBottom.allowCollision = true;
+		roomBottom.body.setFillColor(Color(30, 30, 120, 150));
+		objects.push_back(roomBottom);
+
+		break;
+	}
 
 	}
 }
 
 void saveLevel(const int currentLevel, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Texture>& textures)
 {
-	char buf[10];
-	_itoa_s(currentLevel, buf, 10);
-	ofstream save(DIRECTORY + "Txt/level" + buf + "Save.txt");
+	ofstream save(DIRECTORY + "Txt/level" + std::to_string(currentLevel) + "Save.txt");
 	if (!save.is_open())
 		cout << "VERY BAD";
 

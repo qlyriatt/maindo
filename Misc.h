@@ -7,8 +7,10 @@ using std::cout;
 using std::endl;
 
 extern const std::string DIRECTORY;
-const Vector2f WINDOW_SIZE{ 1066, 600 };
-const Vector2f CAMERA_SIZE{ WINDOW_SIZE / 2.f };
+const Vector2f WINDOW_SIZE{ 1920, 1080 };
+//const Vector2f WINDOW_SIZE{ 1366, 768 };
+const Vector2f CAMERA_SIZE{ 1920, 1080 };
+//const Vector2f CAMERA_SIZE{ 1366, 768 };
 const Vector2f INVENTORY_SIZE{ CAMERA_SIZE / 2.f };
 const Vector2u NATIVE_RESOLUTION = { 1920, 1080 };
 Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
@@ -642,6 +644,7 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 }
 
 
+
 int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont)
 {
 	const Vector2u pauseGrid = { 1, 4 };
@@ -816,7 +819,7 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 					if (chosenButton == 0)
 						return 0;
 					else if (chosenButton == 1)
-						return 1;
+						return 2;
 					//else if (chosenButton == 2)
 					else if (chosenButton == menuGrid.y - 1)
 						return -1;

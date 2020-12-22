@@ -13,13 +13,16 @@ public:
 	
 	bool collisionCheck(const FloatRect& obstacle) const;
 
+	//does not move objects
+	bool collisionCheck(const gameObject& obstacle) const;
+
 	virtual bool collisionCheck(const gameObject& obstacle);
 
 	virtual void collisionCheckInner(const FloatRect& area); //somewhat excessive (though probably not...)
 
 	virtual void updatePosition(float elapsedTime);
 	
-
+	
 	int			ID;
 	bool		isMoving;
 	float		basespeed;

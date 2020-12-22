@@ -101,7 +101,9 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 		}
 
 		isSetIdle = false;
-		//resets animation when direction is changed except on Y change while having constant X
+
+		//resets animation when direction is changed 
+		//except on Y change while having constant X
 		if (previousFrameDirection != currentDirection)
 		{
 			if (!(previousFrameDirection.x == currentDirection.x and currentDirection.x != 0 and
