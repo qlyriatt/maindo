@@ -38,16 +38,16 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 		}
 
 
-		Entity a(0, Vector2f(350, 250), Vector2f(20, 20), NULL, 50);
-		Entity b(0, Vector2f(450, 350), Vector2f(15, 15), NULL, 75);
+		//Entity a(0, Vector2f(350, 250), Vector2f(20, 20), NULL, 50);
+		//Entity b(0, Vector2f(450, 350), Vector2f(15, 15), NULL, 75);
 		
 		//Weapon rifle(2, 600, 400, 30, &textures.at(1), 5);
 		//Weapon pistol(1, 200, 200, 15, &textures.at(2), 3);
 		//a.weapon = rifle;
 		//b.weapon = rifle;
 
-		entities.push_back(a);
-		entities.push_back(b);
+		//entities.push_back(a);
+		//entities.push_back(b);
 
 		break;
 	}
@@ -97,13 +97,14 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 
 		for (short int i = 0; i < 10; i++)
 		{
-			gameObject obj(Vector2f(30, 200 + i * 30), Vector2f(5, 5), NULL, 0, 0, Color::Black,Color::Green);
+			gameObject obj{ Vector2f(30, 200 + i * 30), Vector2f(5,5) };
 			objects.push_back(obj);
 		}
 
 		for (short int i = 0; i < 5; i++)
 		{
-			gameObject obj(Vector2f(30 + i * 20, 200), Vector2f(5, 5), NULL, 0, 0, Color::Black, Color::Green);
+			gameObject obj{ Vector2f(30 + i * 20, 200), Vector2f(5, 5) };
+			obj.body.setFillColor(Color::Green);
 			objects.push_back(obj);
 		}
 
@@ -153,16 +154,36 @@ void initialize(int map_type, vector<gameObject>& objects, vector<Entity>& entit
 	}
 }
 
-void saveLevel(const int currentLevel, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Texture>& textures)
+
+void saveLevel(int currentLevel, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Texture>& textures)
 {
 	ofstream save(DIRECTORY + "Txt/level" + std::to_string(currentLevel) + "Save.txt");
 	if (!save.is_open())
-		cout << "VERY BAD";
+	{
+		cout << "Unable to save the game" << endl;
+		return;
+	}
+
 
 	save << currentLevel << endl;
-	save << "###### Objects ####### " << endl;
+	save << "########## Objects ##########" << endl;
+
+	//---static properties that should be saved:
+	// 
+	// Shape body;
+	//
+	// bool	isDestroyable;
+	// bool	isAnimated;
+	// bool	allowCollision;
+	// int	interactionType;
+	// int	interactionTypeSpeciality;
+	// 
+
 	for (auto& i : objects)
-		save << i.body.getPosition().x << "," << i.body.getPosition().y << "," << i.body.getSize().x << "," << i.body.getSize().y << ";" << endl;
+	{
+		save << i.body.getPosition().x << "," << i.body.getPosition().y << "," << i.body.getSize().x << "," << i.body.getSize().y << ",";
+
+	}
 
 	save.close();
 }

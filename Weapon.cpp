@@ -3,21 +3,13 @@
 
 Vector2f Projectile::swingHandle(const Clock& clock)
 {
+	//__pragma (warning(suppress : 4244))
 	int count = (clock.getElapsedTime().asSeconds() - creationTime) / lifeTime * hitboxPositions->size();
 	return hitboxPositions->at(count);
 }
 
-
-Weapon::Weapon()
-{
-	ID = penetration = ammoCapacity = currentAmmo = isMelee = 0;
-	projectileLifetime = latestShotTime = damage = shotDelay = range = projectileSpeed = reloadTimer = latestReloadUpdate = reloadTime = 0;
-	projectileTexture = nullptr;
-}
-
-
 //melee
-Weapon::Weapon(int ID, float damage, int penetration, float swingDelay, float swingTime,
+Weapon::Weapon(const int ID, const float damage, const int penetration, const float swingDelay, const float swingTime,
 	const vector<Vector2f>& hitboxPositions, const Vector2f& hitboxSize)
 {
 	this->isMelee = true;
@@ -33,11 +25,10 @@ Weapon::Weapon(int ID, float damage, int penetration, float swingDelay, float sw
 }
 
 //ranged
-Weapon::Weapon(int ID, float damage, int penetration, float shotDelay, float range, float projectileSpeed, 
-	int ammoCapacity, float reloadTime, const Texture& projectileTexture)
+Weapon::Weapon(const int ID, const float damage, const int penetration, const float shotDelay, const float range, const float projectileSpeed,
+	const int ammoCapacity, const float reloadTime, const Texture& projectileTexture)
 {
 	this->isMelee = false;
-	this->latestReloadUpdate = this->latestShotTime = this->reloadTimer = 0;
 
 
 	this->ID = ID;

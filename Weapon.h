@@ -3,10 +3,50 @@
 using std::vector;
 
 
-struct Projectile : public gameObject
+class proj : public gameObject
+{
+protected:
+	proj() {};
+public:
+
+	virtual Vector2f swingHandle(const Clock& clock) { printf("handled in proj"); return Vector2f{ 0,0 }; };
+	bool isMelee = { false };
+	int penetration = { 0 };
+};
+
+class meleeHitbox : public proj
+{
+public:
+	meleeHitbox() { isMelee = true; };
+
+	float creationTime = { 0 };
+	float lifeTime = { 0 };
+	const vector<Vector2f>* hitboxPositions = nullptr;
+	
+
+	Vector2f swingHandle(const Clock& clock)
+	{
+		//int count = (clock.getElapsedTime().asSeconds() - creationTime) / lifeTime * hitboxPositions->size();
+		printf("handled in melee");
+		return Vector2f{ 1,1 };
+	}
+};
+
+class rangedProjectile : public proj
+{
+	float traveledDistance = { 0 };
+};
+
+
+
+class Projectile : public gameObject
 {	
+protected:
+	Projectile() {};
+public:
+
 	//MELEE
-	Projectile(int penetration, float creationTime, float lifeTime, const vector<Vector2f>& hitboxPositions)
+	Projectile(const int penetration, const float creationTime, const float lifeTime, const vector<Vector2f>& hitboxPositions)
 	{	
 		this->isMelee = true;
 		this->allowCollision = true;
@@ -34,17 +74,17 @@ struct Projectile : public gameObject
 	//melee only
 	Vector2f swingHandle(const Clock& clock);
 	
-	bool isMelee;
-	int	penetration;
+	bool isMelee = { false };
+	int	penetration = { 0 };
 
 	//melee
-	float creationTime;
-	float lifeTime;
-	const vector<Vector2f>* hitboxPositions;
+	float creationTime = { 0 };
+	float lifeTime = { 0 };
+	const vector<Vector2f>* hitboxPositions = { nullptr };
 
 	//ranged
-	float traveledDistance;
-	float range;
+	float traveledDistance = { 0 };
+	float range = { 0 };
 	Vector2f offsetShotPosition;
 };
 
@@ -52,16 +92,16 @@ struct Projectile : public gameObject
 class Weapon
 {
 public:
-
-	Weapon();
 	
+	Weapon() {};
+
 	//MELEE
-	Weapon(int ID, float damage, int penetration, float swingDelay, float swingTime,
+	Weapon(const int ID, const float damage, const int penetration, const float swingDelay, const float swingTime,
 		const vector<Vector2f>& hitboxPositions, const Vector2f& hitboxSize);
 
 	//RANGED
-	Weapon(int ID, float damage, int penetration, float shotDelay, float range, float projectileSpeed,
-		int ammoCapacity, float reloadTime, const Texture& projectileTexture);
+	Weapon(const int ID, const float damage, const int penetration, const float shotDelay, const float range, const float projectileSpeed,
+		const int ammoCapacity, const float reloadTime, const Texture& projectileTexture);
 
 	//push projectile from the weapon into one shared vector
 	void action(vector<Projectile>& projectiles, const gameObject& projectileSource, const Clock& clock);
@@ -69,31 +109,30 @@ public:
 	//look for reload options and handle them
 	void reloadHandle(const Clock& clock);
 
-	//any
-	bool		isMelee;
-	int			penetration;
-	int			ID;
-	float		latestShotTime;
-	float		damage;
-	float		shotDelay;
 
+	//any
+	bool		isMelee = { false };
+	int			penetration = { 0 };
+	int			ID = { 0 };
+	float		latestShotTime = { 0 };
+	float		damage = { 0 };
+	float		shotDelay = { 0 };
 
 	//melee?
-	float projectileLifetime;
+	float				projectileLifetime = { 0 };
 	Vector2i			actionSpriteOffset;
 	Vector2i			actionSpriteSize;
 	Vector2f			hitboxSize;
 	vector<Vector2f>	hitboxPositions;
 
-
 	//ranged
-	int		ammoCapacity;
-	int		currentAmmo;
-	float	range;
-	float	projectileSpeed;
-	float	reloadTimer;	
-	float	latestReloadUpdate;
-	float	reloadTime;
-	const Texture* projectileTexture;
+	int		ammoCapacity = { 0 };
+	int		currentAmmo = { 0 };
+	float	range = { 0 };
+	float	projectileSpeed = { 0 };
+	float	reloadTimer = { 0 };
+	float	latestReloadUpdate = { 0 };
+	float	reloadTime = { 0 };
+	const Texture* projectileTexture = { nullptr };
 };
 

@@ -7,11 +7,9 @@ class Player : public gameObject
 {
 public:
 
-	Player();
+	Player(const Vector2f& position, const Vector2f& size, const Texture& texture, const size_t animationStates, const float speed);
 
-	Player(Vector2f position, Vector2f size, const Texture* texture, float speed);
-
-	void updatePosition(float elapsedTime);
+	void updatePosition(const Clock& clock);
 
 	void updateAnimation(float elapsedTime, const Texture* texture);
 
@@ -30,31 +28,30 @@ public:
 
 	//movement advanced
 	Vector2f	pendingDirection;
-	bool		overrideInputX;
-	bool		overrideInputY;
+	bool		overrideInputX = { false };
+	bool		overrideInputY = { false };
 
 	//animation
-	bool		isSetIdle;
-	bool		isUsingWeapon;
-	int			latestAnimationType;
-	float		latestAnimationUpdate;
+	bool		isSetIdle = { true };
+	bool		isUsingWeapon = { false };
+	int			latestAnimationType = { 0 };
+	float		latestAnimationUpdate = { 0 };
 	Vector2f	previousFrameDirection;
 	Sprite		sprite;
 
 	//inventory
-	bool		interactionFlag;
-	bool		isInventoryOpen;
-	int			health;
-	int			maxHealth;
+	bool		interactionFlag = { false };
+	int			health = { 0 };
+	int			maxHealth = { 0 };
 	vector<int> inventorySlots;
 
 	//basic
 	Weapon		weapon;
-	bool		upPressed;
-	bool		rightPressed;
-	bool		downPressed;
-	bool		leftPressed;
-	bool		leftShiftPressed;
+	bool		upPressed = { false };
+	bool		rightPressed = { false };
+	bool		downPressed = { false };
+	bool		leftPressed = { false };
+	bool		leftShiftPressed = { false };
 };
 
 

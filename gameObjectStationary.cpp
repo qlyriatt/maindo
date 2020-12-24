@@ -2,47 +2,65 @@
 
 gameObjectStationary::~gameObjectStationary() {};
 
-gameObjectStationary::gameObjectStationary()
+//basic
+gameObjectStationary::gameObjectStationary(const Vector2f& position, const Texture& texture)
 {
-	isAnimated = allowCollision = isDestroyable = false;
-	animationCycleTimer = latestAnimationUpdate = interactionRadius = interactionType = interactionTypeSpeciality = 0;
+	sprite.setPosition(position);
+	sprite.setTexture(texture);
+	body.setPosition(position);
+	body.setSize(Vector2f{ texture.getSize() });
 }
 
-gameObjectStationary::gameObjectStationary(Vector2f position, Vector2f size, const Texture* texture, bool allowCollision,
-	Color bodyColor, Color outlineColor, float outlineThickness)
+//testing
+gameObjectStationary::gameObjectStationary(const Vector2f& position, const Vector2f& size, 
+	const int interactionType, const int interactionTypeSpeciality, const bool allowCollision)
 {
-	isAnimated = interactionType = isDestroyable = false;
-	animationCycleTimer = latestAnimationUpdate = interactionType = interactionTypeSpeciality = 0;
-
 	body.setPosition(position);
 	body.setSize(size);
-	body.setTexture(texture);
+	body.setFillColor(Color(20, 20, 70));
+	body.setOutlineColor(Color::Red);
+	body.setOutlineThickness(4);
 
+	this->interactionType = interactionType;
+	this->interactionTypeSpeciality = interactionTypeSpeciality;
 	this->allowCollision = allowCollision;
-	interactionRadius = 10;
-
-
-
-	//to be removed
-	body.setFillColor(bodyColor);
-	body.setOutlineColor(outlineColor);
-	body.setOutlineThickness(outlineThickness);
 }
 
-const Vector2f gameObjectStationary::getCenter() const 
+//final
+gameObjectStationary::gameObjectStationary(const Vector2f& position, const Texture& texture, const size_t animationStates, const bool allowCollision, 
+	const bool isDestroyable, const int interactionType, const int interactionTypeSpeciality, const float interactionRadius)
 {
-	return Vector2f(body.getPosition() + body.getSize() / 2.f);
+	sprite.setPosition(position);
+	sprite.setTexture(texture);
+	body.setPosition(position);
+	body.setSize(Vector2f{ texture.getSize() });
+
+	this->animationStates = animationStates;
+	if (animationStates > 1)
+		this->isAnimated = true;
+
+	this->interactionType = interactionType;
+	this->interactionTypeSpeciality = interactionTypeSpeciality;
+	this->interactionRadius = interactionRadius;
+	this->allowCollision = allowCollision;
+	this->isDestroyable = isDestroyable;
 }
 
-//texture updates every 1/animationCycles sec.
-void gameObjectStationary::updateAnimation(float elapsedTime, const Texture* texture, int animationCycles)
+
+Vector2f gameObjectStationary::getCenter() const
+{
+	return body.getPosition() + body.getSize() / 2.f;
+}
+
+//texture updates every 1/animationStates sec.
+void gameObjectStationary::updateAnimation(const float elapsedTime)
 {
 	if (isAnimated)
 	{
-		int x = int(floor(animationCycleTimer * animationCycles)) % animationCycles; 
+		const int x = int(animationCycleTimer * animationStates) % animationStates;
 
-		IntRect TextureRect(Vector2i(body.getSize().x * x, 0), Vector2i(body.getSize()));
-		body.setTextureRect(TextureRect);
+		IntRect textureRect({ int(body.getSize().x * x), 0 }, Vector2i{ body.getSize() });
+		body.setTextureRect(textureRect);
 
 		animationCycleTimer += elapsedTime - latestAnimationUpdate;
 		latestAnimationUpdate = elapsedTime;

@@ -7,10 +7,10 @@ using std::cout;
 using std::endl;
 
 extern const std::string DIRECTORY;
-const Vector2f WINDOW_SIZE{ 1920, 1080 };
-//const Vector2f WINDOW_SIZE{ 1366, 768 };
-const Vector2f CAMERA_SIZE{ 1920, 1080 };
-//const Vector2f CAMERA_SIZE{ 1366, 768 };
+//const Vector2f WINDOW_SIZE{ 1920, 1080 };
+const Vector2f WINDOW_SIZE{ 1366, 768 };
+//const Vector2f CAMERA_SIZE{ 1920, 1080 };
+const Vector2f CAMERA_SIZE{ 1366, 768 };
 const Vector2f INVENTORY_SIZE{ CAMERA_SIZE / 2.f };
 const Vector2u NATIVE_RESOLUTION = { 1920, 1080 };
 Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
@@ -100,116 +100,13 @@ String pickName()
 	names.push_back("F - Fm - C");
 	names.push_back("Microsoft C++ exception: std::length_error at memory location 0x0055BA50");
 	names.push_back("Please be quiet");
+	names.push_back("Error C2398: Element '1': conversion from 'int' to 'T' requires a narrowing conversion");
 
 	return names.at(rand() % names.size());
 }
 
 
-//aligns latestTimeUpdate (or else) for everything after additional rendering
-void alignTime(float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles)
-{
-	for (auto& i : objects)
-	{
-		i.latestUpdate = clock.getElapsedTime().asSeconds();
-		i.latestAnimationUpdate = clock.getElapsedTime().asSeconds();
-	}
-
-	for (auto& i : projectiles)
-	{
-		i.latestUpdate = clock.getElapsedTime().asSeconds();
-		i.creationTime = clock.getElapsedTime().asSeconds() - (timestamp - i.creationTime);
-	}
-
-	// aCT += eT 21 - lAU 20.5; count = 3; aCT += eT 48 - lAU 21(48); aCT += eT 48.5 - aCT 48; count = 4
-	player.latestUpdate = clock.getElapsedTime().asSeconds();
-	player.latestAnimationUpdate = clock.getElapsedTime().asSeconds();
-	player.weapon.latestShotTime = clock.getElapsedTime().asSeconds() - (timestamp - player.weapon.latestShotTime);
-}
-
-
-void finalDraw(RenderTarget& renderTarget, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles, 
-	Player& player) 
-{
-	FloatRect cameraBounds(renderTarget.getView().getCenter() - renderTarget.getView().getSize() / 2.f, renderTarget.getView().getSize());
-
-	for (const auto& i : objects)
-	{
-		if (i.collisionCheck(cameraBounds))
-			renderTarget.draw(i.body);
-	}
-
-	for (const auto& i : entities)
-	{
-		if (i.collisionCheck(cameraBounds))
-			renderTarget.draw(i.body);
-	}
-
-	for (const auto& i : projectiles)
-	{
-		if (i.collisionCheck(cameraBounds))
-		{
-			if (i.isMelee and DEBUG_LEVEL)
-				i.body.setFillColor(Color(255, 255, 255, 150));
-			renderTarget.draw(i.body);
-		}
-	}
-
-	if (DEBUG_LEVEL)
-	{
-		RectangleShape tmp;
-		tmp.setPosition(player.body.getPosition());
-		tmp.setSize(player.body.getSize());
-		tmp.setFillColor(Color(255, 0, 0, 150));
-		renderTarget.draw(tmp);
-		tmp.setPosition(player.sprite.getPosition());
-		tmp.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
-		tmp.setFillColor(Color(0, 255, 0, 70));
-		renderTarget.draw(tmp);
-	}
-
-	renderTarget.draw(player.sprite);
-}
-
-
-void setOpacity(gameObject& object, int opacity = 255)
-{
-	Color tmp = object.body.getFillColor();
-	object.body.setFillColor(Color(tmp.r, tmp.g, tmp.b, opacity));
-	tmp = object.body.getOutlineColor();
-	object.body.setOutlineColor(Color(tmp.r, tmp.g, tmp.b, opacity));
-}
-
-
-void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
-	vector<Projectile>& projectiles, Player& player, const FloatRect& cameraBounds)
-{
-	renderTexture.clear(Color::Transparent);
-	
-	for (auto& i : objects)
-	{
-		setOpacity(i, i.collisionCheck(cameraBounds) ? 200 : 70);
-		renderTexture.draw(i.body);
-		setOpacity(i);
-	}
-
-	for (auto& i : entities)
-	{
-		renderTexture.draw(i.body);
-	}
-
-	for (auto& i : projectiles)
-	{
-		renderTexture.draw(i.body);
-	}
-	
-	setOpacity(player, 150);
-	renderTexture.draw(player.sprite);
-	setOpacity(player);
-	renderTexture.display();
-}
-
-
-float getTimeDiff(const Clock& clock, float time) 
+float getTimeDiff(const Clock& clock, float time)
 {
 	return clock.getElapsedTime().asSeconds() - time;
 }
@@ -223,6 +120,183 @@ int getCount(float storedTimeDifference, int animationStates, int changesPerSeco
 		count %= animationStates;
 	}
 	return count;
+}
+
+
+//aligns latestTimeUpdate (or else) for everything after additional rendering
+void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles)
+{
+	float elapsedTime = clock.getElapsedTime().asSeconds();
+
+	for (auto& i : objects)
+	{
+		i.latestMoveUpdate = elapsedTime;
+		i.latestAnimationUpdate = elapsedTime;
+	}
+
+	for (auto& i : projectiles)
+	{
+		i.latestMoveUpdate = elapsedTime;
+		i.creationTime = elapsedTime - (timestamp - i.creationTime);
+	}
+
+	// aCT += eT 21 - lAU 20.5; count = 3; aCT += eT 48 - lAU 21(48); aCT += eT 48.5 - aCT 48; count = 4
+	player.latestMoveUpdate = elapsedTime;
+	player.latestAnimationUpdate = elapsedTime;
+	player.weapon.latestShotTime = elapsedTime - (timestamp - player.weapon.latestShotTime);
+}
+
+
+/////////////////////////////////////////////////
+/// @brief Changes opacity of an object
+/// @param object Target
+/// @param opacity Opacity to set, default is non-transparent
+/////////////////////////////////////////////////
+void setOpacity(gameObjectStationary& object, int opacity = 255)
+{
+	Color tmp = object.body.getFillColor();
+	object.body.setFillColor(Color(tmp.r, tmp.g, tmp.b, opacity));
+	tmp = object.body.getOutlineColor();
+	object.body.setOutlineColor(Color(tmp.r, tmp.g, tmp.b, opacity));
+}
+
+
+void loadTexturesMenu(vector<Texture>& texturesMenu)
+{
+	Texture menuLight;
+	menuLight.loadFromFile(DIRECTORY + "Textures/menuLight.png");
+	texturesMenu.push_back(menuLight);
+
+	Texture menuDark;
+	menuDark.loadFromFile(DIRECTORY + "Textures/menuDark.png");
+	texturesMenu.push_back(menuDark);
+
+	Texture menuButtonLight;
+	menuButtonLight.loadFromFile(DIRECTORY + "Textures/menuButtonLight.png");
+	texturesMenu.push_back(menuButtonLight);
+
+	Texture menuButtonDark;
+	menuButtonDark.loadFromFile(DIRECTORY + "Textures/menuButtonDark.png");
+	texturesMenu.push_back(menuButtonDark);
+}
+
+
+void loadTexturesPause(vector<Texture>& texturesPause)
+{
+	Texture menuLight;
+	menuLight.loadFromFile(DIRECTORY + "Textures/pauseLight.png");
+	texturesPause.push_back(menuLight);
+
+	Texture menuDark;
+	menuDark.loadFromFile(DIRECTORY + "Textures/pauseDark.png");
+	texturesPause.push_back(menuDark);
+
+	Texture menuButtonLight;
+	menuButtonLight.loadFromFile(DIRECTORY + "Textures/pauseButtonLight.png");
+	texturesPause.push_back(menuButtonLight);
+
+	Texture menuButtonDark;
+	menuButtonDark.loadFromFile(DIRECTORY + "Textures/pauseButtonDark.png");
+	texturesPause.push_back(menuButtonDark);
+}
+
+
+void loadTextures(vector<Texture>& textures)
+{
+	Texture playerTexture;
+	playerTexture.loadFromFile(DIRECTORY + "Textures/player.png");
+	textures.push_back(playerTexture);
+
+	Texture bulletPistolTexture;
+	bulletPistolTexture.loadFromFile(DIRECTORY + "Textures/bulletPistol.png");
+	textures.push_back(bulletPistolTexture);
+
+	Texture bulletRifleTexture;
+	bulletRifleTexture.loadFromFile(DIRECTORY + "Textures/bulletRifle.png");
+	textures.push_back(bulletRifleTexture);
+}
+
+
+/////////////////////////////////////////////////
+/// @brief Draws everything in the current frame
+/// @param renderTexture RenderTexture to draw to
+/////////////////////////////////////////////////
+void finalDraw(RenderTexture& renderTexture, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles, 
+	const Player& player) 
+{
+	FloatRect viewField(renderTexture.getView().getCenter() - renderTexture.getView().getSize() / 2.f, renderTexture.getView().getSize());
+
+	for (const auto& i : objects)
+	{
+		if (i.collisionCheck(viewField))
+			renderTexture.draw(i.body);
+	}
+
+	for (const auto& i : entities)
+	{
+		if (i.collisionCheck(viewField))
+			renderTexture.draw(i.body);
+	}
+
+	// fix later
+	for (auto i : projectiles)
+	{
+		if (i.collisionCheck(viewField))
+		{
+			if (i.isMelee and DEBUG_LEVEL)
+				i.body.setFillColor(Color(255, 255, 255, 150));
+			renderTexture.draw(i.body);
+		}
+	}
+
+	if (DEBUG_LEVEL)
+	{
+		RectangleShape tmp;
+		tmp.setPosition(player.body.getPosition());
+		tmp.setSize(player.body.getSize());
+		tmp.setFillColor(Color(255, 0, 0, 150));
+		renderTexture.draw(tmp);
+		tmp.setPosition(player.sprite.getPosition());
+		tmp.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
+		tmp.setFillColor(Color(0, 255, 0, 70));
+		renderTexture.draw(tmp);
+	}
+
+	renderTexture.draw(player.sprite);
+	renderTexture.display();
+}
+
+
+void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
+	vector<Projectile>& projectiles, Player& player)
+{
+	renderTexture.clear(Color::Transparent);
+	
+	for (auto& i : objects)
+	{
+		setOpacity(i, 200);
+		renderTexture.draw(i.body);
+		setOpacity(i);
+	}
+
+	for (auto& i : entities)
+	{
+		setOpacity(i, 200);
+		renderTexture.draw(i.body);
+		setOpacity(i);
+	}
+
+	for (auto& i : projectiles)
+	{
+		setOpacity(i, 200);
+		renderTexture.draw(i.body);
+		setOpacity(i);
+	}
+	
+	setOpacity(player, 150);
+	renderTexture.draw(player.sprite);
+	setOpacity(player);
+	renderTexture.display();
 }
 
 
@@ -288,13 +362,16 @@ void cameraCollision(const gameObject& area, View& camera, const Player& player,
 	}
 }
 
+
 /////////////////////////////////////////////////
-/// @brief Simple function to navigate any menu
+/// @brief Simple function to navigate any menu 
+/// NOTE : count should be a non-const reference
 /// @param event Event to handle
 /// @param gridDimensions Menu grid dimensions (X = rows, Y = columns)
-/// @param count Current menu count (button, item, etc.)
+/// @param count Reference to current menu count (button, item, etc.)
+/// @returns True if event was handled succesfully, false otherwise
 /////////////////////////////////////////////////
-void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& count)
+bool menuNavigation(const Event& event, const Vector2u& gridDimensions, int& count)
 {
 	const auto columns = gridDimensions.x;
 	const auto rows = gridDimensions.y;
@@ -305,6 +382,7 @@ void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& cou
 			count += columns * (rows - 1);
 		else
 			count -= columns;
+		return true;
 	}
 	else if (event.key.code == Keyboard::S)
 	{
@@ -312,6 +390,7 @@ void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& cou
 			count -= columns * (rows - 1);
 		else
 			count += columns;
+		return true;
 	}
 	else if (event.key.code == Keyboard::A)
 	{
@@ -319,6 +398,7 @@ void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& cou
 			count += columns - 1;
 		else
 			count--;
+		return true;
 	}
 	else if (event.key.code == Keyboard::D)
 	{
@@ -326,19 +406,19 @@ void menuNavigation(const Event& event, const Vector2u& gridDimensions, int& cou
 			count -= columns - 1;
 		else
 			count++;
+		return true;
 	}
+
+	return false;
 }
 
+
 /////////////////////////////////////////////////
-///
 /// @brief Draws an additional texture layer
-/// 
 /// @param	targetTexture RenderTexture to draw to
 /// @param	spritesToRender Objects to draw to targetTexture
 /// @param  pendingDraw Texture that should be behind what is going to be rendered
-/// 
 /// @return Sprite ready for display
-///
 /////////////////////////////////////////////////
 Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprite>& spritesToRender)
 {
@@ -354,16 +434,13 @@ Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprit
 	return Sprite(targetTexture.getTexture());
 }
 
+
 /////////////////////////////////////////////////
-///
 /// @brief Overload that draws an additional texture layer on top of other texture
-/// 
 /// @param	targetTexture RenderTexture to draw to
 /// @param	spritesToRender Objects to draw to targetTexture
 /// @param  pendingDraw Texture that should be behind what is going to be rendered
-/// 
 /// @return Sprite ready for display
-///
 /////////////////////////////////////////////////
 Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprite>& spritesToRender, const RenderTexture& pendingDraw)
 {
@@ -381,18 +458,15 @@ Sprite additionalLayerRendering(RenderTexture& targetTexture, const vector<Sprit
 	return Sprite(targetTexture.getTexture());
 }
 
+
 /////////////////////////////////////////////////
-///
 /// @brief Constructs a rectangle grid of graphic vectors
-///
 /// @param cellCount Grid dimensions as X - columns and Y - rows. Either must be non-zero
 /// @param gridSize Size of constructed grid
 /// @param gridPosition Starting point of the grid
 /// @param cellSize Size of the inside cell, base grid is divided instead if left default
 /// @deprecated Actually it's deprecated since day 1
-/// 
 /// @return An array of vectors
-/// 
 /////////////////////////////////////////////////
 const vector<Vector2f> constructRectangleGridVectors(const Vector2u cellCount, const Vector2u gridSize, 
 	const Vector2u gridPosition = { 0,0 }, const Vector2u cellSize = { 0,0 })
@@ -520,17 +594,17 @@ vector<RectangleShape> defineInventory(const Vector2u renderTargetSize, const Pl
 //				//any interactions should be here
 //				else if (event.key.code == Keyboard::E)
 //				{
-//					if (player.inventorySlots.at(chosenItem) == 1 and player.health < player.maxHealth)
-//					{
-//						player.health += 20;
-//						player.inventorySlots.at(chosenItem) = 0;
-//					}
-//					else if (player.inventorySlots.at(chosenItem) == 2 and player.health > 0)
-//					{
-//						player.health -= 20;
-//						player.inventorySlots.at(chosenItem) = 0;
-//					}
-//					else continue; //<---
+					//if (player.inventorySlots.at(chosenItem) == 1 and player.health < player.maxHealth)
+					//{
+					//	player.health += 20;
+					//	player.inventorySlots.at(chosenItem) = 0;
+					//}
+					//else if (player.inventorySlots.at(chosenItem) == 2 and player.health > 0)
+					//{
+					//	player.health -= 20;
+					//	player.inventorySlots.at(chosenItem) = 0;
+					//}
+					//else continue; //<---
 //				}
 //
 //				else
@@ -584,6 +658,213 @@ vector<Vector2f> constructGrid(const Vector2u cellCount, const Texture& texture,
 	
 	return gridVectors;
 }
+
+
+
+int showScreenMenu(RenderWindow& window)
+{
+	const Vector2u menuGrid = { 4,2 };
+	RenderTexture menuTexture;
+	menuTexture.create(window.getSize().x, window.getSize().y);
+
+	int chosenButton = 0;
+	bool redraw = true;
+	Event event;
+
+	while (true)
+	{
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::Closed)
+			{
+				window.close();
+				return -1;
+			}
+
+			else if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::E)
+				{
+					if (chosenButton == 0)
+						return 1;
+					else if (chosenButton == 1)
+						return 2;
+					else if (chosenButton == pauseGrid.y - 1)
+						return 0;
+				}
+				else
+					menuNavigation(event, menuGrid, chosenButton);
+
+				redraw = true;
+			}
+		}
+	}
+
+}
+
+
+//enum AdditionalExitCodes
+//{
+//	requireNavigation = -2,
+//	windowClosed,
+//};
+//
+//
+//enum ScreenTypes
+//{
+//	menu = 0,
+//	pause,
+//	inventory
+//};
+//
+//
+//Vector2u getGridDimensions(const int screenType)
+//{
+//	switch (screenType)
+//	{
+//	case ScreenTypes::menu: return { 1,4 };
+//	case ScreenTypes::pause: return { 1,4 };
+//	case ScreenTypes::inventory: return { 4,2 };
+//	default:
+//		throw("getGridDimensions: NO SUCH SCREENTYPE");
+//		return { 0,0 };
+//	}
+//}
+//
+//
+//int additionalEventHandler(const int screenType, const Event& event, const Vector2u gridDimensions, int& chosenButton, 
+//	void* const additionalData = nullptr)
+//{
+//	switch (screenType)
+//	{
+//	case ScreenTypes::menu:
+//
+//		if (event.type == Event::KeyReleased)
+//		{
+//			if (event.key.code == Keyboard::E)
+//			{
+//				if (chosenButton == 0)
+//					return 0;
+//				else if (chosenButton == 1)
+//					return 2;
+//				//else if (chosenButton == 2)
+//				else if (chosenButton == 3)
+//					return -1;
+//			}
+//		}
+//		break;
+//	case ScreenTypes::pause:
+//
+//		if (event.type == Event::KeyReleased)
+//		{
+//			if (event.key.code == Keyboard::Escape)
+//				return 1;
+//
+//			else if (event.key.code == Keyboard::E)
+//			{
+//				if (chosenButton == 0)
+//					return 1;
+//				else if (chosenButton == 1)
+//					return 2;
+//				else if (chosenButton == 3)
+//					return 0;
+//			}
+//		}
+//		break;
+//	case ScreenTypes::inventory:
+//		
+//		if (event.type == Event::KeyReleased)
+//		{
+//			if (event.key.code == Keyboard::I)
+//				return 0;
+//
+//			//inventory interactions should be supported here
+//			if (event.key.code == Keyboard::E)
+//			{
+//				if (!additionalData)
+//					throw("additionalEventHandler: ADDITIONAL DATA --- NULL PTR");
+//				Player* const player = static_cast<Player*>(additionalData);
+//
+//				if (player->inventorySlots.at(chosenButton) == 1 and player->health < player->maxHealth)
+//				{
+//					player->health += 20;
+//					player->inventorySlots.at(chosenButton) = 0;
+//				}
+//				else if (player->inventorySlots.at(chosenButton) == 2 and player->health > 0)
+//				{
+//					player->health -= 20;
+//					player->inventorySlots.at(chosenButton) = 0;
+//				}
+//			}
+//		}
+//		break;
+//	default:
+//
+//		throw("additionalEventHandler: NO SUCH SCREENTYPE");
+//	}
+//
+//	// if the event was not handled in specialized handler, 
+//	// it may be navigational and require additional check
+//	return AdditionalExitCodes::requireNavigation;
+//}
+//
+//
+//void additionalScreenDrawer(const int screenType, RenderWindow& window)
+//{
+//	window.clear();
+//
+//	RenderTexture nativeResolutionBuffer;
+//	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
+//
+//	window.display();
+//}
+//
+//
+//int showAdditionalScreen(const int screenType, RenderWindow& window, void* const additionalData = nullptr)
+//{
+//	using AEC = AdditionalExitCodes;
+//
+//	const Vector2u gridDimensions = getGridDimensions(screenType);
+//
+//
+//	int chosenButton = 0;
+//	bool redraw = true;
+//	Event event;
+//	while (true)
+//	{
+//		while (window.pollEvent(event))
+//		{
+//			//get closed window out of the way first
+//			if (event.type == Event::Closed)
+//			{
+//				window.close();
+//				return -1;
+//			}
+//
+//			//call specialized handler
+//			else 
+//			{
+//				switch (additionalEventHandler(screenType, event, gridDimensions, chosenButton, additionalData))
+//				{
+//				case AEC::requireNavigation:
+//					if(!menuNavigation(event, gridDimensions, chosenButton)) continue; //if event is not handled by any conditions, go to the next one
+//					break;
+//				case AEC::windowClosed:
+//					return -1;
+//				}
+//				redraw = true;
+//			}
+//		}
+//		
+//		if (redraw)
+//		{
+//			//draws directly to the window
+//			additionalScreenDrawer(screenType, window);
+//			redraw = false;
+//		}
+//	}
+//}
+
 
 
 void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont, const Vector2u& pauseGrid,
@@ -642,7 +923,6 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 	window.draw(finalOutput);
 	window.display();
 }
-
 
 
 int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont)
@@ -851,64 +1131,6 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 }
 
 
-void loadTexturesMenu(vector<Texture>& texturesMenu)
-{
-	Texture menuLight;
-	menuLight.loadFromFile(DIRECTORY + "Textures/menuLight.png");
-	texturesMenu.push_back(menuLight);
-
-	Texture menuDark;
-	menuDark.loadFromFile(DIRECTORY + "Textures/menuDark.png");
-	texturesMenu.push_back(menuDark);
-
-	Texture menuButtonLight;
-	menuButtonLight.loadFromFile(DIRECTORY + "Textures/menuButtonLight.png");
-	texturesMenu.push_back(menuButtonLight);
-
-	Texture menuButtonDark;
-	menuButtonDark.loadFromFile(DIRECTORY + "Textures/menuButtonDark.png");
-	texturesMenu.push_back(menuButtonDark);
-}
-
-
-void loadTexturesPause(vector<Texture>& texturesPause)
-{
-	Texture menuLight;
-	menuLight.loadFromFile(DIRECTORY + "Textures/pauseLight.png");
-	texturesPause.push_back(menuLight);
-
-	Texture menuDark;
-	menuDark.loadFromFile(DIRECTORY + "Textures/pauseDark.png");
-	texturesPause.push_back(menuDark);
-
-	Texture menuButtonLight;
-	menuButtonLight.loadFromFile(DIRECTORY + "Textures/pauseButtonLight.png");
-	texturesPause.push_back(menuButtonLight);
-
-	Texture menuButtonDark;
-	menuButtonDark.loadFromFile(DIRECTORY + "Textures/pauseButtonDark.png");
-	texturesPause.push_back(menuButtonDark);
-}
-
-
-vector<Texture> loadTextures()
-{
-	vector<Texture> textures;
-	
-	Texture playerTexture;
-	playerTexture.loadFromFile(DIRECTORY + "Textures/player.png");
-	textures.push_back(playerTexture);
-	Texture bulletPistolTexture;
-	bulletPistolTexture.loadFromFile(DIRECTORY + "Textures/bulletPistol.png");
-	textures.push_back(bulletPistolTexture);
-	Texture bulletRifleTexture;
-	bulletRifleTexture.loadFromFile(DIRECTORY + "Textures/bulletRifle.png");
-	textures.push_back(bulletRifleTexture);
-
-	return textures;
-}
-
-
 void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock)
 {
 	player.upPressed = (Keyboard::isKeyPressed(Keyboard::W) ? true : false);
@@ -925,3 +1147,62 @@ void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clo
 	}
 }
 
+
+void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectiles, vector<gameObject>& objects, Player& player)
+{
+	// remove melee HB with expired swing or ranged projectiles with exceeding distance
+	// before anything else
+	projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
+		{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
+		!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
+
+	for (size_t i = 0; i < projectiles.size(); i++)
+	{
+		//MELEE
+		if (projectiles.at(i).isMelee)
+		{
+			projectiles.at(i).body.setPosition(player.body.getPosition() + projectiles.at(i).swingHandle(mainClock));
+
+			//check collisions
+			for (size_t j = 1; j < objects.size(); j++)
+			{
+				if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectiles.at(i).penetration)
+				{
+					projectiles.at(i).penetration--;
+					objects.erase(objects.begin() + j);
+					j--;
+				}
+			}
+		}
+		//RANGED
+		else
+		{
+			projectiles.at(i).updatePosition(mainClock);
+			projectiles.at(i).traveledDistance += projectiles.at(i).latestDistanceCovered;
+
+			//check collisions
+			for (size_t j = 1; j < objects.size(); j++)
+			{
+				if (projectiles.at(i).collisionCheck(objects.at(j)))
+				{
+					if (objects.at(j).isDestroyable)
+					{
+						objects.erase(objects.begin() + j);
+						j--;
+
+						if (projectiles.at(i).penetration)
+						{
+							projectiles.at(i).penetration--;
+							continue; //continue checking collisions for the same projectile
+						}
+					}
+
+					projectiles.erase(projectiles.begin() + i);
+					i--;
+					break;
+				}
+			}
+		}
+	}
+	player.weapon.reloadHandle(mainClock);
+}

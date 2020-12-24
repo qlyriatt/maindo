@@ -1,32 +1,15 @@
 #include "Player.h"
-#include <iostream>
 
-Player::Player() : gameObject()
+
+Player::Player(const Vector2f& position, const Vector2f& size, const Texture& texture, const size_t animationStates, const float speed) :
+	gameObject(position, texture, animationStates, speed, false, false, 0, 0, 0)
 {
-	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
-	overrideInputX = overrideInputY = isSetIdle = isUsingWeapon = isInventoryOpen = false;
-	animationCycleTimer = latestAnimationUpdate = latestAnimationType = 0;
+	body.setSize(size);
+	sprite.setTextureRect(IntRect(Vector2i{ 0,0 }, Vector2i{ body.getSize() }));
 }
 
-Player::Player(Vector2f position, Vector2f size, const Texture* texture, float speed) : gameObject(position, size, texture, speed)
-{
-	upPressed = rightPressed = downPressed = leftPressed = leftShiftPressed = false;
-	overrideInputX = overrideInputY = isSetIdle = isUsingWeapon = isInventoryOpen = false;
-	animationCycleTimer = latestAnimationUpdate = latestAnimationType = 0;
-	isAnimated = true;
 
-
-	body.setOutlineThickness(0);
-	body.setFillColor(Color::White);
-
-	inventorySlots.resize(8);
-	inventorySlots = { 0,0,0,0,0,0,0,0 };
-
-	health = 40;
-	maxHealth = 100;
-}
-
-void Player::updatePosition(float elapsedTime)
+void Player::updatePosition(const Clock& clock)
 {
 	float x = 0, y = 0;
 	if (upPressed) y--;
@@ -46,7 +29,7 @@ void Player::updatePosition(float elapsedTime)
 	if (currentDirection != Vector2f(0, 0))
 		currentSight = currentDirection;
 
-	gameObject::updatePosition(elapsedTime);
+	gameObject::updatePosition(clock);
 }
 
 void Player::updateAnimation(float elapsedTime, const Texture* texture)

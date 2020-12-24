@@ -1,27 +1,25 @@
 #include "gameObject.h"
 
-gameObject::gameObject() : gameObjectStationary()
+
+//minimal
+gameObject::gameObject(const Vector2f& position, const Texture& texture) : gameObjectStationary(position, texture) {}
+
+//testing
+gameObject::gameObject(const Vector2f& position, const Vector2f& size, const float basespeed, 
+	const int interactionType, const int interactionTypeSpeciality, const bool allowCollision) : 
+	gameObjectStationary(position, size, interactionType, interactionTypeSpeciality, allowCollision)
 {
-	isMoving = false;
-	basespeed = speed = latestUpdate = latestDistanceCovered = 0;
-	ID = 0;
+	this->speed = this->basespeed = basespeed;
 }
 
-gameObject::gameObject(Vector2f position, Vector2f size, const Texture* texture, float speed,
-	bool allowCollision, Color bodyColor, Color outlineColor, float outlineThickness) : gameObjectStationary(position, size, texture, allowCollision, bodyColor, outlineColor, outlineThickness)
-{	
-	this->speed = this->basespeed = speed;
-
-	currentSight = Vector2f(1, 0); //RIGHT
-
-	isMoving = false;
-
-	isDestroyable = true;
-
-	latestUpdate = latestDistanceCovered = 0;
-
-	ID = 0;
+//final
+gameObject::gameObject(const Vector2f& position, const Texture& texture, const size_t animationStates, const float basespeed, 
+	const bool allowCollision, const bool isDestroyable, const int interactionType, const int interactionTypeSpeciality, const size_t interactionRadius) :
+	gameObjectStationary(position, texture, animationStates, allowCollision, isDestroyable, interactionType, interactionTypeSpeciality, interactionRadius)
+{
+	this->speed = this->basespeed = basespeed;
 }
+
 
 bool gameObject::collisionCheck(const FloatRect& obstacle) const
 {
@@ -59,23 +57,24 @@ void gameObject::collisionCheckInner(const FloatRect& area)
 		body.move(-currentDirection * latestDistanceCovered);
 }
 
-void gameObject::updatePosition(float elapsedTime)
+void gameObject::updatePosition(const Clock& clock)
 {
-	if (!(isMoving and speed))
+	float elapsedTime = clock.getElapsedTime().asSeconds();
+
+	if (!(isMoving and speed)) //skips update if the object is static or standing still
 	{
-		latestUpdate = 0;
-		//animationCycleTimer = 0;			//eta suka ubila mne 2 chasa blyatttttt
+		latestMoveUpdate = 0;
 		return;
 	}
 
-	if (!latestUpdate)	//skips one still frame after beginning of motion, not essential
+	if (!latestMoveUpdate)	//skips one still frame after beginning of motion, not essential
 	{
-		latestUpdate = elapsedTime;
+		latestMoveUpdate = elapsedTime;
 		return;
 	}
 	
-	latestDistanceCovered = (elapsedTime - latestUpdate) * speed;
-	latestUpdate = elapsedTime;
+	latestDistanceCovered = (elapsedTime - latestMoveUpdate) * speed;
+	latestMoveUpdate = elapsedTime;
 	body.move(currentDirection * latestDistanceCovered);
 }
 

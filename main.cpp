@@ -5,7 +5,6 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 
-#include "Init.h"
 #include "Weapon.h"
 #include "gameObject.h"
 #include "Misc.h"
@@ -14,7 +13,6 @@
 #include "Entity.h"
 
 using namespace std;
-using namespace sf;
 
 #define ESSENTIALS 2
 
@@ -31,6 +29,7 @@ struct gameTexture
 	int animationCycles;
 };
 
+
 enum ExitCodes
 {
 	windowClosedMain = 0,
@@ -41,9 +40,18 @@ enum ExitCodes
 // SPECIFY FOLDER WITH GAME FILES
 const std::string DIRECTORY = { "D:/All mine/Game/Maindo/" };
 
+void test(meleeHitbox& hitbox, Clock& clock)
+{
+	vector<proj> test;
+	test.push_back(hitbox);
+
+	if (test.at(0).isMelee)
+		test.at(0).swingHandle(clock);
+}
+
 int main()
 {
-	RenderWindow window(VideoMode(WINDOW_SIZE.x, WINDOW_SIZE.y), pickName()/*, Style::Fullscreen*/);
+	RenderWindow window(VideoMode::getDesktopMode(), pickName()/*, Style::Fullscreen*/);
 
 	Image* icon = new Image;
 	icon->loadFromFile(DIRECTORY + "Textures/icon.png");
@@ -67,14 +75,18 @@ int main()
 	loadTexturesMenu(texturesMenu);
 	vector<Texture> texturesPause;
 	loadTexturesPause(texturesPause);
-
-	vector<Texture> textures = loadTextures();
+	vector<Texture> textures; 
+	loadTextures(textures);
 
 	vector<gameObject> objects;
 	vector<Projectile> projectiles;
 	vector<Entity> entities;
 
+	Clock clock;
+	meleeHitbox a;
+	test(a, clock);
 
+	return 0;
 	//MELEE WEAPONS
 	//
 	//---ID---DAMAGE---ADDITIONAL PENETRATION---SWING DELAY---HITBOX LIFETIME---HITBOX POSITIONS---HITBOX SIZE---
@@ -94,18 +106,17 @@ int main()
 	Weapon pistol(2, 8, 0, 0.5, 400, 400, 12, 1.5, textures.at(1));
 	Weapon rifle(3, 12, 1, 0.3, 600, 600, 25, 2, textures.at(2));
 	Weapon sniperRifle(4, 20, 2, 2, 800, 800, 5, 3, textures.at(2));
-
+	
 	board.actionSpriteOffset = Vector2i(10, 25);
 	board.actionSpriteSize = Vector2i(65, 85);
 	
-	Player player(Vector2f(20, 20), Vector2f(70, 155), &textures.at(0), 400); //speed is pixels per second
+	Player player{ Vector2f(20, 20), Vector2f(70, 155), textures.at(0), 6, 400 }; //speed is pixels per second
 	player.weapon = pistol;
 	player.sprite.setTexture(textures.at(0));
 	bool switchedWeapon = false;
 
 	int currentLevel = 1;
 	bool drawMinimap = true;
-	bool mainTextureCreated = true;
 	levelLoad(window, objects, entities, currentLevel, 1, textures);
 
 	ifstream test1("D:/All mine/Game/test1.txt");
@@ -116,7 +127,7 @@ int main()
 		cout << "test 2 " << endl;
 
 	bool inMenu = true;
-	player.isUsingWeapon = false;
+	bool inInventory = false;
 
 	Clock mainClock;
 	Event event;
@@ -124,16 +135,31 @@ int main()
 	{
 		window.clear();
 		mainGameTexture.clear();
-		bool interactionFlag = false;
+		player.interactionFlag = false;
 
 		//---INPUT PHASE
 		while (window.pollEvent(event)) 
 		{
-			if (event.type == Event::KeyPressed)
+			if (event.type == Event::KeyReleased)
 			{
-				if (event.key.code == Keyboard::E)
+				if (event.key.code == Keyboard::I)
+					inInventory = true;
+				else if (event.key.code == Keyboard::Escape)
 				{
-					interactionFlag = true;
+					float timestamp = mainClock.getElapsedTime().asSeconds();
+
+					switch (showScreenPause(window, texturesPause, fontMain))
+					{
+					case -1: return -13;
+					case 0: inMenu = true;
+					case 1: break;
+					case 2: saveLevel(currentLevel, objects, entities, textures);
+					}
+					alignTime(timestamp, mainClock, player, objects, projectiles);
+				}
+				else if (event.key.code == Keyboard::E)
+				{
+					player.interactionFlag = true;
 				}
 				else if (event.key.code == Keyboard::R)
 				{
@@ -161,24 +187,7 @@ int main()
 					minimap.zoom(2);
 				else if (event.key.code == Keyboard::Equal)
 					minimap.zoom(0.5);
-			}
-			else if (event.type == Event::KeyReleased)
-			{
-				if (event.key.code == Keyboard::I)
-					player.isInventoryOpen = true;
-				else if (event.key.code == Keyboard::Escape)
-				{
-					float timestamp = mainClock.getElapsedTime().asSeconds();
 
-					switch (showScreenPause(window, texturesPause, fontMain))
-					{
-					case -1: return -13;
-					case 0: inMenu = true;
-					case 1: break;
-					case 2: saveLevel(currentLevel, objects, entities, textures);
-					}
-					alignTime(timestamp, mainClock, player, objects, projectiles);
-				}
 			}
 			else if (event.type == Event::Closed)
 			{
@@ -213,71 +222,17 @@ int main()
 
 
 		//---PROJECTILE PHASE
-
-			// remove melee HB with expired swing or ranged projectiles with exceeding distance
-			// before anything else
-			projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
-			{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
-			!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
-
-		for (size_t i = 0; i < projectiles.size(); i++)
-		{
-			//MELEE
-			if (projectiles.at(i).isMelee)
-			{
-				projectiles.at(i).body.setPosition(player.body.getPosition() + projectiles.at(i).swingHandle(mainClock));
-
-				//check collisions
-				for (size_t j = 1; j < objects.size(); j++)
-				{
-					if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectiles.at(i).penetration)
-					{
-						projectiles.at(i).penetration--;
-						objects.erase(objects.begin() + j);
-						j--;
-					}
-				}
-			}
-			//RANGED
-			else 
-			{
-				projectiles.at(i).updatePosition(mainClock.getElapsedTime().asSeconds());
-				projectiles.at(i).traveledDistance += projectiles.at(i).latestDistanceCovered;
-
-				//check collisions
-				for (size_t j = 1; j < objects.size(); j++)
-				{
-					if (projectiles.at(i).collisionCheck(objects.at(j)))
-					{
-						if (objects.at(j).isDestroyable)
-						{
-							objects.erase(objects.begin() + j);
-							j--;
-
-							if (projectiles.at(i).penetration)
-							{
-								projectiles.at(i).penetration--;
-								continue; //continue checking collisions for the same projectile
-							}
-						}
-
-						projectiles.erase(projectiles.begin() + i);
-						i--;
-						break;
-					}
-				}
-			}
-		}
-		player.weapon.reloadHandle(mainClock);
+		projectileHandlerMain(mainClock, projectiles, objects, player);
 		//---PROJECTILE PHASE END
 
 
 		//---POSITION PHASE
-		player.updatePosition(mainClock.getElapsedTime().asSeconds());
+		player.updatePosition(mainClock);
 		//---POSITION PHASE END
 
 
 		//---COLLISION PHASE
+
 		//if (player.collisionCheck(objects.at(1), NULL))
 		//{
 		//	if (currentLevel == 1)
@@ -312,7 +267,7 @@ int main()
 
 			if (!interactionMessageDisplayed and player.interactionCheck(objects.at(i)))
 			{
-				if (interactionFlag)
+				if (player.interactionFlag)
 				{
 					if (objects.at(i).interactionType == 1)
 					{
@@ -334,7 +289,7 @@ int main()
 						else
 							objects.at(i).body.setFillColor(Color(Color::Green));
 					}
-					interactionFlag = false;
+					player.interactionFlag = false;
 				}
 				else
 				{
@@ -350,17 +305,20 @@ int main()
 		if (!needOverride)
 			player.overrideInputX = player.overrideInputY = false;
 
-		for (size_t i = 0; i < entities.size(); i++)
-		{
-			entities.at(i).script(Vector2f(400 + 100 * i, 300 + 100 * i), player.getCenter(), mainClock.getElapsedTime().asSeconds(), projectiles);
-			for (size_t j = 1; j < objects.size(); j++)
-			{
-				entities.at(i).collisionCheck(objects.at(j));
-			}
-		}
+		//for (size_t i = 0; i < entities.size(); i++)
+		//{
+		//	entities.at(i).script(Vector2f(400 + 100 * i, 300 + 100 * i), player.getCenter(), mainClock.getElapsedTime().asSeconds(), projectiles);
+		//	for (size_t j = 1; j < objects.size(); j++)
+		//	{
+		//		entities.at(i).collisionCheck(objects.at(j));
+		//	}
+		//}
+
 		//---COLLISION PHASE END
 
+
 		//---DRAW PHASE
+
 		player.updateAnimation(mainClock.getElapsedTime().asSeconds(), &textures.at(0));
 
 		camera.setCenter(player.getCenter());
@@ -371,15 +329,13 @@ int main()
 			camera.setCenter(player.getCenter() - Vector2f(0, 20));
 
 		mainGameTexture.setView(camera);
-		minimapTexture.setView(minimap);
-		minimap.setCenter(player.getCenter());
 
+		minimap.setCenter(player.getCenter());
+		minimapTexture.setView(minimap);
 
 		finalDraw(mainGameTexture, objects, entities, projectiles, player);
-		mainGameTexture.display();
 
-
-		if (player.isInventoryOpen)
+		if (inInventory)
 		{			
 			float timestamp = mainClock.getElapsedTime().asSeconds();
 			//showScreenInventory(window, mainGameTexture, player);
@@ -387,6 +343,10 @@ int main()
 		}
 
 		window.draw(Sprite{ mainGameTexture.getTexture() });
+		//----------main draw cycle ends here----------
+		//
+		//at this point current game frame should be ready for display
+
 
 		RectangleShape hpBase;
 		hpBase.setPosition(30, 30);
@@ -402,7 +362,7 @@ int main()
 
 		if (drawMinimap)
 		{
-			finalDrawMinimap(minimapTexture, objects, entities, projectiles, player, cameraBounds);
+			finalDrawMinimap(minimapTexture, objects, entities, projectiles, player);
 			
 			RectangleShape black;
 			black.setPosition(window.getSize()* Vector2f{ minimap.getViewport().left, minimap.getViewport().top });
@@ -412,8 +372,9 @@ int main()
 			black.setOutlineThickness(2);
 			
 			window.draw(black);
-			window.draw(Sprite(minimapTexture.getTexture()));
+			window.draw(Sprite{ minimapTexture.getTexture() });
 		}
+
 		window.display();
 		//---DRAW PHASE END
 	}

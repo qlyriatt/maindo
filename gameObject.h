@@ -3,13 +3,22 @@
 
 
 class gameObject : public gameObjectStationary
-{	
+{
+protected:
+	gameObject() {};
 public:
 
-	gameObject();
-	
-	gameObject(Vector2f position, Vector2f size, const Texture* texture = NULL, float speed = 0, bool allowCollision = 0, 
-		Color bodyColor = Color::Black, Color outlineColor = Color::Red, float outlineThickness = 4); 
+	//simple initializer with one texture state
+	gameObject(const Vector2f& position, const Texture& texture);
+
+	//initializer for testing
+	gameObject(const Vector2f& position, const Vector2f& size, const float basespeed = 0, 
+		const int interactionType = 0, const int interactionTypeSpeciality = 0, const bool allowCollision = false);
+
+	//final constructor
+	gameObject(const Vector2f& position, const Texture& texture, const size_t animationStates, const float basespeed, const bool allowCollision,
+		const bool isDestroyable, const int interactionType, const int interactionTypeSpeciality, const size_t interactionRadius = 10);
+
 	
 	bool collisionCheck(const FloatRect& obstacle) const;
 
@@ -20,15 +29,16 @@ public:
 
 	virtual void collisionCheckInner(const FloatRect& area); //somewhat excessive (though probably not...)
 
-	virtual void updatePosition(float elapsedTime);
-	
-	
-	int			ID;
-	bool		isMoving;
-	float		basespeed;
-	float		speed;
-	float		latestUpdate;
-	float		latestDistanceCovered;
-	Vector2f	currentSight;
+	virtual void updatePosition(const Clock& clock);
+
+
+	//movement
+	bool		isMoving = { false };
+	int			ID = { 0 };
+	float		basespeed = { 0 };
+	float		speed = { 0 };
+	float		latestMoveUpdate = { 0 };
+	float		latestDistanceCovered = { 0 };
+	Vector2f	currentSight = { 1,0 };
 	Vector2f	currentDirection;
 };
