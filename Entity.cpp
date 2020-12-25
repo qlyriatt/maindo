@@ -1,17 +1,14 @@
 #include "Entity.h"
 
-Entity::Entity() : gameObject()
-{
-	type = 0;
-}
-
-Entity::Entity(int type, Vector2f position, Vector2f size, const Texture* texture, float speed, bool allowCollision,
-	Color bodyColor, Color outlineColor, float outlineThickness) : gameObject(position, size, texture, speed, allowCollision, bodyColor, outlineColor, outlineThickness)
+Entity::Entity(const int type, const Vector2f& position, const Vector2f& size, const float speed) : 
+	gameObject(position, size, speed)
 {
 	this->type = type;
+	this->allowCollision = true;
 }
 
-void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, vector<Projectile>& projectiles)
+
+void Entity::script(Vector2f node, Vector2f playerPosition, const float elapsedTime, vector<Projectile>& projectiles)
 {
 	srand(elapsedTime);
 	Vector2f offset = node - body.getPosition();
@@ -39,7 +36,7 @@ void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, v
 			currentDirection.x = -sqrt(1 / (1 + tan * tan));
 		}
 		currentDirection.y = tan * currentDirection.x;
-		movedToNode += elapsedTime - latestUpdate;
+		movedToNode += elapsedTime - latestMoveUpdate;
 	}
 	bool moveplayer = false;
 	if (sqrt(offsetPlayer.x * offsetPlayer.x + offsetPlayer.y * offsetPlayer.y) < 200 and !movenode)
@@ -100,5 +97,5 @@ void Entity::script(Vector2f node, Vector2f playerPosition, float elapsedTime, v
 	}
 
 	updatePosition(elapsedTime);
-
 }
+

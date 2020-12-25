@@ -1,0 +1,32 @@
+////constructGrid() is good but probably not good enough
+
+////Ideally every showScreenX should be split into two specialized functions :
+1 --- Event handler
+2 --- Drawer
+
+..and their base kept the same as a sort of a template
+so that needed menu/additional screen can be shown through the same function. 
+On the other hand, this may not be achievable due to functions requiring
+completely different arguments or being implemented very differently.
+
+////std::list was not satisfactory or even better than std::vector in any way.
+At least for now.
+
+////Resolutions need a good think-through. Currently a texture for every menu 
+assumes a screen of 1920x1080 and shrinks otherwise. Game process is 
+untouched for now.
+
+////A satisfactory way of constructing and saving levels is required.
+
+////Perhaps there should be an "editor mode" that allows object construction 
+using console (or other) input and supports only basic walking/collisions to reduce
+resource usage. Main issue is the compilation time though.
+
+////Textures, textures and more textures
+
+////Also implementation details, interaction types, weapon types, entities, other
+characters, etc. etc. Maybe textures.
+
+////Other than that the whole mess was pretty much cleaned up
+
+ 

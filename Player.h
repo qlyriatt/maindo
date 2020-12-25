@@ -1,7 +1,6 @@
 #pragma once
-#include "gameObject.h"
 #include "Weapon.h"
-using std::vector;
+
 
 class Player : public gameObject
 {
@@ -9,13 +8,13 @@ public:
 
 	Player(const Vector2f& position, const Vector2f& size, const Texture& texture, const size_t animationStates, const float speed);
 
-	void updatePosition(const Clock& clock);
+	void updatePosition(const float elapsedTime) override;
 
 	void updateAnimation(float elapsedTime, const Texture* texture);
-
-	bool collisionCheck(const gameObject& obstacle, bool* needOverride);
-
-	bool interactionCheck(const gameObject& object);
+	
+	bool collisionCheck(const gameObjectStationary& obstacle, bool& needOverride);
+	
+	bool interactionCheck(const gameObjectStationary& object);
 
 	void collisionCheckInner(const FloatRect& area);
 

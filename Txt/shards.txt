@@ -1,0 +1,232 @@
+//enum AdditionalExitCodes
+//{
+//	requireNavigation = -2,
+//	windowClosed,
+//};
+//
+//
+//enum ScreenTypes
+//{
+//	menu = 0,
+//	pause,
+//	inventory
+//};
+//
+//
+//Vector2u getGridDimensions(const int screenType)
+//{
+//	switch (screenType)
+//	{
+//	case ScreenTypes::menu: return { 1,4 };
+//	case ScreenTypes::pause: return { 1,4 };
+//	case ScreenTypes::inventory: return { 4,2 };
+//	default:
+//		throw("getGridDimensions: NO SUCH SCREENTYPE");
+//		return { 0,0 };
+//	}
+//}
+//
+//
+//int additionalEventHandler(const int screenType, const Event& event, const Vector2u gridDimensions, int& chosenButton, 
+//	void* const additionalData = nullptr)
+//{
+//	switch (screenType)
+//	{
+//	case ScreenTypes::menu:
+//
+//		if (event.type == Event::KeyReleased)
+//		{
+//			if (event.key.code == Keyboard::E)
+//			{
+//				if (chosenButton == 0)
+//					return 0;
+//				else if (chosenButton == 1)
+//					return 2;
+//				//else if (chosenButton == 2)
+//				else if (chosenButton == 3)
+//					return -1;
+//			}
+//		}
+//		break;
+//	case ScreenTypes::pause:
+//
+//		if (event.type == Event::KeyReleased)
+//		{
+//			if (event.key.code == Keyboard::Escape)
+//				return 1;
+//
+//			else if (event.key.code == Keyboard::E)
+//			{
+//				if (chosenButton == 0)
+//					return 1;
+//				else if (chosenButton == 1)
+//					return 2;
+//				else if (chosenButton == 3)
+//					return 0;
+//			}
+//		}
+//		break;
+//	case ScreenTypes::inventory:
+//		
+//		if (event.type == Event::KeyReleased)
+//		{
+//			if (event.key.code == Keyboard::I)
+//				return 0;
+//
+//			//inventory interactions should be supported here
+//			if (event.key.code == Keyboard::E)
+//			{
+//				if (!additionalData)
+//					throw("additionalEventHandler: ADDITIONAL DATA --- NULL PTR");
+//				Player* const player = static_cast<Player*>(additionalData);
+//
+//				if (player->inventorySlots.at(chosenButton) == 1 and player->health < player->maxHealth)
+//				{
+//					player->health += 20;
+//					player->inventorySlots.at(chosenButton) = 0;
+//				}
+//				else if (player->inventorySlots.at(chosenButton) == 2 and player->health > 0)
+//				{
+//					player->health -= 20;
+//					player->inventorySlots.at(chosenButton) = 0;
+//				}
+//			}
+//		}
+//		break;
+//	default:
+//
+//		throw("additionalEventHandler: NO SUCH SCREENTYPE");
+//	}
+//
+//	// if the event was not handled in specialized handler, 
+//	// it may be navigational and require additional check
+//	return AdditionalExitCodes::requireNavigation;
+//}
+//
+//
+//void additionalScreenDrawer(const int screenType, RenderWindow& window)
+//{
+//	window.clear();
+//
+//	RenderTexture nativeResolutionBuffer;
+//	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
+//
+//	window.display();
+//}
+//
+//
+//int showAdditionalScreen(const int screenType, RenderWindow& window, void* const additionalData = nullptr)
+//{
+//	using AEC = AdditionalExitCodes;
+//
+//	const Vector2u gridDimensions = getGridDimensions(screenType);
+//
+//
+//	int chosenButton = 0;
+//	bool redraw = true;
+//	Event event;
+//	while (true)
+//	{
+//		while (window.pollEvent(event))
+//		{
+//			//get closed window out of the way first
+//			if (event.type == Event::Closed)
+//			{
+//				window.close();
+//				return -1;
+//			}
+//
+//			//call specialized handler
+//			else 
+//			{
+//				switch (additionalEventHandler(screenType, event, gridDimensions, chosenButton, additionalData))
+//				{
+//				case AEC::requireNavigation:
+//					if(!menuNavigation(event, gridDimensions, chosenButton)) continue; //if event is not handled by any conditions, go to the next one
+//					break;
+//				case AEC::windowClosed:
+//					return -1;
+//				}
+//				redraw = true;
+//			}
+//		}
+//		
+//		if (redraw)
+//		{
+//			//draws directly to the window
+//			additionalScreenDrawer(screenType, window);
+//			redraw = false;
+//		}
+//	}
+//}
+
+
+void projectileHandlerMain(const Clock& mainClock, list<Projectile>& projectiles, vector<gameObject>& objects, Player& player, float& testTime)
+{
+	Clock testClock;
+	// remove melee HB with expired swing or ranged projectiles with exceeding distance
+	// before anything else
+	projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
+		{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
+		!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
+
+	bool erased = false;
+	for (auto iterator = projectiles.begin(); iterator != projectiles.end();)
+	{
+		auto& projectile = *iterator;
+
+		//MELEE
+		if (projectile.isMelee)
+		{
+			projectile.body.setPosition(player.body.getPosition() + projectile.swingHandle(mainClock));
+
+			//check collisions
+			for (size_t j = 0; j < objects.size(); j++)
+			{
+				if (projectile.collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectile.penetration)
+				{
+					projectile.penetration--;
+					objects.erase(objects.begin() + j);
+					j--;
+				}
+			}
+		}
+		//RANGED
+		else
+		{
+			projectile.updatePosition(mainClock.getElapsedTime().asSeconds());
+			projectile.traveledDistance += projectile.latestDistanceCovered;
+
+			//check collisions
+			for (size_t j = 0; j < objects.size(); j++)
+			{
+				if (projectile.collisionCheck(objects.at(j)))
+				{
+					if (objects.at(j).isDestroyable)
+					{
+						objects.erase(objects.begin() + j);
+						j--;
+
+						if (projectile.penetration)
+						{
+							projectile.penetration--;
+							continue; //continue checking collisions for the same projectile
+						}
+					}
+
+					iterator = projectiles.erase(iterator);
+					erased = true;
+					break;
+				}
+			}
+			if (erased)
+			{
+				erased = false;
+				continue;
+			}
+		}
+		iterator++;
+	}
+	player.weapon.reloadHandle(mainClock);
+	testTime += testClock.getElapsedTime().asSeconds();
+}

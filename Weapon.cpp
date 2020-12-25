@@ -87,7 +87,7 @@ void Weapon::action(vector<Projectile>& projectiles, const gameObject& projectil
 			projectile.body.setRotation(180);
 		else
 		{
-			projectile.body.setRotation(atan2(projectile.currentDirection.y, projectile.currentDirection.x) * 180 / 3.14);
+			projectile.body.setRotation(double(atan2(projectile.currentDirection.y, projectile.currentDirection.x)) * 180 / 3.14);
 		}
 
 		//time
@@ -122,3 +122,4 @@ void Weapon::reloadHandle(const Clock& clock)
 		}
 	}
 }
+

@@ -6,10 +6,11 @@ using namespace sf;
 class gameObjectStationary
 {
 protected:
-	~gameObjectStationary();
-
 	gameObjectStationary() {};
 public:
+
+	virtual ~gameObjectStationary() {};
+
 
 	// basic initializer with only one texture state
 	gameObjectStationary(const Vector2f& position, const Texture& texture);

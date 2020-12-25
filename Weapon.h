@@ -1,42 +1,7 @@
 #pragma once
 #include "gameObject.h"
+
 using std::vector;
-
-
-class proj : public gameObject
-{
-protected:
-	proj() {};
-public:
-
-	virtual Vector2f swingHandle(const Clock& clock) { printf("handled in proj"); return Vector2f{ 0,0 }; };
-	bool isMelee = { false };
-	int penetration = { 0 };
-};
-
-class meleeHitbox : public proj
-{
-public:
-	meleeHitbox() { isMelee = true; };
-
-	float creationTime = { 0 };
-	float lifeTime = { 0 };
-	const vector<Vector2f>* hitboxPositions = nullptr;
-	
-
-	Vector2f swingHandle(const Clock& clock)
-	{
-		//int count = (clock.getElapsedTime().asSeconds() - creationTime) / lifeTime * hitboxPositions->size();
-		printf("handled in melee");
-		return Vector2f{ 1,1 };
-	}
-};
-
-class rangedProjectile : public proj
-{
-	float traveledDistance = { 0 };
-};
-
 
 
 class Projectile : public gameObject
@@ -105,6 +70,7 @@ public:
 
 	//push projectile from the weapon into one shared vector
 	void action(vector<Projectile>& projectiles, const gameObject& projectileSource, const Clock& clock);
+
 
 	//look for reload options and handle them
 	void reloadHandle(const Clock& clock);

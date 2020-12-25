@@ -9,7 +9,7 @@ Player::Player(const Vector2f& position, const Vector2f& size, const Texture& te
 }
 
 
-void Player::updatePosition(const Clock& clock)
+void Player::updatePosition(const float elapsedTime)
 {
 	float x = 0, y = 0;
 	if (upPressed) y--;
@@ -29,8 +29,9 @@ void Player::updatePosition(const Clock& clock)
 	if (currentDirection != Vector2f(0, 0))
 		currentSight = currentDirection;
 
-	gameObject::updatePosition(clock);
+	gameObject::updatePosition(elapsedTime);
 }
+
 
 void Player::updateAnimation(float elapsedTime, const Texture* texture)
 {
@@ -134,14 +135,15 @@ void Player::updateAnimation(float elapsedTime, const Texture* texture)
 	latestAnimationUpdate = elapsedTime;
 }
 
-bool Player::collisionCheck(const gameObject& obstacle, bool* needOverride)
+
+bool Player::collisionCheck(const gameObjectStationary& obstacle, bool& needOverride)
 {
 	if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
 	{
 		if (obstacle.allowCollision)
 			return true;
-		if (pendingDirection.x and pendingDirection.y and needOverride)
-			*needOverride = true;
+		if (pendingDirection.x and pendingDirection.y)
+			needOverride = true;
 
 		if (!(currentDirection.x and currentDirection.y))
 		{
@@ -204,19 +206,24 @@ bool Player::collisionCheck(const gameObject& obstacle, bool* needOverride)
 		return true;
 	}
 
+	//Check if input override should still be present after current collision
+	//
+	//This checks pendingDirection (player input) to be clear from collision
+	//If it's not, override is set back to true
 	else if ((overrideInputX or overrideInputY) and currentDirection != Vector2f(0,0))
 	{
 		Vector2f pendingCheck((pendingDirection - currentDirection) * latestDistanceCovered);
 		body.move(pendingCheck);
-		if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()) and needOverride /*tmp workaround*/)
-			*needOverride = true; //caused nullptr twice
+		if (obstacle.body.getGlobalBounds().intersects(body.getGlobalBounds()))
+			needOverride = true; //caused nullptr twice (when was a pointer)
 		body.move(-pendingCheck);
 	}
 
 	return false;
 }
 
-bool Player::interactionCheck(const gameObject& object)
+
+bool Player::interactionCheck(const gameObjectStationary& object)
 {
 	const Vector2f interactionRadius = Vector2f(object.interactionRadius, object.interactionRadius);
 	
@@ -224,6 +231,7 @@ bool Player::interactionCheck(const gameObject& object)
 	
 	return gameObject::collisionCheck(interactionZone);
 }
+
 
 void Player::collisionCheckInner(const FloatRect& area)
 {

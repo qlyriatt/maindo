@@ -57,10 +57,8 @@ void gameObject::collisionCheckInner(const FloatRect& area)
 		body.move(-currentDirection * latestDistanceCovered);
 }
 
-void gameObject::updatePosition(const Clock& clock)
+void gameObject::updatePosition(const float elapsedTime)
 {
-	float elapsedTime = clock.getElapsedTime().asSeconds();
-
 	if (!(isMoving and speed)) //skips update if the object is static or standing still
 	{
 		latestMoveUpdate = 0;

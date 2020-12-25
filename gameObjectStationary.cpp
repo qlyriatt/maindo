@@ -1,6 +1,5 @@
 #include "gameObjectStationary.h"
 
-gameObjectStationary::~gameObjectStationary() {};
 
 //basic
 gameObjectStationary::gameObjectStationary(const Vector2f& position, const Texture& texture)

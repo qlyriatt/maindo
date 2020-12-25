@@ -29,7 +29,7 @@ public:
 
 	virtual void collisionCheckInner(const FloatRect& area); //somewhat excessive (though probably not...)
 
-	virtual void updatePosition(const Clock& clock);
+	virtual void updatePosition(const float elapsedTime);
 
 
 	//movement
