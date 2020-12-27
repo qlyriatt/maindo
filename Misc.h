@@ -1,8 +1,10 @@
 #pragma once
+
 #include "Map.h"
 
 #include <time.h>
 
+extern vector<gameObject> itemList;
 
 
 extern const std::string DIRECTORY;
@@ -45,16 +47,31 @@ namespace sf
 
 //every possible use(less)(ful) function that can be thought of
 
+
 String pickName();
 
 
 float getTimeDiff(const Clock& clock, float time);
 
 
-int getCount(float storedTimeDifference, int animationStates, int changesPerSecondMultiplier = 1);
+/////////////////////////////////////////////////
+/// @brief Gets current animation state based on time diffetence
+/// @param storedTimeDifference Time elapsed since the beginning of animation cycle
+/// @param animationStates How much animation states are provided
+/// @param changesPerSecondMultiplier Animation speed multiplier
+/// @return Current animation state
+/////////////////////////////////////////////////
+int getCount(float storedTimeDifference, int animationStates, const size_t changesPerSecondMultiplier = 1);
 
 
-//aligns latestTimeUpdate (or else) for everything after additional rendering
+/////////////////////////////////////////////////
+/// @brief Aligns time differences after switching to menus (pause, inventory etc.)
+/// @param timestamp Time on menu entering
+/// @param clock Main clock
+/// @param player Player instance
+/// @param objects Vector containing objects
+/// @param projectiles Vector containing projectiles
+/////////////////////////////////////////////////
 void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles);
 
 
@@ -71,6 +88,9 @@ void loadTexturesMenu(vector<Texture>& menuTextures);
 
 
 void loadTexturesPause(vector<Texture>& pauseTextures);
+
+
+void loadTexturesInventory(vector<Texture>& inventoryTextures);
 
 
 void loadTextures(vector<Texture>& textures);
@@ -157,10 +177,28 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 
 
 /////////////////////////////////////////////////
+/// @brief Produces a vector to align sprite in the middle of target
+/// @param insideSprite What should be aligned
+/// @param outsideAreaSize Where should it be aligned at
+/// @return Vector to calculated position
+/////////////////////////////////////////////////
+Vector2f getCenterAlignment(const Sprite& insideSprite, const Vector2f& outsideAreaSize);
+
+
+/////////////////////////////////////////////////
+/// @brief Produces a vector to align sprite in the middle of target
+/// @param inside What should be aligned
+/// @param outside Where should it be aligned at
+/// @return Vector to calculated position
+/////////////////////////////////////////////////
+Vector2f getCenterAlignment(const Sprite& insideSprite, const Sprite& outsideSprite);
+
+
+/////////////////////////////////////////////////
 /// @brief Inventory drawer function
 /////////////////////////////////////////////////
 void drawInventory(RenderWindow& window, const RenderTexture& background,
-	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const int chosenItem);
+	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const int chosenItem, const Player& player);
 
 
 /////////////////////////////////////////////////
@@ -168,12 +206,15 @@ void drawInventory(RenderWindow& window, const RenderTexture& background,
 ///
 /// @param window Main render window
 /// @param background What was on the screen on inventory call (usually mainGameTexture) 
-/// @param textures Textures to use
-/// @param font Font to use
+/// @param inventoryTextures Textures to use
+/// @param inventoryFont Font to use
+/// @param player Player instance
+/// @param objects Vector containing objects to handle item drops
 /// 
 /// @return
 /////////////////////////////////////////////////
-int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, Player& player);
+int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, 
+	Player& player, vector<gameObject>& objects);
 
 
 /////////////////////////////////////////////////
@@ -219,5 +260,5 @@ void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectil
 /// @param player Player instance
 /// @param needOverride Does input need to be overriden
 /// @param interactionMessageDisplayed Is intera
-void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject> objects, Player& player);
+void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject>& objects, Player& player);
 

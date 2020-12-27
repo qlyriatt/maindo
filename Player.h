@@ -42,7 +42,7 @@ public:
 	bool		interactionFlag = { false };
 	int			health = { 0 };
 	int			maxHealth = { 0 };
-	vector<int> inventorySlots;
+	vector<int> inventorySlots = { 0,0,0,0,0,0,0,0 }; //size() = 8
 
 	//basic
 	Weapon		weapon;

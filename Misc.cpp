@@ -1,5 +1,6 @@
 #include "Misc.h"
-
+#pragma warning(push)
+#pragma warning(disable : 4018 4244 4305)
 
 String pickName()
 {
@@ -86,7 +87,7 @@ float getTimeDiff(const Clock& clock, float time)
 }
 
 
-int getCount(float storedTimeDifference, int animationStates, int changesPerSecondMultiplier)
+int getCount(float storedTimeDifference, int animationStates, const size_t changesPerSecondMultiplier)
 {
 	int count = storedTimeDifference * animationStates * changesPerSecondMultiplier;
 	for (size_t i = 0; i < changesPerSecondMultiplier; i++)
@@ -166,6 +167,27 @@ void loadTexturesPause(vector<Texture>& pauseTextures)
 	Texture menuButtonDark;
 	menuButtonDark.loadFromFile(DIRECTORY + "Textures/pauseButtonDark.png");
 	pauseTextures.push_back(menuButtonDark);
+}
+
+
+void loadTexturesInventory(vector<Texture>& inventoryTextures)
+{
+	Texture inventoryLight;
+	inventoryLight.loadFromFile(DIRECTORY + "Textures/inventoryLight.png");
+	inventoryTextures.push_back(inventoryLight);
+
+	Texture inventoryDark;
+	inventoryDark.loadFromFile(DIRECTORY + "Textures/inventoryDark.png");
+	inventoryTextures.push_back(inventoryDark);
+
+	Texture itemFrameLight;
+	itemFrameLight.loadFromFile(DIRECTORY + "Textures/itemFrameLight.png");
+	inventoryTextures.push_back(itemFrameLight);
+
+	Texture itemFrameDark;
+	itemFrameDark.loadFromFile(DIRECTORY + "Textures/itemFrameDark.png");
+	inventoryTextures.push_back(itemFrameDark);
+
 }
 
 
@@ -432,7 +454,7 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 
 	Text text[]{ {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
 	size_t count = 0;
-	for (auto& i : constructGrid(menuGrid, menuTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }))
+	for (auto& i : constructGrid(menuGrid, menuTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }/*C4305*/))
 	{
 		Sprite button(count == chosenButton ? menuTextures.at(2) : menuTextures.at(3));
 		button.setPosition(i);
@@ -519,11 +541,13 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 					else if (chosenButton == menuGrid.y - 1)
 						return -1;
 				}
+				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
+				else if(!menuNavigation(event, menuGrid, chosenButton)) continue;
 
-				else menuNavigation(event, menuGrid, chosenButton);
 				redraw = true;
 			}
 
+			//this event is unlikely, so it's placed below Event::KR
 			else if (event.type == Event::Closed)
 			{
 				window.close();
@@ -618,13 +642,7 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 	{
 		while (window.pollEvent(event))
 		{
-			if (event.type == Event::Closed)
-			{
-				window.close();
-				return -1;
-			}
-
-			else if (event.type == Event::KeyReleased)
+			if (event.type == Event::KeyReleased)
 			{
 				if (event.key.code == Keyboard::Escape)
 				{
@@ -639,10 +657,17 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 					else if (chosenButton == pauseGrid.y - 1)
 						return 0;
 				}
-				else
-					menuNavigation(event, pauseGrid, chosenButton);
+				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
+				else if (!menuNavigation(event, pauseGrid, chosenButton)) continue;
 
 				redraw = true;
+			}
+
+			//this event is unlikely, so it's placed below Event::KR
+			else if (event.type == Event::Closed)
+			{
+				window.close();
+				return -1;
 			}
 		}
 
@@ -655,8 +680,31 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 }
 
 
-void drawInventory(RenderWindow& window, const RenderTexture& background,
-	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const int chosenItem)
+Vector2f getCenterAlignment(const Sprite& insideSprite, const Vector2f& outsideAreaSize)
+{
+	const FloatRect insideBounds = insideSprite.getGlobalBounds();
+
+	const float x = (outsideAreaSize.x - insideBounds.width) / 2;
+	const float y = (outsideAreaSize.y - insideBounds.height) / 2;
+
+	return { x,y };
+}
+
+
+Vector2f getCenterAlignment(const Sprite& insideSprite, const Sprite& outsideSprite)
+{
+	const FloatRect insideBounds = insideSprite.getGlobalBounds();
+	const FloatRect outsideBounds = outsideSprite.getGlobalBounds();
+
+	const float x = (outsideBounds.width - insideBounds.width) / 2;
+	const float y = (outsideBounds.height - insideBounds.height) / 2;
+
+	return { x,y };
+}
+
+
+void drawInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont,
+	const Vector2u& inventoryGrid, const int chosenItem, const Player& player)
 {
 	window.clear();
 
@@ -665,14 +713,35 @@ void drawInventory(RenderWindow& window, const RenderTexture& background,
 
 	vector<Sprite> sprites;
 	vector<Text> text;
+
+	Sprite inventoryFrame{ inventoryTextures.at(0) };
+	const Vector2f inventoryFramePosition = getCenterAlignment(inventoryFrame, Vector2f{ NATIVE_RESOLUTION });
+	inventoryFrame.setPosition(inventoryFramePosition);
+	sprites.push_back(inventoryFrame);
+
+	unsigned int count = 0;
+	for (auto& i : constructGrid(inventoryGrid, inventoryTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5,0.5 }))
+	{
+		Sprite itemFrame(chosenItem == count ? inventoryTextures.at(2) : inventoryTextures.at(3));
+		itemFrame.setPosition(i);
+		sprites.push_back(itemFrame);
+		if (player.inventorySlots.at(count))
+		{
+			Sprite item(*itemList.at(player.inventorySlots.at(count) - 1).sprite.getTexture()); //wtf
+			item.setPosition(itemFrame.getPosition() + getCenterAlignment(item, itemFrame));
+			sprites.push_back(item);
+		}
+		count++;
+	}
 	
+	for (auto& i : sprites)
+		nativeResolutionBuffer.draw(i);
 
 	//
 	//
-	//DRAW HERE
+	//-----------------DRAW HERE
 	//
 	//
-	
 	
 	nativeResolutionBuffer.display();
 	Sprite finalOutput(nativeResolutionBuffer.getTexture());
@@ -681,20 +750,25 @@ void drawInventory(RenderWindow& window, const RenderTexture& background,
 	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
 		finalOutput.setScale(SHRINK_FACTOR);
 
+	//draw background first
 	window.draw(Sprite{ background.getTexture() });
 
+	//tint it
 	RectangleShape tint;
 	tint.setSize(Vector2f{ window.getSize() });
 	tint.setFillColor(Color{ 0, 0, 0, 170 });
 	window.draw(tint);
 
+	//draw the rest
 	window.draw(finalOutput);
 	window.display();
 }
 
 
-int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, Player& player)
+int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, 
+	Player& player, vector<gameObject>& objects)
 {
+	srand(time(0));
 	const Vector2u inventoryGrid = { 4,2 };
 
 	bool redraw = true;
@@ -711,12 +785,31 @@ int showScreenInventory(RenderWindow& window, const RenderTexture& background, c
 				{
 					return 0;
 				}
-				//if this returns false, KR event does not satisfy any contitions so it is dismissed and redraw is not needed
+				else if (event.key.code == Keyboard::Q)
+				{
+					if (player.inventorySlots.at(chosenItem))
+					{
+						gameObject droppedItem(itemList.at(player.inventorySlots.at(chosenItem) - 1));
+
+						//should be changed to sprites (see finalDraw())
+						
+						droppedItem.body.setTexture(droppedItem.sprite.getTexture());
+						droppedItem.body.setPosition(player.getCenter() + Vector2f( rand() % 20, rand() % 20 ));
+
+						//items that player's able to pick up
+						droppedItem.interactionType = 1;
+						droppedItem.ID = 1;
+						objects.push_back(droppedItem);
+						player.inventorySlots.at(chosenItem) = 0;
+					}
+				}
+				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
 				else if (!menuNavigation(event, inventoryGrid, chosenItem)) continue;
 
 				redraw = true;
 			}
 
+			//this event is unlikely, so it's placed below Event::KR
 			else if (event.type == Event::Closed)
 			{
 				window.close();
@@ -726,7 +819,7 @@ int showScreenInventory(RenderWindow& window, const RenderTexture& background, c
 
 		if (redraw)
 		{
-			drawInventory(window, background, inventoryTextures, inventoryFont, inventoryGrid, chosenItem);
+			drawInventory(window, background, inventoryTextures, inventoryFont, inventoryGrid, chosenItem, player);
 			redraw = false;
 		}
 	}
@@ -812,7 +905,7 @@ void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectil
 }
 
 
-void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject> objects, Player& player)
+void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject>& objects, Player& player)
 {
 	bool interactionMessageDisplayed = false;
 	bool needOverride = false;
@@ -876,13 +969,23 @@ void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls
 			//interaction with gO should be HERE
 			//
 			// EXAMPLE: 
-			if (objects.at(i).body.getFillColor() == Color::Green)
-				objects.at(i).body.setFillColor(Color::Black);
-			else
-				objects.at(i).body.setFillColor(Color::Green);
+			if (objects.at(i).interactionType == 1)
+			{
+				for (auto& j : player.inventorySlots)
+				{
+					if (!j)
+					{
+						j = objects.at(i).ID;
+						player.interactionFlag = false;
+						objects.erase(objects.begin() + i);
+						i--;
+						break;
+					}
+				}
+			}
 			//
 			//
-			player.interactionFlag = false;
+			//
 		}
 		else if (!interactionMessageDisplayed)
 		{
@@ -903,3 +1006,5 @@ void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls
 	if (!needOverride)
 		player.overrideInputX = player.overrideInputY = false;
 }
+
+#pragma warning(pop)

@@ -15,6 +15,7 @@
 // SPECIFY FOLDER WITH GAME FILES
 const std::string DIRECTORY = { "D:/All mine/Game/Maindo/" };
 
+vector<gameObject> itemList;
 
 int main()
 {
@@ -43,15 +44,22 @@ int main()
 	vector<Texture> pauseTextures;
 	loadTexturesPause(pauseTextures);
 	vector<Texture> inventoryTextures;
+	loadTexturesInventory(inventoryTextures);
 	vector<Texture> textures; 
 	loadTextures(textures);
+
+
+	itemList.push_back(gameObject{ { 0,0 }, textures.at(2), 0, 0, true, true, 0, 0 });
+	itemList.push_back(gameObject{ {0,0},{0,0} });
+	itemList.push_back(gameObject{ {0,0},{0,0} });
+	itemList.push_back(gameObject{ {0,0},{0,0} });
+
 
 	vector<gameObjectStationary> walls;
 	vector<gameObject> objects;
 	vector<Entity> entities;
 	vector<Projectile> projectiles;
 
-	
 	//MELEE WEAPONS
 	//
 	//---ID---DAMAGE---ADDITIONAL PENETRATION---SWING DELAY---HITBOX LIFETIME---HITBOX POSITIONS---HITBOX SIZE---
@@ -90,6 +98,7 @@ int main()
 	ofstream test2("D:/All mine/Game/test2.txt");
 	if (!test2.is_open())
 		cout << "test 2 " << endl;
+
 
 	bool inMenu = true;
 	bool inInventory = false;
@@ -181,6 +190,10 @@ int main()
 				break;
 			}
 
+			for (int i = 0; i < 4; i++)
+			{
+				player.inventorySlots.at(i) = 1;
+			}
 			inMenu = false;
 		}
 
@@ -239,7 +252,7 @@ int main()
 		if (inInventory)
 		{			
 			float timestamp = mainClock.getElapsedTime().asSeconds();
-			showScreenInventory(window, mainGameTexture, inventoryTextures, fontMain, player);
+			showScreenInventory(window, mainGameTexture, inventoryTextures, fontMain, player, objects);
 			alignTime(timestamp, mainClock, player, objects, projectiles);
 			inInventory = false;
 		}
