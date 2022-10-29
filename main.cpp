@@ -1,4 +1,3 @@
-#pragma once
 #pragma warning (disable : 4244 4305)	//<----
 #include <list>
 #include <SFML/Graphics.hpp>
@@ -13,7 +12,7 @@
 
 
 // SPECIFY FOLDER WITH GAME FILES
-const std::string DIRECTORY = { "D:/All mine/Game/Maindo/" };
+const std::string DIRECTORY = { "/home/qlyriatt/CODE/maindo/" };
 
 vector<gameObject> itemList;
 
