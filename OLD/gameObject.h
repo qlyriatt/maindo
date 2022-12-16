@@ -32,13 +32,4 @@ public:
 	virtual void updatePosition(const float elapsedTime);
 
 
-	//movement
-	bool		isMoving = { false };
-	int			ID = { 0 };
-	float		basespeed = { 0 };
-	float		speed = { 0 };
-	float		latestMoveUpdate = { 0 };
-	float		latestDistanceCovered = { 0 };
-	Vector2f	currentSight = { 1,0 };
-	Vector2f	currentDirection;
 };

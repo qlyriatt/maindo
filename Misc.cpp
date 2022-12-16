@@ -2,89 +2,7 @@
 #pragma warning(push)
 #pragma warning(disable : 4018 4244 4305)
 
-String pickName()
-{
-	srand(time(0));
 
-	vector<String> names;
-
-	names.push_back("VeryGoodGame");
-	names.push_back("Maindo");
-	names.push_back("Unfinished");
-	names.push_back("what");
-	names.push_back("Why are we still here");
-	names.push_back("ovhl 1.xx <----> this string is useless");
-	names.push_back("LOL LOL LOL LOL LOL LOL");
-	names.push_back("Mine is better");
-	names.push_back("Also try Terraria!");
-	names.push_back("When I was / A young boy / My father / Took me into the city");
-	names.push_back("Hajimemashite, chikyuujin-san!");
-	names.push_back("Cookie ^_^");
-	names.push_back("Ore wa Emilia ga suki da");
-	names.push_back("My neck, my back...");
-	names.push_back("3 things I hate in life: 1.Lists 2.C++ 3.Irony");
-	names.push_back("Also try Minecraft!");
-	names.push_back("Warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data");
-	names.push_back("<-----DO NOT TOUCH----->");
-	names.push_back("Eighth Wonder of the World");
-	names.push_back("Sometimes I pull so hard on it, I rip the skin");
-	names.push_back("Angrily taking a shit");
-	names.push_back("You want my property - you can't have it!");
-	names.push_back("Dorimin chuchu / Chocola-ta-ta-ta-ta!");
-	names.push_back("Certainly not a case of lupus");
-	names.push_back("Soretomo...	wa...ta...shi?");
-	names.push_back("...'cause we'll be doing this till 6 in the morning"); //whoops
-	names.push_back("Full sail ahead!");
-	names.push_back("cout << vector.x << " " << vector.y << endl;");
-	names.push_back("For $%@^$%^# sake, would you work already?");
-	names.push_back("NULL");
-	names.push_back("JOJO!-da-da-da-dum-dum-dum-dum-dum-GOLD WIND!");
-	names.push_back("Bangarang!");
-	names.push_back("This game is not suitable for children or those who are easily disturbed");
-	names.push_back(" ");
-	names.push_back("It's because the heart of mine has made it here before my body");
-	names.push_back("Seven circles of OOP");
-	names.push_back("Sleep is overrated");
-	names.push_back("Number 15: Burger King foot lettuce");
-	names.push_back("O - ya - su - mi");
-	names.push_back("Back in the zenzenzense till this day been looking everywhere for you...");
-	names.push_back("pickName()");
-	names.push_back("Welcome back, Commander");
-	names.push_back("Daijoubu da yo!");
-	names.push_back("B7 flat 9 flat 13");
-	names.push_back("I guess you guys aren't ready for that yet... but your kids are gonna love it");
-	names.push_back("F - Fm - C");
-	names.push_back("Microsoft C++ exception: std::length_error at memory location 0x0055BA50");
-	names.push_back("Please be quiet");
-	names.push_back("Error C2398: Element '1': conversion from 'int' to 'T' requires a narrowing conversion");
-	names.push_back("Debug Assertion Failed!");
-	names.push_back("Stretching and shrinking and stretching and shrinking");
-	names.push_back("forward_list<Projectile> projectiles");
-	names.push_back("----textures----textures----textures----textures----textures----textures----");
-	names.push_back("git add --all");
-	names.push_back("Premature optimization is the root of all evil");
-	names.push_back("names.push_back(names.push_back(names.push_back(names.push_back(names.push_back(names.push_back('a'))))))");
-	names.push_back("And they were roommates...");
-	names.push_back("return names.at(rand() % names.size());");
-	names.push_back("Paint.net is my best friend!");
-	names.push_back("Tell me if I go straight on to morning / Would there be somebody there waiting for me?");
-	names.push_back("If you can't understand it then it lies beyond your understanding");
-	names.push_back("Citizens of Dalaran! Raise your eyes to the skies and observe!");
-	names.push_back("All around the Stactus plant the stalker chased the bandit");
-	names.push_back("Soap trusted you. I thought I could too.");
-	names.push_back("Is it summertime already?");
-	names.push_back("The fastest goodbye song");
-	names.push_back("What's cookin' good lookin'?");
-
-
-	return names.at(rand() % names.size());
-}
-
-
-float getTimeDiff(const Clock& clock, float time)
-{
-	return clock.getElapsedTime().asSeconds() - time;
-}
 
 
 int getCount(float storedTimeDifference, int animationStates, const size_t changesPerSecondMultiplier)
@@ -98,36 +16,28 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 }
 
 
-void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles)
-{
-	float elapsedTime = clock.getElapsedTime().asSeconds();
+// void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles)
+// {
+// 	float elapsedTime = clock.getElapsedTime().asSeconds();
 
-	for (auto& i : objects)
-	{
-		i.latestMoveUpdate = elapsedTime;
-		i.latestAnimationUpdate = elapsedTime;
-	}
+// 	for (auto& i : objects)
+// 	{
+// 		i.latestMoveUpdate = elapsedTime;
+// 		i.latestAnimationUpdate = elapsedTime;
+// 	}
 
-	for (auto& i : projectiles)
-	{
-		i.latestMoveUpdate = elapsedTime;
-		i.creationTime = elapsedTime - (timestamp - i.creationTime);
-	}
+// 	for (auto& i : projectiles)
+// 	{
+// 		i.latestMoveUpdate = elapsedTime;
+// 		i.creationTime = elapsedTime - (timestamp - i.creationTime);
+// 	}
 
-	// aCT += eT 21 - lAU 20.5; count = 3; aCT += eT 48 - lAU 21(48); aCT += eT 48.5 - aCT 48; count = 4
-	player.latestMoveUpdate = elapsedTime;
-	player.latestAnimationUpdate = elapsedTime;
-	player.weapon.latestShotTime = elapsedTime - (timestamp - player.weapon.latestShotTime);
-}
+// 	// aCT += eT 21 - lAU 20.5; count = 3; aCT += eT 48 - lAU 21(48); aCT += eT 48.5 - aCT 48; count = 4
+// 	player.latestMoveUpdate = elapsedTime;
+// 	player.latestAnimationUpdate = elapsedTime;
+// 	player.weapon.latestShotTime = elapsedTime - (timestamp - player.weapon.latestShotTime);
+// }
 
-
-void setOpacity(gameObjectStationary& object, int opacity)
-{
-	Color tmp = object.body.getFillColor();
-	object.body.setFillColor(Color(tmp.r, tmp.g, tmp.b, opacity));
-	tmp = object.body.getOutlineColor();
-	object.body.setOutlineColor(Color(tmp.r, tmp.g, tmp.b, opacity));
-}
 
 
 void loadTexturesMenu(vector<Texture>& menuTextures)
@@ -207,190 +117,207 @@ void loadTextures(vector<Texture>& textures)
 }
 
 
-void finalDraw(RenderTexture& renderTexture, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles,
-	const Player& player)
+// void finalDraw(RenderTexture& renderTexture, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles,
+// 	const Player& player)
+// {
+// 	FloatRect viewField(renderTexture.getView().getCenter() - renderTexture.getView().getSize() / 2.f, renderTexture.getView().getSize());
+
+// 	for (const auto& i : objects)
+// 	{
+// 		if (i.collisionCheck(viewField))
+// 			renderTexture.draw(i.body);
+// 	}
+
+// 	for (const auto& i : entities)
+// 	{
+// 		if (i.collisionCheck(viewField))
+// 			renderTexture.draw(i.body);
+// 	}
+
+// 	// fix later
+// 	for (auto i : projectiles)
+// 	{
+// 		if (i.collisionCheck(viewField))
+// 		{
+// 			if (i.isMelee and DEBUG_LEVEL)
+// 				i.body.setFillColor(Color(255, 255, 255, 150));
+// 			renderTexture.draw(i.body);
+// 		}
+// 	}
+
+// 	if (DEBUG_LEVEL)
+// 	{
+// 		RectangleShape tmp;
+// 		tmp.setPosition(player.body.getPosition());
+// 		tmp.setSize(player.body.getSize());
+// 		tmp.setFillColor(Color(255, 0, 0, 150));
+// 		renderTexture.draw(tmp);
+// 		tmp.setPosition(player.sprite.getPosition());
+// 		tmp.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
+// 		tmp.setFillColor(Color(0, 255, 0, 70));
+// 		renderTexture.draw(tmp);
+// 	}
+
+// 	renderTexture.draw(player.sprite);
+// 	renderTexture.display();
+// }
+
+
+// void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
+// 	vector<Projectile>& projectiles, Player& player)
+// {
+// 	renderTexture.clear(Color::Transparent);
+
+// 	for (auto& i : objects)
+// 	{
+// 		setOpacity(i, 200);
+// 		renderTexture.draw(i.body);
+// 		setOpacity(i);
+// 	}
+
+// 	for (auto& i : entities)
+// 	{
+// 		setOpacity(i, 200);
+// 		renderTexture.draw(i.body);
+// 		setOpacity(i);
+// 	}
+
+// 	for (auto& i : projectiles)
+// 	{
+// 		setOpacity(i, 200);
+// 		renderTexture.draw(i.body);
+// 		setOpacity(i);
+// 	}
+
+// 	setOpacity(player, 150);
+// 	renderTexture.draw(player.sprite);
+// 	setOpacity(player);
+// 	renderTexture.display();
+// }
+
+
+// void levelLoad(RenderWindow& window, vector<gameObject>& objects, vector<Entity>& entities, int& currentLevel, int switchToLevel, const vector<Texture>& textures)
+// {
+// 	Clock clock;
+
+// 	RectangleShape loadScreen;
+// 	loadScreen.setSize(Vector2f(window.getSize()));
+// 	loadScreen.setFillColor(Color(Color::Black));
+// 	window.draw(loadScreen);
+// 	window.display();
+
+// 	objects.erase(objects.begin(), objects.end());
+// 	entities.erase(entities.begin(), entities.end());
+// 	initialize(switchToLevel, objects, entities, textures);
+// 	currentLevel = switchToLevel;
+
+// 	for (; floor(clock.getElapsedTime().asSeconds() * 2) < 2;); //wait
+// 	window.clear();
+// }
+
+
+// void cameraCollision(const gameObject& area, View& camera, const Player& player, const Vector2f WINDOW_SIZE)
+// {
+// 	camera.setCenter(player.getCenter());
+// 	const FloatRect allowedCameraArea = area.body.getGlobalBounds();
+// 	const Vector2f cameraPosition = camera.getCenter() - camera.getSize() / 2.f;
+
+// 	bool TL = allowedCameraArea.contains(cameraPosition);
+// 	bool TR = allowedCameraArea.contains(cameraPosition + Vector2f(camera.getSize().x, 0));
+// 	bool BL = allowedCameraArea.contains(cameraPosition + Vector2f(0, camera.getSize().y));
+// 	bool BR = allowedCameraArea.contains(cameraPosition + camera.getSize());
+
+// 	if (!(TL and TR and BL and BR))
+// 	{
+// 		if (TL)
+// 		{
+// 			if (BL)
+// 				camera.setCenter(Vector2f(WINDOW_SIZE.x - camera.getSize().x / 2, player.getCenter().y));
+// 			else if (TR)
+// 				camera.setCenter(Vector2f(player.getCenter().x, WINDOW_SIZE.y - camera.getSize().y / 2));
+// 			else
+// 				camera.setCenter(WINDOW_SIZE - camera.getSize() / 2.f);
+// 		}
+
+// 		else if (BR)
+// 		{
+// 			if (TR)
+// 				camera.setCenter(Vector2f(camera.getSize().x / 2, player.getCenter().y));
+// 			else if (BL)
+// 				camera.setCenter(Vector2f(player.getCenter().x, camera.getSize().y / 2));
+// 			else
+// 				camera.setCenter(camera.getSize() / 2.f);
+// 		}
+
+// 		else if (BL)
+// 			camera.setCenter(Vector2f(WINDOW_SIZE.x - camera.getSize().x / 2, camera.getSize().y / 2));
+// 		else if (TR)
+// 			camera.setCenter(Vector2f(camera.getSize().x / 2, WINDOW_SIZE.y - camera.getSize().y / 2));
+// 		else
+// 			camera.setCenter(player.getCenter()); // precaution
+// 	}
+// }
+
+//FULLY DONE
+bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u& count)
 {
-	FloatRect viewField(renderTexture.getView().getCenter() - renderTexture.getView().getSize() / 2.f, renderTexture.getView().getSize());
+	// handle pressed key to navigate menu grid
+	// 	   columns
+	//		1   2
+	// r 1	x	x	
+	// o 2	x	x
+	// w 3	x	x
+	// s 4	x	x
 
-	for (const auto& i : objects)
-	{
-		if (i.collisionCheck(viewField))
-			renderTexture.draw(i.body);
-	}
-
-	for (const auto& i : entities)
-	{
-		if (i.collisionCheck(viewField))
-			renderTexture.draw(i.body);
-	}
-
-	// fix later
-	for (auto i : projectiles)
-	{
-		if (i.collisionCheck(viewField))
-		{
-			if (i.isMelee and DEBUG_LEVEL)
-				i.body.setFillColor(Color(255, 255, 255, 150));
-			renderTexture.draw(i.body);
-		}
-	}
-
-	if (DEBUG_LEVEL)
-	{
-		RectangleShape tmp;
-		tmp.setPosition(player.body.getPosition());
-		tmp.setSize(player.body.getSize());
-		tmp.setFillColor(Color(255, 0, 0, 150));
-		renderTexture.draw(tmp);
-		tmp.setPosition(player.sprite.getPosition());
-		tmp.setSize(Vector2f(player.sprite.getGlobalBounds().width, player.sprite.getGlobalBounds().height));
-		tmp.setFillColor(Color(0, 255, 0, 70));
-		renderTexture.draw(tmp);
-	}
-
-	renderTexture.draw(player.sprite);
-	renderTexture.display();
-}
-
-
-void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
-	vector<Projectile>& projectiles, Player& player)
-{
-	renderTexture.clear(Color::Transparent);
-
-	for (auto& i : objects)
-	{
-		setOpacity(i, 200);
-		renderTexture.draw(i.body);
-		setOpacity(i);
-	}
-
-	for (auto& i : entities)
-	{
-		setOpacity(i, 200);
-		renderTexture.draw(i.body);
-		setOpacity(i);
-	}
-
-	for (auto& i : projectiles)
-	{
-		setOpacity(i, 200);
-		renderTexture.draw(i.body);
-		setOpacity(i);
-	}
-
-	setOpacity(player, 150);
-	renderTexture.draw(player.sprite);
-	setOpacity(player);
-	renderTexture.display();
-}
-
-
-void levelLoad(RenderWindow& window, vector<gameObject>& objects, vector<Entity>& entities, int& currentLevel, int switchToLevel, const vector<Texture>& textures)
-{
-	Clock clock;
-
-	RectangleShape loadScreen;
-	loadScreen.setSize(Vector2f(window.getSize()));
-	loadScreen.setFillColor(Color(Color::Black));
-	window.draw(loadScreen);
-	window.display();
-
-	objects.erase(objects.begin(), objects.end());
-	entities.erase(entities.begin(), entities.end());
-	initialize(switchToLevel, objects, entities, textures);
-	currentLevel = switchToLevel;
-
-	for (; floor(clock.getElapsedTime().asSeconds() * 2) < 2;); //wait
-	window.clear();
-}
-
-
-void cameraCollision(const gameObject& area, View& camera, const Player& player, const Vector2f WINDOW_SIZE)
-{
-	camera.setCenter(player.getCenter());
-	const FloatRect allowedCameraArea = area.body.getGlobalBounds();
-	const Vector2f cameraPosition = camera.getCenter() - camera.getSize() / 2.f;
-
-	bool TL = allowedCameraArea.contains(cameraPosition);
-	bool TR = allowedCameraArea.contains(cameraPosition + Vector2f(camera.getSize().x, 0));
-	bool BL = allowedCameraArea.contains(cameraPosition + Vector2f(0, camera.getSize().y));
-	bool BR = allowedCameraArea.contains(cameraPosition + camera.getSize());
-
-	if (!(TL and TR and BL and BR))
-	{
-		if (TL)
-		{
-			if (BL)
-				camera.setCenter(Vector2f(WINDOW_SIZE.x - camera.getSize().x / 2, player.getCenter().y));
-			else if (TR)
-				camera.setCenter(Vector2f(player.getCenter().x, WINDOW_SIZE.y - camera.getSize().y / 2));
-			else
-				camera.setCenter(WINDOW_SIZE - camera.getSize() / 2.f);
-		}
-
-		else if (BR)
-		{
-			if (TR)
-				camera.setCenter(Vector2f(camera.getSize().x / 2, player.getCenter().y));
-			else if (BL)
-				camera.setCenter(Vector2f(player.getCenter().x, camera.getSize().y / 2));
-			else
-				camera.setCenter(camera.getSize() / 2.f);
-		}
-
-		else if (BL)
-			camera.setCenter(Vector2f(WINDOW_SIZE.x - camera.getSize().x / 2, camera.getSize().y / 2));
-		else if (TR)
-			camera.setCenter(Vector2f(camera.getSize().x / 2, WINDOW_SIZE.y - camera.getSize().y / 2));
-		else
-			camera.setCenter(player.getCenter()); // precaution
-	}
-}
-
-
-bool menuNavigation(const Event& event, const Vector2u& gridDimensions, int& count)
-{
+	// menu grid dimensions
 	const auto columns = gridDimensions.x;
 	const auto rows = gridDimensions.y;
 
-	if (event.key.code == Keyboard::W)
+	if (event.key.code == Keyboard::W and rows != 1) // up
 	{
-		if (count < columns)
-			count += columns * (rows - 1);
+		// if top row -- go to the bottom
+		// otherwise -- go 1 row up
+		if (count.y == 1)
+			count.y = rows;
 		else
-			count -= columns;
+			count.y -= 1;
 		return true;
 	}
-	else if (event.key.code == Keyboard::S)
+	else if (event.key.code == Keyboard::S and rows != 1) // down
 	{
-		if (count > columns * (rows - 1) - 1)
-			count -= columns * (rows - 1);
+		// if bottom row -- go to the top
+		// otherwise -- go 1 row down
+		if (count.y == rows)
+			count.y = 1;
 		else
-			count += columns;
+			count.y += 1;
 		return true;
 	}
-	else if (event.key.code == Keyboard::A)
+	else if (event.key.code == Keyboard::A and columns != 1) // left
 	{
-		if (count % columns == 0)
-			count += columns - 1;
+		// if left-most column -- go to the right side
+		// otherwise -- go 1 column left
+		if (count.x == 1)
+			count.x = columns;
 		else
-			count--;
+			count.x -= 1;
 		return true;
 	}
-	else if (event.key.code == Keyboard::D)
+	else if (event.key.code == Keyboard::D and columns != 1) // right
 	{
-		if (count % columns == columns - 1)
-			count -= columns - 1;
+		// if right-most column -- go to the left side
+		// otherwise -- go 1 column right
+		if (count.x == columns)
+			count.x = 1;
 		else
-			count++;
+			count.x += 1;
 		return true;
 	}
 
 	return false;
 }
 
-
+//FULLY DONE
 vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& textureSize, const Vector2u& renderTargetSize,
 	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor)
 {
@@ -434,11 +361,11 @@ vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& t
 	return gridVectors;
 }
 
-
+//FULLY DONE (HARDCODED)
 void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont, const Vector2u& menuGrid,
-	const int chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
+	const Vector2u& chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
 {
-	const size_t lightUpTime = 3;
+	const int lightUpTime = 3;
 
 
 	window.clear();
@@ -449,19 +376,23 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	vector<Sprite> sprites;
 	vector<Text> texts;
 
+	// main menu background
 	Sprite background(menuTextures.at(1));
 	sprites.push_back(background);
 
+	// main menu buttons text
 	Text text[]{ {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
-	size_t count = 0;
+	int count = 1;
+
+	// create buttons
 	for (auto& i : constructGrid(menuGrid, menuTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }/*C4305*/))
 	{
-		Sprite button(count == chosenButton ? menuTextures.at(2) : menuTextures.at(3));
+		Sprite button(count == chosenButton.y ? menuTextures.at(2) : menuTextures.at(3));
 		button.setPosition(i);
 		sprites.push_back(button);
 
 		text[count].setFillColor(Color::Black);
-		text[count].setOutlineColor(count == chosenButton ? Color(175, 58, 210) : Color(112, 37, 135));
+		text[count].setOutlineColor(count == chosenButton.y ? Color(175, 58, 210) : Color(112, 37, 135));
 		text[count].setOutlineThickness(2);
 		text[count].setCharacterSize(button.getGlobalBounds().height / 2);
 
@@ -480,18 +411,20 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	for (auto& i : texts)
 		nativeResolutionBuffer.draw(i);
 
+	// on first load the menu is tinted
 	if (isFirstDraw)
 	{
 		RectangleShape tint;
 		tint.setSize(Vector2f{ nativeResolutionBuffer.getSize() });
 		if (storedTime < lightUpTime)
 		{
+			// opacity goes from 0 to 255, making the tint go from black to transparent
 			tint.setFillColor(Color(0, 0, 0, 255 * (1 - storedTime / lightUpTime)));
 			nativeResolutionBuffer.draw(tint);
 			storedTime += clock.getElapsedTime().asSeconds() - latestAnimationUpdate;
 			latestAnimationUpdate = clock.getElapsedTime().asSeconds();
 		}
-		else
+		else // lightup time ended
 		{
 			isFirstDraw = false;
 			storedTime = latestAnimationUpdate = 0;
@@ -499,29 +432,27 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	}
 
 	nativeResolutionBuffer.display();
-	Sprite finalOutput(nativeResolutionBuffer.getTexture());
+	Sprite finalOutput(nativeResolutionBuffer.getTexture()); // get final result from the buffer
 
 	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
 	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
 		finalOutput.setScale(SHRINK_FACTOR);
 
-
 	window.draw(finalOutput);
 	window.display();
 }
 
-
+//FULLY DONE (HARDCODED)
 int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont)
 {
 	const Vector2u menuGrid = { 1, 4 };
 
 	//tech stuff
 	bool isFirstDraw = true;
-	bool entryAnimationFinished = false;
 	bool redraw = true;
-	int chosenButton = 0;
 	float storedTime = 0;
 	float latestAnimationUpdate = 0;
+	Vector2u chosenButton = {1,1};
 	Event event;
 	Clock clock;
 
@@ -533,12 +464,12 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 			{
 				if (event.key.code == Keyboard::E)
 				{
-					if (chosenButton == 0)
+					if (chosenButton.y == 1)
 						return 0;
-					else if (chosenButton == 1)
+					else if (chosenButton.y == 2)
 						return 2;
 					//else if (chosenButton == 2)
-					else if (chosenButton == menuGrid.y - 1)
+					else if (chosenButton.y == menuGrid.y)
 						return -1;
 				}
 				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
@@ -560,7 +491,8 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 				redraw = true;
 			}
 		}
-
+		
+		// is there a need to redraw the menu
 		if (redraw or isFirstDraw)
 		{
 			drawMenu(window, menuTextures, menuFont, menuGrid, chosenButton, clock, storedTime, latestAnimationUpdate, isFirstDraw);
@@ -569,9 +501,9 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 	}
 }
 
-
+//FULLY DONE (HARDCODED)
 void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont, const Vector2u& pauseGrid,
-	const int chosenButton)
+	const Vector2u& chosenButton)
 {
 	window.clear();
 
@@ -581,21 +513,25 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 	vector<Sprite> sprites;
 	vector<Text> texts;
 
+	// pause background
 	Sprite background(pauseTextures.at(1));
 	sprites.push_back(background);
 
+	// pause menu buttons text
 	Text text[]{ {"Continue", pauseFont}, {"Save game", pauseFont}, {"Whatever", pauseFont}, {"Quit to menu", pauseFont} };
-	size_t count = 0;
+	int count = 1;
+
+	// create buttons
 	for (auto& i : constructGrid(pauseGrid, pauseTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }))
 	{
-		Sprite button(count == chosenButton ? pauseTextures.at(2) : pauseTextures.at(3));
+		Sprite button(count == chosenButton.y ? pauseTextures.at(2) : pauseTextures.at(3));
 		button.setPosition(i);
 		sprites.push_back(button);
 
 		if (count < sizeof(text) / sizeof(Text)) //precaution
 		{
 			text[count].setFillColor(Color::Black);
-			text[count].setOutlineColor(count == chosenButton ? Color(77, 193, 193) : Color(82, 119, 119));
+			text[count].setOutlineColor(count == chosenButton.y ? Color(77, 193, 193) : Color(82, 119, 119));
 			text[count].setOutlineThickness(2);
 			text[count].setCharacterSize(button.getGlobalBounds().height / 2);
 
@@ -616,28 +552,27 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 		nativeResolutionBuffer.draw(i);
 
 	nativeResolutionBuffer.display();
-	Sprite finalOutput(nativeResolutionBuffer.getTexture());
+	Sprite finalOutput(nativeResolutionBuffer.getTexture()); // get final result from the buffer
 
 	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
 	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
 		finalOutput.setScale(SHRINK_FACTOR);
 
-
 	window.draw(finalOutput);
 	window.display();
 }
 
-
+//FULLY DONE (HARDCODED)
 int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont)
 {
 	const Vector2u pauseGrid = { 1, 4 };
+	Vector2u chosenButton = {1, 1};
+	bool redraw = true;
+	Event event;
+
 	RenderTexture pauseTexture;
 	pauseTexture.create(window.getSize().x, window.getSize().y);
 
-
-	int chosenButton = 0;
-	bool redraw = true;
-	Event event;
 	while (true)
 	{
 		while (window.pollEvent(event))
@@ -650,11 +585,11 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 				}
 				else if (event.key.code == Keyboard::E)
 				{
-					if (chosenButton == 0)
+					if (chosenButton.y == 1)
 						return 1;
-					else if (chosenButton == 1)
+					else if (chosenButton.y == 2)
 						return 2;
-					else if (chosenButton == pauseGrid.y - 1)
+					else if (chosenButton.y == pauseGrid.y)
 						return 0;
 				}
 				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
@@ -669,8 +604,16 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 				window.close();
 				return -1;
 			}
+
+			else if (event.type == Event::Resized)
+			{
+				//SHRINK_FACTOR = window.getSize() / NATIVE_RESOLUTION;
+				redraw = true;
+			}
+
 		}
 
+		// is there a need to redraw the menu
 		if (redraw)
 		{
 			drawPause(window, pauseTextures, pauseFont, pauseGrid, chosenButton);
@@ -680,150 +623,128 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 }
 
 
-Vector2f getCenterAlignment(const Sprite& insideSprite, const Vector2f& outsideAreaSize)
-{
-	const FloatRect insideBounds = insideSprite.getGlobalBounds();
 
-	const float x = (outsideAreaSize.x - insideBounds.width) / 2;
-	const float y = (outsideAreaSize.y - insideBounds.height) / 2;
+// void drawInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont,
+// 	const Vector2u& inventoryGrid, const int chosenItem, const Player& player)
+// {
+// 	window.clear();
 
-	return { x,y };
-}
+// 	RenderTexture nativeResolutionBuffer;
+// 	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
 
+// 	vector<Sprite> sprites;
+// 	vector<Text> text;
 
-Vector2f getCenterAlignment(const Sprite& insideSprite, const Sprite& outsideSprite)
-{
-	const FloatRect insideBounds = insideSprite.getGlobalBounds();
-	const FloatRect outsideBounds = outsideSprite.getGlobalBounds();
+// 	Sprite inventoryFrame{ inventoryTextures.at(0) };
+// 	const Vector2f inventoryFramePosition = getCenterAlignment(inventoryFrame, Vector2f{ NATIVE_RESOLUTION });
+// 	inventoryFrame.setPosition(inventoryFramePosition);
+// 	sprites.push_back(inventoryFrame);
 
-	const float x = (outsideBounds.width - insideBounds.width) / 2;
-	const float y = (outsideBounds.height - insideBounds.height) / 2;
-
-	return { x,y };
-}
-
-
-void drawInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont,
-	const Vector2u& inventoryGrid, const int chosenItem, const Player& player)
-{
-	window.clear();
-
-	RenderTexture nativeResolutionBuffer;
-	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
-
-	vector<Sprite> sprites;
-	vector<Text> text;
-
-	Sprite inventoryFrame{ inventoryTextures.at(0) };
-	const Vector2f inventoryFramePosition = getCenterAlignment(inventoryFrame, Vector2f{ NATIVE_RESOLUTION });
-	inventoryFrame.setPosition(inventoryFramePosition);
-	sprites.push_back(inventoryFrame);
-
-	unsigned int count = 0;
-	for (auto& i : constructGrid(inventoryGrid, inventoryTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5,0.5 }))
-	{
-		Sprite itemFrame(chosenItem == count ? inventoryTextures.at(2) : inventoryTextures.at(3));
-		itemFrame.setPosition(i);
-		sprites.push_back(itemFrame);
-		if (player.inventorySlots.at(count))
-		{
-			Sprite item(*itemList.at(player.inventorySlots.at(count) - 1).sprite.getTexture()); //wtf
-			item.setPosition(itemFrame.getPosition() + getCenterAlignment(item, itemFrame));
-			sprites.push_back(item);
-		}
-		count++;
-	}
+// 	unsigned int count = 0;
+// 	for (auto& i : constructGrid(inventoryGrid, inventoryTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5,0.5 }))
+// 	{
+// 		Sprite itemFrame(chosenItem == count ? inventoryTextures.at(2) : inventoryTextures.at(3));
+// 		itemFrame.setPosition(i);
+// 		sprites.push_back(itemFrame);
+// 		if (player.inventorySlots.at(count))
+// 		{
+// 			Sprite item(*itemList.at(player.inventorySlots.at(count) - 1).sprite.getTexture()); //wtf
+// 			item.setPosition(itemFrame.getPosition() + getCenterAlignment(item, itemFrame));
+// 			sprites.push_back(item);
+// 		}
+// 		count++;
+// 	}
 	
-	for (auto& i : sprites)
-		nativeResolutionBuffer.draw(i);
+// 	for (auto& i : sprites)
+// 		nativeResolutionBuffer.draw(i);
 
-	//
-	//
-	//-----------------DRAW HERE
-	//
-	//
+// 	//
+// 	//
+// 	//-----------------DRAW HERE
+// 	//
+// 	//
 	
-	nativeResolutionBuffer.display();
-	Sprite finalOutput(nativeResolutionBuffer.getTexture());
+// 	nativeResolutionBuffer.display();
+// 	Sprite finalOutput(nativeResolutionBuffer.getTexture());
 
-	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
-	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
-		finalOutput.setScale(SHRINK_FACTOR);
+// 	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
+// 	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
+// 		finalOutput.setScale(SHRINK_FACTOR);
 
-	//draw background first
-	window.draw(Sprite{ background.getTexture() });
+// 	//draw background first
+// 	window.draw(Sprite{ background.getTexture() });
 
-	//tint it
-	RectangleShape tint;
-	tint.setSize(Vector2f{ window.getSize() });
-	tint.setFillColor(Color{ 0, 0, 0, 170 });
-	window.draw(tint);
+// 	//tint it
+// 	RectangleShape tint;
+// 	tint.setSize(Vector2f{ window.getSize() });
+// 	tint.setFillColor(Color{ 0, 0, 0, 170 });
+// 	window.draw(tint);
 
-	//draw the rest
-	window.draw(finalOutput);
-	window.display();
-}
+// 	//draw the rest
+// 	window.draw(finalOutput);
+// 	window.display();
+// }
 
 
-int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, 
-	Player& player, vector<gameObject>& objects)
-{
-	srand(time(0));
-	const Vector2u inventoryGrid = { 4,2 };
+// int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, 
+// 	Player& player, vector<gameObject>& objects)
+// {
+// 	srand(time(0));
+// 	const Vector2u inventoryGrid = { 4,2 };
 
-	bool redraw = true;
-	int chosenItem = 0;
-	Event event;
+// 	bool redraw = true;
+// 	int chosenItem = 0;
+// 	Event event;
 
-	while (true)
-	{
-		while (window.pollEvent(event))
-		{
-			if (event.type == Event::KeyReleased)
-			{
-				if (event.key.code == Keyboard::Escape or event.key.code == Keyboard::I)
-				{
-					return 0;
-				}
-				else if (event.key.code == Keyboard::Q)
-				{
-					if (player.inventorySlots.at(chosenItem))
-					{
-						gameObject droppedItem(itemList.at(player.inventorySlots.at(chosenItem) - 1));
+// 	while (true)
+// 	{
+// 		while (window.pollEvent(event))
+// 		{
+// 			if (event.type == Event::KeyReleased)
+// 			{
+// 				if (event.key.code == Keyboard::Escape or event.key.code == Keyboard::I)
+// 				{
+// 					return 0;
+// 				}
+// 				else if (event.key.code == Keyboard::Q)
+// 				{
+// 					if (player.inventorySlots.at(chosenItem))
+// 					{
+// 						gameObject droppedItem(itemList.at(player.inventorySlots.at(chosenItem) - 1));
 
-						//should be changed to sprites (see finalDraw())
+// 						//should be changed to sprites (see finalDraw())
 						
-						droppedItem.body.setTexture(droppedItem.sprite.getTexture());
-						droppedItem.body.setPosition(player.getCenter() + Vector2f( rand() % 20, rand() % 20 ));
+// 						droppedItem.body.setTexture(droppedItem.sprite.getTexture());
+// 						droppedItem.body.setPosition(player.getCenter() + Vector2f( rand() % 20, rand() % 20 ));
 
-						//items that player's able to pick up
-						droppedItem.interactionType = 1;
-						droppedItem.ID = 1;
-						objects.push_back(droppedItem);
-						player.inventorySlots.at(chosenItem) = 0;
-					}
-				}
-				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
-				else if (!menuNavigation(event, inventoryGrid, chosenItem)) continue;
+// 						//items that player's able to pick up
+// 						droppedItem.interactionType = 1;
+// 						droppedItem.ID = 1;
+// 						objects.push_back(droppedItem);
+// 						player.inventorySlots.at(chosenItem) = 0;
+// 					}
+// 				}
+// 				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
+// 				else if (!menuNavigation(event, inventoryGrid, chosenItem)) continue;
 
-				redraw = true;
-			}
+// 				redraw = true;
+// 			}
 
-			//this event is unlikely, so it's placed below Event::KR
-			else if (event.type == Event::Closed)
-			{
-				window.close();
-				return -1;
-			}
-		}
+// 			//this event is unlikely, so it's placed below Event::KR
+// 			else if (event.type == Event::Closed)
+// 			{
+// 				window.close();
+// 				return -1;
+// 			}
+// 		}
 
-		if (redraw)
-		{
-			drawInventory(window, background, inventoryTextures, inventoryFont, inventoryGrid, chosenItem, player);
-			redraw = false;
-		}
-	}
-}
+// 		if (redraw)
+// 		{
+// 			drawInventory(window, background, inventoryTextures, inventoryFont, inventoryGrid, chosenItem, player);
+// 			redraw = false;
+// 		}
+// 	}
+// }
 
 
 void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock)
@@ -843,168 +764,168 @@ void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clo
 }
 
 
-void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectiles, vector<gameObject>& objects, Player& player, float& testTime)
-{
-	Clock testClock;
-	// remove melee HB with expired swing or ranged projectiles with exceeding distance
-	// before anything else
-	projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
-		{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
-		!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
+// void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectiles, vector<gameObject>& objects, Player& player, float& testTime)
+// {
+// 	Clock testClock;
+// 	// remove melee HB with expired swing or ranged projectiles with exceeding distance
+// 	// before anything else
+// 	projectiles.erase(remove_if(projectiles.begin(), projectiles.end(), [mainClock](const Projectile& projectile)
+// 		{ return projectile.isMelee and getTimeDiff(mainClock, projectile.creationTime) > projectile.lifeTime ? true :
+// 		!projectile.isMelee and projectile.traveledDistance > projectile.range ? true : false; }), projectiles.end());
 
-	for (size_t i = 0; i < projectiles.size(); i++)
-	{
-		//MELEE
-		if (projectiles.at(i).isMelee)
-		{
-			projectiles.at(i).body.setPosition(player.body.getPosition() + projectiles.at(i).swingHandle(mainClock));
+// 	for (size_t i = 0; i < projectiles.size(); i++)
+// 	{
+// 		//MELEE
+// 		if (projectiles.at(i).isMelee)
+// 		{
+// 			projectiles.at(i).body.setPosition(player.body.getPosition() + projectiles.at(i).swingHandle(mainClock));
 
-			//check collisions
-			for (size_t j = 1; j < objects.size(); j++)
-			{
-				if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectiles.at(i).penetration)
-				{
-					projectiles.at(i).penetration--;
-					objects.erase(objects.begin() + j);
-					j--;
-				}
-			}
-		}
-		//RANGED
-		else
-		{
-			projectiles.at(i).updatePosition(mainClock.getElapsedTime().asSeconds());
-			projectiles.at(i).traveledDistance += projectiles.at(i).latestDistanceCovered;
+// 			//check collisions
+// 			for (size_t j = 1; j < objects.size(); j++)
+// 			{
+// 				if (projectiles.at(i).collisionCheck(objects.at(j)) and objects.at(j).isDestroyable and projectiles.at(i).penetration)
+// 				{
+// 					projectiles.at(i).penetration--;
+// 					objects.erase(objects.begin() + j);
+// 					j--;
+// 				}
+// 			}
+// 		}
+// 		//RANGED
+// 		else
+// 		{
+// 			projectiles.at(i).updatePosition(mainClock.getElapsedTime().asSeconds());
+// 			projectiles.at(i).traveledDistance += projectiles.at(i).latestDistanceCovered;
 
-			//check collisions
-			for (size_t j = 1; j < objects.size(); j++)
-			{
-				if (projectiles.at(i).collisionCheck(objects.at(j)))
-				{
-					if (objects.at(j).isDestroyable)
-					{
-						objects.erase(objects.begin() + j);
-						j--;
+// 			//check collisions
+// 			for (size_t j = 1; j < objects.size(); j++)
+// 			{
+// 				if (projectiles.at(i).collisionCheck(objects.at(j)))
+// 				{
+// 					if (objects.at(j).isDestroyable)
+// 					{
+// 						objects.erase(objects.begin() + j);
+// 						j--;
 
-						if (projectiles.at(i).penetration)
-						{
-							projectiles.at(i).penetration--;
-							continue; //continue checking collisions for the same projectile
-						}
-					}
+// 						if (projectiles.at(i).penetration)
+// 						{
+// 							projectiles.at(i).penetration--;
+// 							continue; //continue checking collisions for the same projectile
+// 						}
+// 					}
 
-					projectiles.erase(projectiles.begin() + i);
-					i--;
-					break;
-				}
-			}
-		}
-	}
-	player.weapon.reloadHandle(mainClock);
-	testTime += testClock.getElapsedTime().asSeconds();
-}
+// 					projectiles.erase(projectiles.begin() + i);
+// 					i--;
+// 					break;
+// 				}
+// 			}
+// 		}
+// 	}
+// 	player.weapon.reloadHandle(mainClock);
+// 	testTime += testClock.getElapsedTime().asSeconds();
+// }
 
 
-void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject>& objects, Player& player)
-{
-	bool interactionMessageDisplayed = false;
-	bool needOverride = false;
+// void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject>& objects, Player& player)
+// {
+// 	bool interactionMessageDisplayed = false;
+// 	bool needOverride = false;
 	
-	for (size_t i = 0; i < walls.size(); i++)
-	{
-		if (player.collisionCheck(walls.at(i), needOverride))
-		{
-			if (!walls.at(i).interactionType)
-				continue;
-			//otherwise collision and interaction ability are both present, handle them
-		}
-		else if (walls.at(i).interactionType)
-		{
-			if (!player.interactionCheck(walls.at(i)))
-				continue;
-			//otherwise interaction ability and interaction zone collision are both present, handle them
-		}
+// 	for (size_t i = 0; i < walls.size(); i++)
+// 	{
+// 		if (player.collisionCheck(walls.at(i), needOverride))
+// 		{
+// 			if (!walls.at(i).interactionType)
+// 				continue;
+// 			//otherwise collision and interaction ability are both present, handle them
+// 		}
+// 		else if (walls.at(i).interactionType)
+// 		{
+// 			if (!player.interactionCheck(walls.at(i)))
+// 				continue;
+// 			//otherwise interaction ability and interaction zone collision are both present, handle them
+// 		}
 
 
-		//if both conditions are not satisfied 
-		//handle interactable gOS options
-		if (player.interactionFlag)
-		{
-			//
-			//interaction with gOS should be HERE
-			//
-			player.interactionFlag = false;
-		}
-		else if (!interactionMessageDisplayed)
-		{
-			//
-			//interaction message display should be HERE
-			//
-			interactionMessageDisplayed = true;
-		}
-	}
+// 		//if both conditions are not satisfied 
+// 		//handle interactable gOS options
+// 		if (player.interactionFlag)
+// 		{
+// 			//
+// 			//interaction with gOS should be HERE
+// 			//
+// 			player.interactionFlag = false;
+// 		}
+// 		else if (!interactionMessageDisplayed)
+// 		{
+// 			//
+// 			//interaction message display should be HERE
+// 			//
+// 			interactionMessageDisplayed = true;
+// 		}
+// 	}
 
-	//gameObject handler
-	for (size_t i = 0; i < objects.size(); i++)
-	{
-		if (player.collisionCheck(objects.at(i), needOverride))
-		{
-			if (!objects.at(i).interactionType)
-				continue;
-			//otherwise collision and interaction ability are both present, handle them
-		}
-		else if (objects.at(i).interactionType)
-		{
-			if (!player.interactionCheck(objects.at(i)))
-				continue;
-			//otherwise interaction ability and interaction zone collision are both present, handle them
-		}
+// 	//gameObject handler
+// 	for (size_t i = 0; i < objects.size(); i++)
+// 	{
+// 		if (player.collisionCheck(objects.at(i), needOverride))
+// 		{
+// 			if (!objects.at(i).interactionType)
+// 				continue;
+// 			//otherwise collision and interaction ability are both present, handle them
+// 		}
+// 		else if (objects.at(i).interactionType)
+// 		{
+// 			if (!player.interactionCheck(objects.at(i)))
+// 				continue;
+// 			//otherwise interaction ability and interaction zone collision are both present, handle them
+// 		}
 
 
-		//if both conditions are not satisfied 
-		//handle interactable gO options
-		if (player.interactionFlag)
-		{
-			//
-			//interaction with gO should be HERE
-			//
-			// EXAMPLE: 
-			if (objects.at(i).interactionType == 1)
-			{
-				for (auto& j : player.inventorySlots)
-				{
-					if (!j)
-					{
-						j = objects.at(i).ID;
-						player.interactionFlag = false;
-						objects.erase(objects.begin() + i);
-						i--;
-						break;
-					}
-				}
-			}
-			//
-			//
-			//
-		}
-		else if (!interactionMessageDisplayed)
-		{
-			//
-			//interaction message display should be HERE
-			//
-			// EXAMPLE: 
-			RectangleShape msg;
-			msg.setSize(Vector2f(20, 5));
-			msg.setPosition(Vector2f(player.body.getPosition() + Vector2f(0, -10)));
-			msg.setFillColor(Color(Color::White));
-			window.draw(msg);
-			//
-			//
-			interactionMessageDisplayed = true;
-		}
-	}
-	if (!needOverride)
-		player.overrideInputX = player.overrideInputY = false;
-}
+// 		//if both conditions are not satisfied 
+// 		//handle interactable gO options
+// 		if (player.interactionFlag)
+// 		{
+// 			//
+// 			//interaction with gO should be HERE
+// 			//
+// 			// EXAMPLE: 
+// 			if (objects.at(i).interactionType == 1)
+// 			{
+// 				for (auto& j : player.inventorySlots)
+// 				{
+// 					if (!j)
+// 					{
+// 						j = objects.at(i).ID;
+// 						player.interactionFlag = false;
+// 						objects.erase(objects.begin() + i);
+// 						i--;
+// 						break;
+// 					}
+// 				}
+// 			}
+// 			//
+// 			//
+// 			//
+// 		}
+// 		else if (!interactionMessageDisplayed)
+// 		{
+// 			//
+// 			//interaction message display should be HERE
+// 			//
+// 			// EXAMPLE: 
+// 			RectangleShape msg;
+// 			msg.setSize(Vector2f(20, 5));
+// 			msg.setPosition(Vector2f(player.body.getPosition() + Vector2f(0, -10)));
+// 			msg.setFillColor(Color(Color::White));
+// 			window.draw(msg);
+// 			//
+// 			//
+// 			interactionMessageDisplayed = true;
+// 		}
+// 	}
+// 	if (!needOverride)
+// 		player.overrideInputX = player.overrideInputY = false;
+// }
 
 #pragma warning(pop)

@@ -14,14 +14,10 @@ if(!${SMFL_FOUND})
     message(FATAL_ERROR "SFML not found")
 endif()
 
-add_executable(maindo   main.cpp 
-                        Entity.cpp
-                        gameObject.cpp 
-                        gameObjectStationary.cpp
-                        Map.cpp
+add_executable(maindo   main.cpp
+                        basicObject.cpp
+                        Movable.cpp
                         Misc.cpp
-                        Player.cpp
-                        Weapon.cpp
 )
 
 target_include_directories(maindo PUBLIC ${SFML_INCLUDE_DIR})

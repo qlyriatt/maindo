@@ -1,11 +1,9 @@
 #pragma once
-
-#include "Map.h"
-
 #include <time.h>
 
-extern vector<gameObject> itemList;
-
+#include "Map.h"
+#include "BasicObject.h"
+#include "Utilities.h"
 
 extern const std::string DIRECTORY;
 //const Vector2f WINDOW_SIZE{ 1920, 1080 };
@@ -20,38 +18,11 @@ const Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
 
 
 
-//pls help
-namespace sf
-{
-	template<typename T, typename U>
-	Vector2f operator *(const Vector2<T>& left, const Vector2<U>& right)
-	{
-		return Vector2f(left.x * right.x, left.y * right.y);
-	}
-
-	template<typename T>
-	Vector2<T> operator *(const Vector2<T>& left, const Vector2<T>& right)
-	{
-		return Vector2<T>(left.x * right.x, left.y * right.y);
-	}
-
-	template<typename T, typename U>
-	Vector2f operator /(const Vector2<T>& left, const Vector2<U>& right)
-	{
-		return Vector2f(float(left.x) / float(right.x), float(left.y) / float(right.y));
-	}
-};
 
 
 
 
 //every possible use(less)(ful) function that can be thought of
-
-
-String pickName();
-
-
-float getTimeDiff(const Clock& clock, float time);
 
 
 /////////////////////////////////////////////////
@@ -75,13 +46,6 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles);
 
 
-/////////////////////////////////////////////////
-/// @brief Changes opacity of an object
-///
-/// @param object Target
-/// @param opacity Opacity to set, default is non-transparent
-/////////////////////////////////////////////////
-void setOpacity(gameObjectStationary& object, int opacity = 255);
 
 
 void loadTexturesMenu(vector<Texture>& menuTextures);
@@ -125,7 +89,7 @@ void cameraCollision(const gameObject& area, View& camera, const Player& player,
 /// 
 /// @return True if event was handled succesfully, false otherwise
 /////////////////////////////////////////////////
-bool menuNavigation(const Event& event, const Vector2u& gridDimensions, int& count);
+bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u& count);
 
 
 /////////////////////////////////////////////////
@@ -142,7 +106,7 @@ vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& t
 /// @brief Main menu drawer function
 /////////////////////////////////////////////////
 void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont, const Vector2u& menuGrid,
-	const int chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw);
+	const Vector2u& chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw);
 
 
 /////////////////////////////////////////////////
@@ -161,7 +125,7 @@ int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, co
 /// @brief Pause menu drawer function
 /////////////////////////////////////////////////
 void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont, const Vector2u& pauseGrid,
-	const int chosenButton);
+	const Vector2u& chosenButton);
 
 
 /////////////////////////////////////////////////
@@ -176,29 +140,13 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont);
 
 
-/////////////////////////////////////////////////
-/// @brief Produces a vector to align sprite in the middle of target
-/// @param insideSprite What should be aligned
-/// @param outsideAreaSize Where should it be aligned at
-/// @return Vector to calculated position
-/////////////////////////////////////////////////
-Vector2f getCenterAlignment(const Sprite& insideSprite, const Vector2f& outsideAreaSize);
-
-
-/////////////////////////////////////////////////
-/// @brief Produces a vector to align sprite in the middle of target
-/// @param inside What should be aligned
-/// @param outside Where should it be aligned at
-/// @return Vector to calculated position
-/////////////////////////////////////////////////
-Vector2f getCenterAlignment(const Sprite& insideSprite, const Sprite& outsideSprite);
 
 
 /////////////////////////////////////////////////
 /// @brief Inventory drawer function
 /////////////////////////////////////////////////
 void drawInventory(RenderWindow& window, const RenderTexture& background,
-	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const int chosenItem, const Player& player);
+	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const Vector2u& chosenItem, const Player& player);
 
 
 /////////////////////////////////////////////////
