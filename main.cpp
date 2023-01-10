@@ -1,7 +1,8 @@
-//#pragma warning (disable : 4244 4305)	//<----
-#include <list>
 #include <SFML/Graphics.hpp>
+
 #include "Misc.h"
+#include "Render.h"
+#include "Player.h"
 
 // INPUT --> PROJECTILE --> POSITION --> COLLISION CHECK --> CAMERA --> DRAW
 //	 ^													|
@@ -11,32 +12,35 @@
 
 
 // SPECIFY FOLDER WITH GAME FILES
-const std::string DIRECTORY = { "/home/qlyriatt/CODE/maindo/" };
+const std::string DIRECTORY = { "/home/qlyriatt/Code/maindo/" };
 
 //vector<gameObject> itemList;
 
 int main()
 {
-	RenderWindow window(VideoMode::getDesktopMode(), pickName()/*, Style::Fullscreen*/);
-	
-	Image* icon = new Image;
-	icon->loadFromFile(DIRECTORY + "Textures/icon.png");
-	window.setIcon(icon->getSize().x, icon->getSize().y, icon->getPixelsPtr());
-	delete icon;
+	// game window
+	RenderWindow window(VideoMode::getDesktopMode(), Utilities::pickName()/*, Style::Fullscreen*/);
+	setWindowIcon(window);
 
-	View camera(FloatRect(Vector2f(0, 0), CAMERA_SIZE));
+	// views for window
+	View camera(FloatRect(Vector2f(0, 0), {1280, 720}));
 	camera.setViewport(FloatRect(0, 0, 1, 1));
 	View minimap(FloatRect(Vector2f(0, 0), WINDOW_SIZE));
 	minimap.setViewport(FloatRect(0.35, 0.7, 0.28, 0.28)); //0.03, 0.75, 0.2, 0.2
 	
+	// render textures for window
 	RenderTexture mainGameTexture;
 	mainGameTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
+	mainGameTexture.setView(camera);
 	RenderTexture minimapTexture;
 	minimapTexture.create(WINDOW_SIZE.x, WINDOW_SIZE.y);
+	minimapTexture.setView(minimap);
 
+	// fonts
 	Font fontMain;
-	fontMain.loadFromFile(DIRECTORY + "VERYBADFONT.ttf");
+	fontMain.loadFromFile(DIRECTORY + "gnomoria.ttf");
 
+	// textures
 	vector<Texture> menuTextures;
 	loadTexturesMenu(menuTextures);
 	vector<Texture> pauseTextures;
@@ -46,6 +50,14 @@ int main()
 	vector<Texture> textures; 
 	loadTextures(textures);
 
+	Sprite bg;
+	bg.setTexture(textures.at(0));
+	bg.setPosition(0,0);
+
+	Player player;
+	player.body.setPosition(200,200);
+	player.body.setFillColor(Color::White);
+	player.body.setSize( {40, 90} );
 
 	// itemList.push_back(gameObject{ { 0,0 }, textures.at(2), 0, 0, true, true, 0, 0 });
 	// itemList.push_back(gameObject{ {0,0},{0,0} });
@@ -65,21 +77,21 @@ int main()
 	// SWING DELAY - HB LIFETIME == TIME BETWEEN SWINGS ----> SWING DELAY SHOULD BE >= HB LIFETIME
 	//
 	//
-	Vector2f hitboxSizeBoardStandart = { 30,25 };
-	vector<Vector2f> hitboxesBoardStandart = { {-10,-20}, {25,-15}, {25,10}, {25,35} };
-	Weapon board(1, 8, 1, 1, 0.7, hitboxesBoardStandart, hitboxSizeBoardStandart);
+	// Vector2f hitboxSizeBoardStandart = { 30,25 };
+	// vector<Vector2f> hitboxesBoardStandart = { {-10,-20}, {25,-15}, {25,10}, {25,35} };
+	// Weapon board(1, 8, 1, 1, 0.7, hitboxesBoardStandart, hitboxSizeBoardStandart);
 
 	// RANGED WEAPONS
 	//
 	//---ID---DAMAGE---ADDITIONAL PENETRATION---SHOT DELAY---RANGE---PROJECTILE SPEED---AMMO CAPACITY---RELOAD TIME---PROJECTILE TEXTURE---
 	//
 	//
-	Weapon rifle(3, 12, 1, 0.3, 600, 600, 25, 2, textures.at(2));
-	Weapon sniperRifle(4, 20, 2, 2, 800, 800, 5, 3, textures.at(2));
-	Weapon pistol(2, 8, 0, 0.5, 400, 400, 120, 1.5, textures.at(1));
+	// Weapon rifle(3, 12, 1, 0.3, 600, 600, 25, 2, textures.at(2));
+	// Weapon sniperRifle(4, 20, 2, 2, 800, 800, 5, 3, textures.at(2));
+	// Weapon pistol(2, 8, 0, 0.5, 400, 400, 120, 1.5, textures.at(1));
 
-	board.actionSpriteOffset = Vector2i(10, 25);
-	board.actionSpriteSize = Vector2i(65, 85);
+	// board.actionSpriteOffset = Vector2i(10, 25);
+	// board.actionSpriteSize = Vector2i(65, 85);
 
 	// Player player{ Vector2f(20, 20), Vector2f(70, 155), textures.at(0), 6, 400 }; //speed is pixels per second
 	// player.weapon = pistol;
@@ -87,31 +99,32 @@ int main()
 	//bool switchedWeapon = false;
 
 	int currentLevel = 1;
-	bool drawMinimap = true;
 	//levelLoad(window, objects, entities, currentLevel, 1, textures);
 
-	// ifstream test1("D:/All mine/Game/test1.txt");
-	// if (!test1.is_open())
-	// 	cout << "TEST 1" << endl;
-	// ofstream test2("D:/All mine/Game/test2.txt");
-	// if (!test2.is_open())
-	// 	cout << "test 2 " << endl;
-
-
+	bool drawMinimap = true;
 	bool inMenu = true;
 	bool inInventory = false;
 
 	Clock mainClock;
 	Event event;
-	//float testTime = 0;
 	while (window.isOpen())
 	{
 		window.clear();
 		mainGameTexture.clear();
+		minimapTexture.clear();
+
 		//player.interactionFlag = false;
 		if (inMenu)
 		{
-			showScreenMenu(window, menuTextures, fontMain);
+			switch (showScreenMenu(window, menuTextures, fontMain))
+			{
+			case -1:
+				return -1;
+			case 1:
+			case 2:
+				inMenu = false;
+				break;
+			}
 		}
 
 		//---INPUT PHASE
@@ -169,7 +182,6 @@ int main()
 			else if (event.type == Event::Closed)
 			{
 				window.close();
-				return 0;
 			}
 		}
 
@@ -292,6 +304,15 @@ int main()
 		// 	window.draw(Sprite{ minimapTexture.getTexture() });
 		// }
 
+
+
+		
+
+		player.updatePosition(mainClock.getElapsedTime().asSeconds());
+		camera.setCenter(Utilities::getCenter(player.body));
+		window.setView(camera);
+		window.draw(bg);
+		window.draw(player);
 		window.display();
 		//---DRAW PHASE END
 	}

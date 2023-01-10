@@ -40,83 +40,6 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 
 
 
-void loadTexturesMenu(vector<Texture>& menuTextures)
-{
-	Texture menuLight;
-	menuLight.loadFromFile(DIRECTORY + "Textures/menuLight.png");
-	menuTextures.push_back(menuLight);
-
-	Texture menuDark;
-	menuDark.loadFromFile(DIRECTORY + "Textures/menuDark.png");
-	menuTextures.push_back(menuDark);
-
-	Texture menuButtonLight;
-	menuButtonLight.loadFromFile(DIRECTORY + "Textures/menuButtonLight.png");
-	menuTextures.push_back(menuButtonLight);
-
-	Texture menuButtonDark;
-	menuButtonDark.loadFromFile(DIRECTORY + "Textures/menuButtonDark.png");
-	menuTextures.push_back(menuButtonDark);
-}
-
-
-void loadTexturesPause(vector<Texture>& pauseTextures)
-{
-	Texture menuLight;
-	menuLight.loadFromFile(DIRECTORY + "Textures/pauseLight.png");
-	pauseTextures.push_back(menuLight);
-
-	Texture menuDark;
-	menuDark.loadFromFile(DIRECTORY + "Textures/pauseDark.png");
-	pauseTextures.push_back(menuDark);
-
-	Texture menuButtonLight;
-	menuButtonLight.loadFromFile(DIRECTORY + "Textures/pauseButtonLight.png");
-	pauseTextures.push_back(menuButtonLight);
-
-	Texture menuButtonDark;
-	menuButtonDark.loadFromFile(DIRECTORY + "Textures/pauseButtonDark.png");
-	pauseTextures.push_back(menuButtonDark);
-}
-
-
-void loadTexturesInventory(vector<Texture>& inventoryTextures)
-{
-	Texture inventoryLight;
-	inventoryLight.loadFromFile(DIRECTORY + "Textures/inventoryLight.png");
-	inventoryTextures.push_back(inventoryLight);
-
-	Texture inventoryDark;
-	inventoryDark.loadFromFile(DIRECTORY + "Textures/inventoryDark.png");
-	inventoryTextures.push_back(inventoryDark);
-
-	Texture itemFrameLight;
-	itemFrameLight.loadFromFile(DIRECTORY + "Textures/itemFrameLight.png");
-	inventoryTextures.push_back(itemFrameLight);
-
-	Texture itemFrameDark;
-	itemFrameDark.loadFromFile(DIRECTORY + "Textures/itemFrameDark.png");
-	inventoryTextures.push_back(itemFrameDark);
-
-}
-
-
-void loadTextures(vector<Texture>& textures)
-{
-	Texture playerTexture;
-	playerTexture.loadFromFile(DIRECTORY + "Textures/player.png");
-	textures.push_back(playerTexture);
-
-	Texture bulletPistolTexture;
-	bulletPistolTexture.loadFromFile(DIRECTORY + "Textures/bulletPistol.png");
-	textures.push_back(bulletPistolTexture);
-
-	Texture bulletRifleTexture;
-	bulletRifleTexture.loadFromFile(DIRECTORY + "Textures/bulletRifle.png");
-	textures.push_back(bulletRifleTexture);
-}
-
-
 // void finalDraw(RenderTexture& renderTexture, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles,
 // 	const Player& player)
 // {
@@ -258,7 +181,7 @@ void loadTextures(vector<Texture>& textures)
 // 	}
 // }
 
-//FULLY DONE
+
 bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u& count)
 {
 	// handle pressed key to navigate menu grid
@@ -317,7 +240,7 @@ bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u
 	return false;
 }
 
-//FULLY DONE
+
 vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& textureSize, const Vector2u& renderTargetSize,
 	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor)
 {
@@ -361,7 +284,70 @@ vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& t
 	return gridVectors;
 }
 
-//FULLY DONE (HARDCODED)
+
+int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont)
+{
+	const Vector2u menuGrid {1, 4};
+
+	//tech stuff
+	bool isFirstDraw = true;
+	bool redraw = true;
+	float storedTime = 0;
+	float latestAnimationUpdate = 0;
+	Vector2u chosenButton {1, 1};
+	Event event;
+	Clock clock;
+	//
+
+	while (window.isOpen())
+	{
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::E)
+				{
+					if (chosenButton.y == 1)
+						return 1;
+					else if (chosenButton.y == 2)
+						return 2;
+					//else if (chosenButton == 2)
+					else if (chosenButton.y == menuGrid.y)
+						return -1;
+				}
+				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
+				else if (!menuNavigation(event, menuGrid, chosenButton)) 
+					continue;
+
+				redraw = true;
+			}
+
+			//this event is unlikely, so it's placed below Event::KR
+			else if (event.type == Event::Closed)
+			{
+				window.close();
+				return -1;
+			}
+
+			else if (event.type == Event::Resized)
+			{
+				//SHRINK_FACTOR = window.getSize() / NATIVE_RESOLUTION;
+				redraw = true;
+			}
+		}
+		
+		// is there a need to redraw the menu
+		if (redraw or isFirstDraw)
+		{
+			drawMenu(window, menuTextures, menuFont, menuGrid, chosenButton, clock, storedTime, latestAnimationUpdate, isFirstDraw);
+			redraw = false;
+		}
+	}
+
+	return -1; // return "closed window" if unspecified
+}
+
+
 void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont, const Vector2u& menuGrid,
 	const Vector2u& chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
 {
@@ -381,7 +367,7 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	sprites.push_back(background);
 
 	// main menu buttons text
-	Text text[]{ {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
+	vector<Text> text { {}, {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
 	int count = 1;
 
 	// create buttons
@@ -391,16 +377,16 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 		button.setPosition(i);
 		sprites.push_back(button);
 
-		text[count].setFillColor(Color::Black);
-		text[count].setOutlineColor(count == chosenButton.y ? Color(175, 58, 210) : Color(112, 37, 135));
-		text[count].setOutlineThickness(2);
-		text[count].setCharacterSize(button.getGlobalBounds().height / 2);
+		text.at(count).setFillColor(Color::Black);
+		text.at(count).setOutlineColor(count == chosenButton.y ? Color(175, 58, 210) : Color(112, 37, 135));
+		text.at(count).setOutlineThickness(2);
+		text.at(count).setCharacterSize(button.getGlobalBounds().height / 2);
 
-		float textOffsetX = (button.getGlobalBounds().width - text[count].getGlobalBounds().width) / 2;
-		float textOffsetY = (button.getGlobalBounds().height - text[count].getCharacterSize()) / 2;
+		float textOffsetX = (button.getGlobalBounds().width - text.at(count).getGlobalBounds().width) / 2;
+		float textOffsetY = (button.getGlobalBounds().height - text.at(count).getCharacterSize()) / 2;
 		Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
-		text[count].setPosition(textPosition);
-		texts.push_back(text[count]);
+		text.at(count).setPosition(textPosition);
+		texts.push_back(text.at(count));
 
 		count++;
 	}
@@ -442,64 +428,6 @@ void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const F
 	window.display();
 }
 
-//FULLY DONE (HARDCODED)
-int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont)
-{
-	const Vector2u menuGrid = { 1, 4 };
-
-	//tech stuff
-	bool isFirstDraw = true;
-	bool redraw = true;
-	float storedTime = 0;
-	float latestAnimationUpdate = 0;
-	Vector2u chosenButton = {1,1};
-	Event event;
-	Clock clock;
-
-	while (true)
-	{
-		while (window.pollEvent(event))
-		{
-			if (event.type == Event::KeyReleased)
-			{
-				if (event.key.code == Keyboard::E)
-				{
-					if (chosenButton.y == 1)
-						return 0;
-					else if (chosenButton.y == 2)
-						return 2;
-					//else if (chosenButton == 2)
-					else if (chosenButton.y == menuGrid.y)
-						return -1;
-				}
-				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
-				else if(!menuNavigation(event, menuGrid, chosenButton)) continue;
-
-				redraw = true;
-			}
-
-			//this event is unlikely, so it's placed below Event::KR
-			else if (event.type == Event::Closed)
-			{
-				window.close();
-				return -1;
-			}
-
-			else if (event.type == Event::Resized)
-			{
-				//SHRINK_FACTOR = window.getSize() / NATIVE_RESOLUTION;
-				redraw = true;
-			}
-		}
-		
-		// is there a need to redraw the menu
-		if (redraw or isFirstDraw)
-		{
-			drawMenu(window, menuTextures, menuFont, menuGrid, chosenButton, clock, storedTime, latestAnimationUpdate, isFirstDraw);
-			redraw = false;
-		}
-	}
-}
 
 //FULLY DONE (HARDCODED)
 void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont, const Vector2u& pauseGrid,
@@ -518,7 +446,7 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 	sprites.push_back(background);
 
 	// pause menu buttons text
-	Text text[]{ {"Continue", pauseFont}, {"Save game", pauseFont}, {"Whatever", pauseFont}, {"Quit to menu", pauseFont} };
+	vector<Text> text { {}, {"Continue", pauseFont}, {"Save game", pauseFont}, {"Whatever", pauseFont}, {"Quit to menu", pauseFont} };
 	int count = 1;
 
 	// create buttons
@@ -530,16 +458,16 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 
 		if (count < sizeof(text) / sizeof(Text)) //precaution
 		{
-			text[count].setFillColor(Color::Black);
-			text[count].setOutlineColor(count == chosenButton.y ? Color(77, 193, 193) : Color(82, 119, 119));
-			text[count].setOutlineThickness(2);
-			text[count].setCharacterSize(button.getGlobalBounds().height / 2);
+			text.at(count).setFillColor(Color::Black);
+			text.at(count).setOutlineColor(count == chosenButton.y ? Color(77, 193, 193) : Color(82, 119, 119));
+			text.at(count).setOutlineThickness(2);
+			text.at(count).setCharacterSize(button.getGlobalBounds().height / 2);
 
-			float textOffsetX = (button.getGlobalBounds().width - text[count].getGlobalBounds().width) / 2;
-			float textOffsetY = (button.getGlobalBounds().height - text[count].getCharacterSize()) / 2;
+			float textOffsetX = (button.getGlobalBounds().width - text.at(count).getGlobalBounds().width) / 2;
+			float textOffsetY = (button.getGlobalBounds().height - text.at(count).getCharacterSize()) / 2;
 			Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
-			text[count].setPosition(textPosition);
-			texts.push_back(text[count]);
+			text.at(count).setPosition(textPosition);
+			texts.push_back(text.at(count));
 		}
 
 		count++;
@@ -747,21 +675,21 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 // }
 
 
-void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock)
-{
-	player.upPressed = (Keyboard::isKeyPressed(Keyboard::W) ? true : false);
-	player.rightPressed = (Keyboard::isKeyPressed(Keyboard::D) ? true : false);
-	player.downPressed = (Keyboard::isKeyPressed(Keyboard::S) ? true : false);
-	player.leftPressed = (Keyboard::isKeyPressed(Keyboard::A) ? true : false);
-	player.leftShiftPressed = (Keyboard::isKeyPressed(Keyboard::LShift) ? true : false);
+// void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock)
+// {
+// 	player.upPressed = (Keyboard::isKeyPressed(Keyboard::W) ? true : false);
+// 	player.rightPressed = (Keyboard::isKeyPressed(Keyboard::D) ? true : false);
+// 	player.downPressed = (Keyboard::isKeyPressed(Keyboard::S) ? true : false);
+// 	player.leftPressed = (Keyboard::isKeyPressed(Keyboard::A) ? true : false);
+// 	player.leftShiftPressed = (Keyboard::isKeyPressed(Keyboard::LShift) ? true : false);
 
-	if (Keyboard::isKeyPressed(Keyboard::Space))
-	{
-		player.weapon.action(projectiles, player, mainClock);
-		//if (player.weapon.isMelee and !(getTimeDiff(mainClock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
-		//	player.isUsingWeapon = true; //false?
-	}
-}
+// 	if (Keyboard::isKeyPressed(Keyboard::Space))
+// 	{
+// 		player.weapon.action(projectiles, player, mainClock);
+// 		//if (player.weapon.isMelee and !(getTimeDiff(mainClock, player.weapon.latestShotTime) > player.weapon.projectileLifetime))
+// 		//	player.isUsingWeapon = true; //false?
+// 	}
+// }
 
 
 // void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectiles, vector<gameObject>& objects, Player& player, float& testTime)

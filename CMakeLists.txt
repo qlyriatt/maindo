@@ -1,13 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(maindo VERSION 0.1.0)
 
-# ???
-include(CTest)
-enable_testing()
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
-
 
 find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
 if(!${SMFL_FOUND})
@@ -15,9 +8,12 @@ if(!${SMFL_FOUND})
 endif()
 
 add_executable(maindo   main.cpp
-                        basicObject.cpp
-                        Movable.cpp
+                        BasicObject.cpp
+                        MovingObject.cpp
                         Misc.cpp
+                        Player.cpp
+                        Utilities.cpp
+                        Render.cpp
 )
 
 target_include_directories(maindo PUBLIC ${SFML_INCLUDE_DIR})

@@ -1,8 +1,11 @@
-#include <SFML/Graphics.hpp>
-using namespace sf;
+#pragma once
 
 #include <vector>
 using std::vector;
+
+#include <SFML/Graphics.hpp>
+using sf::Texture, sf::RenderWindow;
+
 
 extern const std::string DIRECTORY;
 

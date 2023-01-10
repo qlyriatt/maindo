@@ -1,18 +1,24 @@
+#pragma once
 #include <SFML/Graphics.hpp>
-using namespace sf;
+using sf::FloatRect, sf::RectangleShape, sf::Sprite;
 
 
-class BasicObject
+class BasicObject : public sf::Drawable
 {
 protected:
-    virtual ~BasicObject();
 
-    bool allowCollision = {false};
-    bool isDestroyable = {false};
-    Sprite sprite;
+    bool    allowCollision = false;
+    bool    isDestroyable = false;
+    bool    isAnimated = false;
+    int     animationStates = 0;
+    float   animationCycleTimer = 0;
+    float   latestAnimationUpdateTime = 0;    
+    Sprite  sprite;
+    
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
 public:
-    BasicObject();
+    virtual ~BasicObject() = default;
 
     RectangleShape body;
         
@@ -22,5 +28,8 @@ public:
 
     bool collisionCheck(const BasicObject& obstacle) const; 
 
-    virtual void updateState();
+    virtual void updateState() {};
+
+    void updateAnimation(float elapsedTime);
+    
 };

@@ -3,20 +3,8 @@
 
 void MovingObject::createPendingPositionVector(float elapsedTime)
 {
-	if (!(isMoving and currentSpeed)) //skips creation if the object is static or standing still
-	{
-		latestMoveUpdate = 0;
-		return;
-	}
-
-	if (!latestMoveUpdate)	//skips one still frame after beginning of motion, not essential
-	{
-		latestMoveUpdate = elapsedTime;
-		return;
-	}
-
-	latestDistanceCovered = (elapsedTime - latestMoveUpdate) * currentSpeed;
-	latestMoveUpdate = elapsedTime;
+	latestDistanceCovered = (elapsedTime - latestMoveUpdateTime) * currentSpeed;
+	latestMoveUpdateTime = elapsedTime;
 	pendingPositionVector = currentDirection * latestDistanceCovered;
 }
 
@@ -24,7 +12,9 @@ bool MovingObject::collisionCheck(const RectangleShape& obstacle, bool allowColl
 {
 	//if object does not want to move, return simple collision check state
 	if (pendingPositionVector == Vector2f{0,0})
+	{
 		return BasicObject::collisionCheck(obstacle);
+	}
 
 	Vector2f currentPosition = body.getPosition(); //current position
 	 
@@ -49,4 +39,23 @@ bool MovingObject::collisionCheck(const RectangleShape& obstacle, bool allowColl
 		return true;
 	}
 	return false;
+}
+
+// takes direction vector and time, moves object
+void MovingObject::updatePosition(float elapsedTime)
+{
+	if (!(isMoving and currentSpeed)) //skips creation if the object is static or standing still
+	{
+		latestMoveUpdateTime = 0;
+		return;
+	}
+
+	if (!latestMoveUpdateTime)	//skips one still frame after beginning of motion, not essential
+	{
+		latestMoveUpdateTime = elapsedTime;
+		return;
+	}
+
+	createPendingPositionVector(elapsedTime);
+	body.move(pendingPositionVector);
 }

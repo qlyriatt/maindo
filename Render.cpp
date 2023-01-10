@@ -3,7 +3,7 @@
 
 void setWindowIcon(RenderWindow& window)
 {
-    Image icon;
+    sf::Image icon;
 	icon.loadFromFile(DIRECTORY + "Textures/icon.png");
 	window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 }
@@ -74,7 +74,9 @@ void loadTexturesInventory(vector<Texture>& inventoryTextures)
 void loadTextures(vector<Texture>& textures)
 {
 	
-	
+	Texture backgroundTexture;
+	backgroundTexture.loadFromFile(DIRECTORY + "Textures/background.jpg");
+	textures.push_back(backgroundTexture);
 	
 	Texture playerTexture;
 	playerTexture.loadFromFile(DIRECTORY + "Textures/player.png");

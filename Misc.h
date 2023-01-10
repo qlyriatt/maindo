@@ -1,15 +1,15 @@
 #pragma once
 #include <time.h>
+#include <vector>
+using std::vector;
 
-#include "Map.h"
-#include "BasicObject.h"
+
+#include "Player.h"
 #include "Utilities.h"
 
 extern const std::string DIRECTORY;
-//const Vector2f WINDOW_SIZE{ 1920, 1080 };
-const Vector2f WINDOW_SIZE{ 1366, 768 };
-//const Vector2f CAMERA_SIZE{ 1920, 1080 };
-const Vector2f CAMERA_SIZE{ 1366, 768 };
+const Vector2f WINDOW_SIZE{ 1920, 1080 };
+const Vector2f CAMERA_SIZE{ 1920, 1080 };
 const Vector2f INVENTORY_SIZE{ CAMERA_SIZE / 2.f };
 const Vector2u NATIVE_RESOLUTION = { 1920, 1080 };
 const Vector2f SHRINK_FACTOR = { WINDOW_SIZE.x / 1920, WINDOW_SIZE.y / 1080 };
@@ -43,21 +43,7 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 /// @param objects Vector containing objects
 /// @param projectiles Vector containing projectiles
 /////////////////////////////////////////////////
-void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles);
-
-
-
-
-void loadTexturesMenu(vector<Texture>& menuTextures);
-
-
-void loadTexturesPause(vector<Texture>& pauseTextures);
-
-
-void loadTexturesInventory(vector<Texture>& inventoryTextures);
-
-
-void loadTextures(vector<Texture>& textures);
+//void alignTime(const float timestamp, const Clock& clock, Player& player, vector<gameObject>& objects, vector<Projectile>& projectiles);
 
 
 /////////////////////////////////////////////////
@@ -65,18 +51,18 @@ void loadTextures(vector<Texture>& textures);
 ///
 /// @param renderTexture RenderTexture to draw to
 /////////////////////////////////////////////////
-void finalDraw(RenderTexture& renderTexture, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles,
-	const Player& player);
+// void finalDraw(RenderTexture& renderTexture, const vector<gameObject>& objects, const vector<Entity>& entities, const vector<Projectile>& projectiles,
+// 	const Player& player);
 
 
-void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
-	vector<Projectile>& projectiles, Player& player);
+// void finalDrawMinimap(RenderTexture& renderTexture, vector<gameObject>& objects, vector<Entity>& entities,
+// 	vector<Projectile>& projectiles, Player& player);
 
 
-void levelLoad(RenderWindow& window, vector<gameObject>& objects, vector<Entity>& entities, int& currentLevel, int switchToLevel, const vector<Texture>& textures);
+// void levelLoad(RenderWindow& window, vector<gameObject>& objects, vector<Entity>& entities, int& currentLevel, int switchToLevel, const vector<Texture>& textures);
 
 
-void cameraCollision(const gameObject& area, View& camera, const Player& player, const Vector2f WINDOW_SIZE);
+// void cameraCollision(const gameObject& area, View& camera, const Player& player, const Vector2f WINDOW_SIZE);
 
 
 /////////////////////////////////////////////////
@@ -145,8 +131,8 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 /////////////////////////////////////////////////
 /// @brief Inventory drawer function
 /////////////////////////////////////////////////
-void drawInventory(RenderWindow& window, const RenderTexture& background,
-	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const Vector2u& chosenItem, const Player& player);
+// void drawInventory(RenderWindow& window, const RenderTexture& background,
+// 	const vector<Texture>& inventoryTextures, const Font& inventoryFont, const Vector2u& inventoryGrid, const Vector2u& chosenItem, const Player& player);
 
 
 /////////////////////////////////////////////////
@@ -161,8 +147,8 @@ void drawInventory(RenderWindow& window, const RenderTexture& background,
 /// 
 /// @return
 /////////////////////////////////////////////////
-int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, 
-	Player& player, vector<gameObject>& objects);
+// int showScreenInventory(RenderWindow& window, const RenderTexture& background, const vector<Texture>& inventoryTextures, const Font& inventoryFont, 
+// 	Player& player, vector<gameObject>& objects);
 
 
 /////////////////////////////////////////////////
@@ -182,7 +168,7 @@ int showScreenInventory(RenderWindow& window, const RenderTexture& background, c
 /// @param projectiles Reference to the vector containing projectiles
 /// @param mainClock Main game clock
 /////////////////////////////////////////////////
-void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock);
+//void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clock& mainClock);
 
 
 /////////////////////////////////////////////////
@@ -197,7 +183,7 @@ void applyPlayerInput(Player& player, vector<Projectile>& projectiles, const Clo
 /// @param objects Reference to the vector containing objects
 /// @param Player instance to handle reloads
 /////////////////////////////////////////////////
-void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectiles, vector<gameObject>& objects, Player& player, float& testTime);
+//void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectiles, vector<gameObject>& objects, Player& player, float& testTime);
 
 
 /////////////////////////////////////////////////
@@ -208,5 +194,5 @@ void projectileHandlerMain(const Clock& mainClock, vector<Projectile>& projectil
 /// @param player Player instance
 /// @param needOverride Does input need to be overriden
 /// @param interactionMessageDisplayed Is intera
-void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject>& objects, Player& player);
+//void objectHandlerMain(RenderWindow& window, vector<gameObjectStationary>& walls, vector<gameObject>& objects, Player& player);
 

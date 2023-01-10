@@ -2,7 +2,9 @@
 #include <time.h>
 using std::vector;
 
-//FULLY DONE (CAN ADD NEW QUOTES)
+namespace Utilities 
+{
+
 String pickName()
 {
 	srand(time(0));
@@ -81,13 +83,13 @@ String pickName()
 	return names.at(rand() % names.size());
 }
 
-//FULLY DONE
+
 float getTimeDiff(const Clock& clock, const float& time)
 {
 	return clock.getElapsedTime().asSeconds() - time;
 }
 
-//FULLY DONE
+
 void setOpacity(BasicObject& object, int opacity)
 {
 	Color tmp = object.body.getFillColor();
@@ -96,7 +98,7 @@ void setOpacity(BasicObject& object, int opacity)
 	object.body.setOutlineColor(Color(tmp.r, tmp.g, tmp.b, opacity));
 }
 
-//FULLY DONE
+
 Vector2f getCenterAlignment(const Sprite& insideSprite, const Vector2f& outsideAreaSize)
 {
 	const FloatRect insideBounds = insideSprite.getGlobalBounds();
@@ -107,7 +109,7 @@ Vector2f getCenterAlignment(const Sprite& insideSprite, const Vector2f& outsideA
 	return { x,y };
 }
 
-//FULLY DONE
+
 Vector2f getCenterAlignment(const Sprite& insideSprite, const Sprite& outsideSprite)
 {
 	const FloatRect insideBounds = insideSprite.getGlobalBounds();
@@ -119,8 +121,10 @@ Vector2f getCenterAlignment(const Sprite& insideSprite, const Sprite& outsideSpr
 	return { x,y };
 }
 
+// get center point of a RectangleShape
 Vector2f getCenter(RectangleShape rectangle)
 {
     return rectangle.getPosition() + rectangle.getSize() / 2.f;
 }
 
+}
