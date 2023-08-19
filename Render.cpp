@@ -1,14 +1,6 @@
 #include "Render.h"
 
 
-void setWindowIcon(RenderWindow& window)
-{
-    sf::Image icon;
-	icon.loadFromFile(DIRECTORY + "Textures/icon.png");
-	window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
-}
-
-
 void loadTexturesMenu(vector<Texture>& menuTextures)
 {
 	Texture menuLight;

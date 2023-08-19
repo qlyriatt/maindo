@@ -75,7 +75,7 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 /// 
 /// @return True if event was handled succesfully, false otherwise
 /////////////////////////////////////////////////
-bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u& count);
+bool menuNavigation(const Event& event, const Vector2u& grid_dimensions, Vector2u& current_cell);
 
 
 /////////////////////////////////////////////////

@@ -182,7 +182,7 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 // }
 
 
-bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u& count)
+bool menuNavigation(const Event& event, const Vector2u& grid_dimensions, Vector2u& current_cell)
 {
 	// handle pressed key to navigate menu grid
 	// 	   columns
@@ -193,47 +193,47 @@ bool menuNavigation(const Event& event, const Vector2u& gridDimensions, Vector2u
 	// s 4	x	x
 
 	// menu grid dimensions
-	const auto columns = gridDimensions.x;
-	const auto rows = gridDimensions.y;
+	const auto columns = grid_dimensions.x;
+	const auto rows = grid_dimensions.y;
 
 	if (event.key.code == Keyboard::W and rows != 1) // up
 	{
 		// if top row -- go to the bottom
 		// otherwise -- go 1 row up
-		if (count.y == 1)
-			count.y = rows;
+		if (current_cell.y == 1)
+			current_cell.y = rows;
 		else
-			count.y -= 1;
+			current_cell.y -= 1;
 		return true;
 	}
 	else if (event.key.code == Keyboard::S and rows != 1) // down
 	{
 		// if bottom row -- go to the top
 		// otherwise -- go 1 row down
-		if (count.y == rows)
-			count.y = 1;
+		if (current_cell.y == rows)
+			current_cell.y = 1;
 		else
-			count.y += 1;
+			current_cell.y += 1;
 		return true;
 	}
 	else if (event.key.code == Keyboard::A and columns != 1) // left
 	{
 		// if left-most column -- go to the right side
 		// otherwise -- go 1 column left
-		if (count.x == 1)
-			count.x = columns;
+		if (current_cell.x == 1)
+			current_cell.x = columns;
 		else
-			count.x -= 1;
+			current_cell.x -= 1;
 		return true;
 	}
 	else if (event.key.code == Keyboard::D and columns != 1) // right
 	{
 		// if right-most column -- go to the left side
 		// otherwise -- go 1 column right
-		if (count.x == columns)
-			count.x = 1;
+		if (current_cell.x == columns)
+			current_cell.x = 1;
 		else
-			count.x += 1;
+			current_cell.x += 1;
 		return true;
 	}
 

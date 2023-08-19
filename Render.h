@@ -10,9 +10,6 @@ using sf::Texture, sf::RenderWindow;
 extern const std::string DIRECTORY;
 
 
-void setWindowIcon(RenderWindow& window);
-
-
 void loadTexturesMenu(vector<Texture>& menuTextures);
 
 
