@@ -1,11 +1,13 @@
 #include "BasicObject.h"
 
+#include "SFML/Graphics/RenderTarget.hpp"
+
 void BasicObject::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
 	sprite.getTexture() ? target.draw(sprite) : target.draw(body);
 }
 
-inline bool BasicObject::collisionCheck(const FloatRect &obstacle) const
+bool BasicObject::collisionCheck(const sf::FloatRect &obstacle) const
 {
 	if (body.getGlobalBounds().intersects(obstacle))
 		return true;
@@ -13,7 +15,7 @@ inline bool BasicObject::collisionCheck(const FloatRect &obstacle) const
 }
 
 
-bool BasicObject::collisionCheck(const RectangleShape& obstacle) const
+bool BasicObject::collisionCheck(const sf::RectangleShape& obstacle) const
 {
 	if (collisionCheck(obstacle.getGlobalBounds()))
 		return true;

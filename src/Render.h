@@ -6,10 +6,6 @@ using std::vector;
 #include <SFML/Graphics.hpp>
 using sf::Texture, sf::RenderWindow;
 
-
-extern const std::string DIRECTORY;
-
-
 void loadTexturesMenu(vector<Texture>& menuTextures);
 
 

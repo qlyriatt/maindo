@@ -1,11 +1,12 @@
 #include "resources.h"
 
 #include "Render.h"
+#include "app.h"
 
 Resources::Resources()
 {
     // fonts
-    font_.loadFromFile(DIRECTORY + "gnomoria.ttf");
+    font_.loadFromFile(App::resdir() + "gnomoria.ttf");
 
     // textures
     loadTexturesMenu(menu_textures_);

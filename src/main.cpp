@@ -15,13 +15,14 @@
 
 
 // SPECIFY FOLDER WITH GAME FILES
-const std::string DIRECTORY = { "/home/qlyriatt/code/maindo/" };
+const std::string APPDIR;
+const std::string RESDIR;
 
 //vector<gameObject> itemList;
-
-int main()
+#include <iostream>
+int main(int argc, char *argv[])
 {
-	App app;
+	App app(argc, argv);
 	return app.execute();
 }
 

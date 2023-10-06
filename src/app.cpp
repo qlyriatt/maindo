@@ -6,6 +6,18 @@
 #include "menu.h"
 #include "resources.h"
 
+std::string APPDIR;
+std::string RESDIR;
+
+App::App(int argc, char *argv[])
+{
+    APPDIR = argv[0];
+    auto exec = std::find(APPDIR.crbegin(), APPDIR.crend(), '/');
+    auto build = std::find(std::next(exec), APPDIR.crend(), '/');
+    APPDIR.resize(APPDIR.size() - std::distance(APPDIR.crbegin(), build));
+    RESDIR = APPDIR + "/res/";
+}
+
 bool App::execute()
 {
     init();
@@ -146,12 +158,22 @@ bool App::execute()
     return true;
 }
 
+std::string App::appdir()
+{
+    return APPDIR;
+}
+
+std::string App::resdir()
+{
+    return RESDIR;
+}
+
 void App::init()
 {
     // game window
     create(VideoMode::getDesktopMode(), Utilities::pickName());
     Image icon;
-    icon.loadFromFile(DIRECTORY + "Textures/icon.png");
+    icon.loadFromFile(RESDIR + "textures/icon.png");
     setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
     // views for window

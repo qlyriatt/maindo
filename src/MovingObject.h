@@ -1,6 +1,9 @@
 #pragma once
+
 #include "BasicObject.h"
-using sf::Vector2i, sf::Vector2f;
+
+using sf::Vector2i; 
+using sf::Vector2f;
 
 /*
 	Vector2 { X, Y };
@@ -36,7 +39,7 @@ private:
 	void createPendingPositionVector(float elapsedTime); 
 
 public:
-	bool collisionCheck(const RectangleShape& obstacle, bool allowCollision);
+	bool collisionCheck(const sf::RectangleShape& obstacle, bool allowCollision);
 
 	void updateState() override {};
 

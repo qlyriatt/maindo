@@ -9,8 +9,10 @@ Menu::Menu(GameObject *parent) :
     lightup_interval_(3),
     stored_time_{},
     latest_animation_update_{},
-    grid_(1, 4),
-    current_cell_(0, 0)
+    rows_(4),
+    cols_(1),
+    current_row_(0),
+    current_col_(0)
 {
 }
 
@@ -25,23 +27,24 @@ bool Menu::processEvent(const Event &event)
     {
         if (event.key.code == Keyboard::E)
         {
-            if (current_cell_.y == 1)
+            if (current_row_ == 1)
             {
                 load();
                 return true;
             }
-            else if (current_cell_.y == 2)
+            if (current_row_ == 2)
             {
                 load();
                 return true;
             }
-            else if (current_cell_.y == grid_.y)
+            if (current_row_ == rows_ - 1)
             {
                 quit();
                 return true;
             }
         }
-        else return menuNavigation(event, grid_, current_cell_);
+        else if (gridEvent(event, rows_, cols_, current_row_, current_col_))
+            return true;
     }
 
     return false;
@@ -66,35 +69,35 @@ void Menu::draw(RenderWindow &window)
 
     // main menu buttons text
     const auto font = resources().font_;
-    vector<Text> text{{}, {"Continue", font}, {"New Game", font}, {"Whatever", font}, {"Quit", font}};
-    int count = 1;
+    vector<Text> text{{"Continue", font}, {"New Game", font}, {"Whatever", font}, {"Quit", font}};
 
+    int count = 0;
     // create buttons
-    for (auto &i : constructGrid(grid_, resources().menu_textures_.at(2).getSize(), native_res_buf.getSize(), {0.5, 0.6} /*C4305*/))
+    for (const auto &pos : gridLayout(rows_, cols_, resources().menu_textures_.at(2).getSize(), native_res_buf.getSize(), {0.5, 0.6}))
     {
-        Sprite button(count == current_cell_.y ? resources().menu_textures_.at(2) : resources().menu_textures_.at(3));
-        button.setPosition(i);
+        Sprite button(count == current_row_ ? resources().menu_textures_.at(2) : resources().menu_textures_.at(3));
+        button.setPosition(pos);
         sprites.push_back(button);
 
         text.at(count).setFillColor(Color::Black);
-        text.at(count).setOutlineColor(count == current_cell_.y ? Color(175, 58, 210) : Color(112, 37, 135));
+        text.at(count).setOutlineColor(count == current_row_ ? Color(175, 58, 210) : Color(112, 37, 135));
         text.at(count).setOutlineThickness(2);
         text.at(count).setCharacterSize(button.getGlobalBounds().height / 2);
 
         float textOffsetX = (button.getGlobalBounds().width - text.at(count).getGlobalBounds().width) / 2;
         float textOffsetY = (button.getGlobalBounds().height - text.at(count).getCharacterSize()) / 2;
-        Vector2f text_pos = i + Vector2f{textOffsetX, textOffsetY};
+        Vector2f text_pos = pos + Vector2f{textOffsetX, textOffsetY};
         text.at(count).setPosition(text_pos);
         texts.push_back(text.at(count));
 
-        count++;
+        ++count;
     }
 
-    for (auto &i : sprites)
-        native_res_buf.draw(i);
+    for (const auto &s : sprites)
+        native_res_buf.draw(s);
 
-    for (auto &i : texts)
-        native_res_buf.draw(i);
+    for (const auto &t : texts)
+        native_res_buf.draw(t);
 
     // on first load the menu is tinted
     if (is_first_draw_)

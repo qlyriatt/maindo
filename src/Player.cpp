@@ -1,8 +1,12 @@
 #include "Player.h"
-using sf::Keyboard;
+
+#include "SFML/Window/Keyboard.hpp"
+
 #include <iostream>
 
 #pragma GCC diagnostic ignored "-Wnarrowing"
+
+using sf::Keyboard;
 // Player::Player(const Vector2f& position, const Vector2f& size, const Texture& texture, const size_t animationStates, const float speed) :
 // 	gameObject(position, texture, animationStates, speed, false, false, 0, 0, 0)
 // {

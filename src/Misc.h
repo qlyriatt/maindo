@@ -70,42 +70,14 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 /// NOTE : count should be a non-const reference
 /// 
 /// @param event Event to handle
-/// @param gridDimensions Menu grid dimensions (X = rows, Y = columns)
-/// @param count Reference to current menu count (button, item, etc.)
 /// 
 /// @return True if event was handled succesfully, false otherwise
 /////////////////////////////////////////////////
-bool menuNavigation(const Event& event, const Vector2u& grid_dimensions, Vector2u& current_cell);
+bool gridEvent(const Event& event, int rows, int columns, int &current_row, int &current_column);
 
 
-/////////////////////////////////////////////////
-// Very (not)useful calculations that help solve the great (unexisting) problem of
-// having to construct many grid-like sets of objects by making it ten millions times harder 
-// than it actually is, and all thanks to standartisation and code reusage, 
-// because making one function do anything for everything was a BRILLIANT IDEA!!!
-/////////////////////////////////////////////////
-vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& textureSize, const Vector2u& renderTargetSize,
-	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor = { 0, 0 });
-
-
-/////////////////////////////////////////////////
-/// @brief Main menu drawer function
-/////////////////////////////////////////////////
-void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont, const Vector2u& menuGrid,
-	const Vector2u& chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw);
-
-
-/////////////////////////////////////////////////
-/// @brief Draws main menu and allows menu interaction
-///
-/// @param window Main render window
-/// @param menuTextures Textures used in menu drawing
-/// @param menuFont Font used in menu drawing
-/// 
-/// @returns -1 if the window was closed, 0 if level is loading from save, otherwise a level to load
-/////////////////////////////////////////////////
-int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont);
-
+vector<Vector2f> gridLayout(int rows, int columns, const Vector2u& cell_size, const Vector2u& target_size,
+	const Vector2f& alignment_factor = {0.5, 0.5}, const Vector2f& cell_gap_factor = {0, 0});
 
 /////////////////////////////////////////////////
 /// @brief Pause menu drawer function

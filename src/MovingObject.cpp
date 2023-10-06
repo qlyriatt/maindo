@@ -8,7 +8,7 @@ void MovingObject::createPendingPositionVector(float elapsedTime)
 	pendingPositionVector = currentDirection * latestDistanceCovered;
 }
 
-bool MovingObject::collisionCheck(const RectangleShape& obstacle, bool allowCollision)
+bool MovingObject::collisionCheck(const sf::RectangleShape& obstacle, bool allowCollision)
 {
 	//if object does not want to move, return simple collision check state
 	if (pendingPositionVector == Vector2f{0,0})
@@ -18,7 +18,7 @@ bool MovingObject::collisionCheck(const RectangleShape& obstacle, bool allowColl
 
 	Vector2f currentPosition = body.getPosition(); //current position
 	 
-	RectangleShape pendingBodyPosition;
+	sf::RectangleShape pendingBodyPosition;
 	pendingBodyPosition.setPosition(currentPosition + pendingPositionVector); //position that the object wants to be in
 
 	//check what the pending move leads to

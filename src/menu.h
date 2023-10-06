@@ -24,8 +24,10 @@ private:
     double latest_animation_update_;
 
     Clock clock_;
-    Vector2u grid_;
-    Vector2u current_cell_;
+    int rows_;
+    int cols_;
+    int current_row_;
+    int current_col_;
 
     std::function<void()> quit_func_;
 };

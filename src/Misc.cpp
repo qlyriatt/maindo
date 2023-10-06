@@ -182,58 +182,56 @@ int getCount(float storedTimeDifference, int animationStates, const size_t chang
 // }
 
 
-bool menuNavigation(const Event& event, const Vector2u& grid_dimensions, Vector2u& current_cell)
+bool gridEvent(const Event& event, int rows, int columns, int &current_row, int &current_column)
 {
-	// handle pressed key to navigate menu grid
-	// 	   columns
-	//		1   2
-	// r 1	x	x	
-	// o 2	x	x
-	// w 3	x	x
-	// s 4	x	x
+	// TODO: make way for non-wrapping navigation
+	bool wrapping = true;
 
-	// menu grid dimensions
-	const auto columns = grid_dimensions.x;
-	const auto rows = grid_dimensions.y;
+	// handle pressed key to navigate grid
+	//
+	// 	   	   columns
+	//			0   1
+	// r 	0	x	x	
+	// o 	1	x	x
+	// w 	2	x	x
+	// s 	3	x	x
+	//
+	//
 
-	if (event.key.code == Keyboard::W and rows != 1) // up
+	if (event.key.code == Keyboard::W) // up
 	{
-		// if top row -- go to the bottom
-		// otherwise -- go 1 row up
-		if (current_cell.y == 1)
-			current_cell.y = rows;
+		if (current_row == 0 && wrapping)
+			current_row = rows - 1;
 		else
-			current_cell.y -= 1;
+			current_row -= 1;
+
 		return true;
 	}
-	else if (event.key.code == Keyboard::S and rows != 1) // down
+	if (event.key.code == Keyboard::S) // down
 	{
-		// if bottom row -- go to the top
-		// otherwise -- go 1 row down
-		if (current_cell.y == rows)
-			current_cell.y = 1;
+		if (current_row == rows - 1 && wrapping)
+			current_row = 0;
 		else
-			current_cell.y += 1;
+			current_row += 1;
+
 		return true;
 	}
-	else if (event.key.code == Keyboard::A and columns != 1) // left
+	if (event.key.code == Keyboard::A) // left
 	{
-		// if left-most column -- go to the right side
-		// otherwise -- go 1 column left
-		if (current_cell.x == 1)
-			current_cell.x = columns;
+		if (!current_column && wrapping)
+			current_column = columns - 1;
 		else
-			current_cell.x -= 1;
+			current_column -= 1;
+
 		return true;
 	}
-	else if (event.key.code == Keyboard::D and columns != 1) // right
+	else if (event.key.code == Keyboard::D) // right
 	{
-		// if right-most column -- go to the left side
-		// otherwise -- go 1 column right
-		if (current_cell.x == columns)
-			current_cell.x = 1;
+		if (current_column == columns - 1 && wrapping)
+			current_column = 0;
 		else
-			current_cell.x += 1;
+			current_column += 1;
+			
 		return true;
 	}
 
@@ -241,193 +239,31 @@ bool menuNavigation(const Event& event, const Vector2u& grid_dimensions, Vector2
 }
 
 
-vector<Vector2f> constructGrid(const Vector2u& gridDimensions, const Vector2u& textureSize, const Vector2u& renderTargetSize,
-	const Vector2f& alignmentFactor, const Vector2f& cellOffsetFactor)
+vector<Vector2f> gridLayout(int rows, int columns, const Vector2u& cell_size, const Vector2u& target_size,
+	const Vector2f& alignment_factor, const Vector2f& cell_gap_factor)
 {
-	//every Vector2<> is made float to overcome all the stupid warnings and errors that are caused by conversions and etc.
+	const auto center = Vector2f(target_size) * alignment_factor;
 
-	//check for zeroes in gridDimensions
-	//NOTE : 0 value is trasformed into 1 here for convenience
-	const auto rows = gridDimensions.y == 0 ? 1 : gridDimensions.y;
-	const auto columns = gridDimensions.x == 0 ? 1 : gridDimensions.x;
+	const auto cell_gap = cell_gap_factor == Vector2f(0, 0) ? Vector2f(15, 15) : cell_size * cell_gap_factor;
 
-	//calculate alignment on renderTarget
-	const Vector2f targetSize = Vector2f{ renderTargetSize };
-	const Vector2f alignmentCenter = targetSize * alignmentFactor;
+	double width = cell_size.x * columns / 2 + cell_gap.x * (columns - 1) / 2;
+	double height = cell_size.y * rows / 2 + cell_gap.y * (rows - 1) / 2;
+	const auto TL = center - Vector2f(width, height);
 
-	//get sprite size 
-	const Vector2f spriteSize = Vector2f{ textureSize };
+	const auto cell_offset = Vector2f(cell_size) + cell_gap;
 
-	//calculate gap between sprites
-	const Vector2f spriteGap = cellOffsetFactor == Vector2f{ 0, 0 } ? Vector2f{ 15, 15 } : spriteSize * cellOffsetFactor;
-
-	//find the edge point 
-	const float offsetEdgeX = spriteSize.x * columns / 2 + spriteGap.x * (columns - 1) / 2;
-	const float offsetEdgeY = spriteSize.y * rows / 2 + spriteGap.y * (rows - 1) / 2;
-	const Vector2f edgePoint = alignmentCenter - Vector2f{ offsetEdgeX, offsetEdgeY };
-
-	//calculate final offset
-	const Vector2f finalOffset = spriteSize + spriteGap;
-
-
-	vector<Vector2f> gridVectors;
-	gridVectors.reserve(rows * columns);
-
-	for (size_t i = 0; i < rows; i++)
+	vector<Vector2f> grid;
+	grid.reserve(rows * columns);
+	for (int row = 0; row < rows; ++row)
 	{
-		for (size_t j = 0; j < columns; j++)
+		for (int col = 0; col < columns; ++col)
 		{
-			gridVectors.push_back({ edgePoint + Vector2f{finalOffset.x * j, finalOffset.y * i} });
+			grid.push_back({TL + Vector2f(cell_offset.x * col, cell_offset.y * row)});
 		}
 	}
 
-	return gridVectors;
+	return grid;
 }
-
-
-int showScreenMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont)
-{
-	const Vector2u menuGrid {1, 4};
-
-	//tech stuff
-	bool isFirstDraw = true;
-	bool redraw = true;
-	float storedTime = 0;
-	float latestAnimationUpdate = 0;
-	Vector2u chosenButton {1, 1};
-	Event event;
-	Clock clock;
-	//
-
-	while (window.isOpen())
-	{
-		while (window.pollEvent(event))
-		{
-			if (event.type == Event::KeyReleased)
-			{
-				if (event.key.code == Keyboard::E)
-				{
-					if (chosenButton.y == 1)
-						return 1;
-					else if (chosenButton.y == 2)
-						return 2;
-					//else if (chosenButton == 2)
-					else if (chosenButton.y == menuGrid.y)
-						return -1;
-				}
-				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
-				else if (!menuNavigation(event, menuGrid, chosenButton)) 
-					continue;
-
-				redraw = true;
-			}
-
-			//this event is unlikely, so it's placed below Event::KR
-			else if (event.type == Event::Closed)
-			{
-				window.close();
-				return -1;
-			}
-
-			else if (event.type == Event::Resized)
-			{
-				//SHRINK_FACTOR = window.getSize() / NATIVE_RESOLUTION;
-				redraw = true;
-			}
-		}
-		
-		// is there a need to redraw the menu
-		if (redraw or isFirstDraw)
-		{
-			drawMenu(window, menuTextures, menuFont, menuGrid, chosenButton, clock, storedTime, latestAnimationUpdate, isFirstDraw);
-			redraw = false;
-		}
-	}
-
-	return -1; // return "closed window" if unspecified
-}
-
-
-void drawMenu(RenderWindow& window, const vector<Texture>& menuTextures, const Font& menuFont, const Vector2u& menuGrid,
-	const Vector2u& chosenButton, const Clock& clock, float& storedTime, float& latestAnimationUpdate, bool& isFirstDraw)
-{
-	const int lightUpTime = 3;
-
-
-	window.clear();
-
-	RenderTexture nativeResolutionBuffer;
-	nativeResolutionBuffer.create(NATIVE_RESOLUTION.x, NATIVE_RESOLUTION.y);
-
-	vector<Sprite> sprites;
-	vector<Text> texts;
-
-	// main menu background
-	Sprite background(menuTextures.at(1));
-	sprites.push_back(background);
-
-	// main menu buttons text
-	vector<Text> text { {}, {"Continue", menuFont}, {"New Game", menuFont}, {"Whatever", menuFont}, {"Quit", menuFont} };
-	int count = 1;
-
-	// create buttons
-	for (auto& i : constructGrid(menuGrid, menuTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }/*C4305*/))
-	{
-		Sprite button(count == chosenButton.y ? menuTextures.at(2) : menuTextures.at(3));
-		button.setPosition(i);
-		sprites.push_back(button);
-
-		text.at(count).setFillColor(Color::Black);
-		text.at(count).setOutlineColor(count == chosenButton.y ? Color(175, 58, 210) : Color(112, 37, 135));
-		text.at(count).setOutlineThickness(2);
-		text.at(count).setCharacterSize(button.getGlobalBounds().height / 2);
-
-		float textOffsetX = (button.getGlobalBounds().width - text.at(count).getGlobalBounds().width) / 2;
-		float textOffsetY = (button.getGlobalBounds().height - text.at(count).getCharacterSize()) / 2;
-		Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
-		text.at(count).setPosition(textPosition);
-		texts.push_back(text.at(count));
-
-		count++;
-	}
-
-	for (auto& i : sprites)
-		nativeResolutionBuffer.draw(i);
-
-	for (auto& i : texts)
-		nativeResolutionBuffer.draw(i);
-
-	// on first load the menu is tinted
-	if (isFirstDraw)
-	{
-		RectangleShape tint;
-		tint.setSize(Vector2f{ nativeResolutionBuffer.getSize() });
-		if (storedTime < lightUpTime)
-		{
-			// opacity goes from 0 to 255, making the tint go from black to transparent
-			tint.setFillColor(Color(0, 0, 0, 255 * (1 - storedTime / lightUpTime)));
-			nativeResolutionBuffer.draw(tint);
-			storedTime += clock.getElapsedTime().asSeconds() - latestAnimationUpdate;
-			latestAnimationUpdate = clock.getElapsedTime().asSeconds();
-		}
-		else // lightup time ended
-		{
-			isFirstDraw = false;
-			storedTime = latestAnimationUpdate = 0;
-		}
-	}
-
-	nativeResolutionBuffer.display();
-	Sprite finalOutput(nativeResolutionBuffer.getTexture()); // get final result from the buffer
-
-	//SCALE DOWN FOR RESOLUTIONS LOWER THAN 1920/1080
-	if (SHRINK_FACTOR != Vector2f{ 1, 1 })
-		finalOutput.setScale(SHRINK_FACTOR);
-
-	window.draw(finalOutput);
-	window.display();
-}
-
 
 //FULLY DONE (HARDCODED)
 void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const Font& pauseFont, const Vector2u& pauseGrid,
@@ -450,28 +286,28 @@ void drawPause(RenderWindow& window, const vector<Texture>& pauseTextures, const
 	int count = 1;
 
 	// create buttons
-	for (auto& i : constructGrid(pauseGrid, pauseTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }))
-	{
-		Sprite button(count == chosenButton.y ? pauseTextures.at(2) : pauseTextures.at(3));
-		button.setPosition(i);
-		sprites.push_back(button);
+	// for (auto& i : constructGrid(pauseGrid, pauseTextures.at(2).getSize(), nativeResolutionBuffer.getSize(), { 0.5, 0.6 }))
+	// {
+	// 	Sprite button(count == chosenButton.y ? pauseTextures.at(2) : pauseTextures.at(3));
+	// 	button.setPosition(i);
+	// 	sprites.push_back(button);
 
-		if (count < sizeof(text) / sizeof(Text)) //precaution
-		{
-			text.at(count).setFillColor(Color::Black);
-			text.at(count).setOutlineColor(count == chosenButton.y ? Color(77, 193, 193) : Color(82, 119, 119));
-			text.at(count).setOutlineThickness(2);
-			text.at(count).setCharacterSize(button.getGlobalBounds().height / 2);
+	// 	if (count < sizeof(text) / sizeof(Text)) //precaution
+	// 	{
+	// 		text.at(count).setFillColor(Color::Black);
+	// 		text.at(count).setOutlineColor(count == chosenButton.y ? Color(77, 193, 193) : Color(82, 119, 119));
+	// 		text.at(count).setOutlineThickness(2);
+	// 		text.at(count).setCharacterSize(button.getGlobalBounds().height / 2);
 
-			float textOffsetX = (button.getGlobalBounds().width - text.at(count).getGlobalBounds().width) / 2;
-			float textOffsetY = (button.getGlobalBounds().height - text.at(count).getCharacterSize()) / 2;
-			Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
-			text.at(count).setPosition(textPosition);
-			texts.push_back(text.at(count));
-		}
+	// 		float textOffsetX = (button.getGlobalBounds().width - text.at(count).getGlobalBounds().width) / 2;
+	// 		float textOffsetY = (button.getGlobalBounds().height - text.at(count).getCharacterSize()) / 2;
+	// 		Vector2f textPosition = i + Vector2f{ textOffsetX, textOffsetY };
+	// 		text.at(count).setPosition(textPosition);
+	// 		texts.push_back(text.at(count));
+	// 	}
 
-		count++;
-	}
+	// 	count++;
+	// }
 
 	for (auto& i : sprites)
 		nativeResolutionBuffer.draw(i);
@@ -521,7 +357,8 @@ int showScreenPause(RenderWindow& window, const vector<Texture>& pauseTextures, 
 						return 0;
 				}
 				//if this returns false, Event::KR event does not satisfy any contitions so it is dismissed and redraw is not needed
-				else if (!menuNavigation(event, pauseGrid, chosenButton)) continue;
+				// else if (!gridEvent(event, pauseGrid, chosenButton)) 
+				// 	continue;
 
 				redraw = true;
 			}
